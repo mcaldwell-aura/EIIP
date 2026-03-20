@@ -1,0 +1,726 @@
+<div class="details-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="details-main">
+    <section class="page-header">
+      <div class="title-wrap">
+        <div>
+          <div class="title-row">
+            <h1>Inspection #{{ inspection().inspectionId }}</h1>
+            <span
+              class="status-badge"
+              [class.warning]="requiresAttention(inspection().inspectionStatus)"
+            >
+              <span class="status-dot" aria-hidden="true"></span>
+              {{ inspection().inspectionStatus }}
+            </span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <a class="back-btn" routerLink="/inspection-overview">Back</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="tabs" aria-label="Inspection details tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'summary'"
+        (click)="selectTab('summary')"
+      >
+        Summary
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'notes'"
+        (click)="selectTab('notes')"
+      >
+        Notes
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'documents'"
+        (click)="selectTab('documents')"
+      >
+        Documents
+      </button>
+    </section>
+
+    @switch (activeTab()) {
+      @case ('summary') {
+        <section class="content-grid">
+          <article class="details-card feature-card" aria-label="Inspection information">
+            <div class="card-header">
+              <div>
+                <h2>Inspection Information</h2>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label>Inspection ID</label>
+                <p>{{ inspection().inspectionId }}</p>
+              </div>
+              <div class="field">
+                <label>Inspection Status</label>
+                <p>{{ inspection().inspectionStatus }}</p>
+              </div>
+              <div class="field">
+                <label>Inspection Type</label>
+                <p>{{ inspection().inspectionType }}</p>
+              </div>
+              <div class="field field-wide">
+                <label>Subject Name</label>
+                <p>{{ inspection().subjectName }}</p>
+              </div>
+              <div class="field field-wide field-with-action">
+                <label>Assigned Inspector</label>
+                <div class="field-action-row">
+                  <p [class.placeholder]="!isAssigned(assignedInspector())">
+                    {{ assignedInspector() }}
+                  </p>
+                  <button type="button" class="assign-btn" (click)="openAssignInspectorModal()">
+                    Assign Inspector
+                  </button>
+                </div>
+              </div>
+              <div class="field field-wide reason-field">
+                <label>Inspection Reason</label>
+                <p>{{ inspection().inspectionReason }}</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="details-card appointment-card" aria-label="Appointment details">
+            <div class="card-header">
+              <div>
+                <h2>Appointment Details</h2>
+              </div>
+              <button type="button" class="primary-btn" (click)="openAppointmentModal()">
+                Update Appointment
+              </button>
+            </div>
+
+            <div class="field-grid compact-grid">
+              <div class="field">
+                <label>Date</label>
+                <p>{{ inspection().appointmentDate }}</p>
+              </div>
+              <div class="field">
+                <label>Time</label>
+                <p>{{ inspection().appointmentTime }}</p>
+              </div>
+              <div class="field">
+                <label>Location</label>
+                <p>{{ inspection().appointmentLocation }}</p>
+              </div>
+            </div>
+          </article>
+        </section>
+      }
+
+      @case ('notes') {
+        <section class="details-card auxiliary-card notes-card" aria-label="Inspection notes">
+          <div class="card-header">
+            <div>
+              <h2>Notes</h2>
+            </div>
+            <button type="button" class="primary-btn" (click)="openNoteModal()">Add Note</button>
+          </div>
+
+          <div class="notes-table-wrap">
+            <table class="notes-table">
+              <thead>
+                <tr>
+                  <th>Name ▼</th>
+                  <th>Updated Date ▼</th>
+                  <th>Updated By ▼</th>
+                  <th>Actions ▼</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (note of noteRows(); track note.name + note.updatedDate + $index) {
+                  <tr>
+                    <td>{{ note.name }}</td>
+                    <td>{{ note.updatedDate }}</td>
+                    <td>{{ note.updatedBy }}</td>
+                    <td>
+                      <div class="notes-actions">
+                        <button
+                          type="button"
+                          class="table-action-btn"
+                          aria-label="Edit note"
+                          (click)="openEditNoteModal(note, $index)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="table-action-btn delete-action-btn"
+                          aria-label="Delete note"
+                          (click)="openDeleteNoteModal($index)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+
+      @case ('documents') {
+        <section
+          class="details-card auxiliary-card documents-card"
+          aria-label="Inspection documents"
+        >
+          <div class="card-header">
+            <div>
+              <h2>Documents</h2>
+            </div>
+            <button type="button" class="primary-btn" (click)="openDocumentModal()">
+              Add Document
+            </button>
+          </div>
+
+          <div class="documents-table-wrap">
+            <table class="documents-table">
+              <thead>
+                <tr>
+                  <th>Name ▼</th>
+                  <th>File Name ▼</th>
+                  <th>Updated Date ▼</th>
+                  <th>Actions ▼</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  document of documentRows();
+                  track document.name + document.fileName + $index
+                ) {
+                  <tr>
+                    <td>{{ document.name }}</td>
+                    <td>{{ document.fileName }}</td>
+                    <td>{{ document.updatedDate }}</td>
+                    <td>
+                      <div class="notes-actions">
+                        <button
+                          type="button"
+                          class="table-action-btn"
+                          aria-label="Edit document"
+                          (click)="openEditDocumentModal(document, $index)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          class="table-action-btn"
+                          aria-label="Download document"
+                          (click)="downloadDocument(document)"
+                        >
+                          Download
+                        </button>
+                        <button
+                          type="button"
+                          class="table-action-btn delete-action-btn"
+                          aria-label="Delete document"
+                          (click)="openDeleteDocumentModal($index)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    }
+  </main>
+
+  @if (isAppointmentModalOpen()) {
+    <div class="appointment-modal-backdrop" (click)="closeAppointmentModal()">
+      <section
+        class="appointment-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="appointment-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="appointment-modal-header">
+          <h2 id="appointment-modal-title">Appointment Scheduler</h2>
+          <button
+            type="button"
+            class="appointment-modal-close"
+            aria-label="Close appointment scheduler"
+            (click)="closeAppointmentModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="appointment-form-grid">
+          <label class="appointment-field">
+            <span>Date</span>
+            <input
+              type="text"
+              [value]="appointmentDateInput()"
+              (input)="updateAppointmentDate($event)"
+            />
+          </label>
+
+          <label class="appointment-field">
+            <span>Time</span>
+            <input
+              type="text"
+              [value]="appointmentTimeInput()"
+              (input)="updateAppointmentTime($event)"
+            />
+          </label>
+
+          <label class="appointment-field">
+            <span>Location</span>
+            <input
+              type="text"
+              [value]="appointmentLocationInput()"
+              (input)="updateAppointmentLocation($event)"
+            />
+          </label>
+        </div>
+
+        <div class="appointment-submit-row">
+          <button type="button" class="primary-btn" (click)="continueAppointmentUpdate()">
+            Continue
+          </button>
+        </div>
+
+        <div class="upcoming-section">
+          <h3>Upcoming Appointments</h3>
+          <div class="upcoming-table-wrap">
+            <table class="upcoming-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Location</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  appointment of upcomingAppointments();
+                  track appointment.date + appointment.time + $index
+                ) {
+                  <tr>
+                    <td>{{ appointment.date }}</td>
+                    <td>{{ appointment.time }}</td>
+                    <td>{{ appointment.location }}</td>
+                    <td>
+                      <button
+                        type="button"
+                        class="primary-btn select-appointment-btn"
+                        (click)="selectAppointment(appointment)"
+                      >
+                        Select
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isAssignInspectorModalOpen()) {
+    <div class="assign-inspector-modal-backdrop" (click)="closeAssignInspectorModal()">
+      <section
+        class="assign-inspector-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assign-inspector-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="assign-inspector-modal-header">
+          <h2 id="assign-inspector-modal-title">Assign Inspector</h2>
+          <button
+            type="button"
+            class="assign-inspector-modal-close"
+            aria-label="Close assign inspector modal"
+            (click)="closeAssignInspectorModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="assign-inspector-controls">
+          <label class="assign-inspector-search">
+            <span>Search Inspectors</span>
+            <input
+              type="text"
+              [value]="inspectorSearchTerm()"
+              (input)="updateInspectorSearchTerm($event)"
+              placeholder="Search by inspector name"
+              autofocus
+            />
+          </label>
+
+          <div class="assign-inspector-filters" aria-label="Filter inspectors by status">
+            <button
+              type="button"
+              class="inspector-filter-chip"
+              [class.active]="inspectorStatusFilter() === 'All'"
+              (click)="setInspectorStatusFilter('All')"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              class="inspector-filter-chip"
+              [class.active]="inspectorStatusFilter() === 'Available'"
+              (click)="setInspectorStatusFilter('Available')"
+            >
+              Available
+            </button>
+            <button
+              type="button"
+              class="inspector-filter-chip"
+              [class.active]="inspectorStatusFilter() === 'Busy'"
+              (click)="setInspectorStatusFilter('Busy')"
+            >
+              Busy
+            </button>
+            <button
+              type="button"
+              class="inspector-filter-chip"
+              [class.active]="inspectorStatusFilter() === 'Offline'"
+              (click)="setInspectorStatusFilter('Offline')"
+            >
+              Offline
+            </button>
+          </div>
+        </div>
+
+        <div class="assign-inspector-table-wrap">
+          <table class="assign-inspector-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (filteredInspectors().length === 0) {
+                <tr>
+                  <td class="empty-state-cell" colspan="3">
+                    No inspectors match the current search and filter.
+                  </td>
+                </tr>
+              } @else {
+                @for (inspector of filteredInspectors(); track inspector.name) {
+                  <tr>
+                    <td>{{ inspector.name }}</td>
+                    <td>
+                      <span
+                        class="inspector-status-pill"
+                        [class.busy]="inspector.status === 'Busy'"
+                        [class.offline]="inspector.status === 'Offline'"
+                      >
+                        {{ inspector.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="primary-btn assign-inspector-select-btn"
+                        [disabled]="assignedInspector() === inspector.name"
+                        (click)="assignInspector(inspector)"
+                      >
+                        {{ assignedInspector() === inspector.name ? 'Assigned' : 'Select' }}
+                      </button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isNoteModalOpen()) {
+    <div class="note-modal-backdrop" (click)="closeNoteModal()">
+      <section
+        class="note-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="note-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="note-modal-header">
+          <h2 id="note-modal-title">{{ noteModalTitle() }}</h2>
+          <button
+            type="button"
+            class="note-modal-close"
+            aria-label="Close add note modal"
+            (click)="closeNoteModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="note-modal-body">
+          <label class="note-modal-field">
+            <span>Name</span>
+            <div class="note-select-wrap">
+              <select
+                class="note-input note-select"
+                [value]="noteNameInput()"
+                (change)="updateNoteName($event)"
+                autofocus
+              >
+                @for (option of noteNameOptions(); track option) {
+                  <option [value]="option">{{ option }}</option>
+                }
+              </select>
+            </div>
+          </label>
+
+          <label class="note-modal-field note-modal-field-wide">
+            <span>Description</span>
+            <textarea
+              class="note-input note-textarea"
+              [value]="noteDescriptionInput()"
+              (input)="updateNoteDescription($event)"
+            ></textarea>
+          </label>
+        </div>
+
+        <div class="note-modal-actions">
+          <button
+            type="button"
+            class="note-save-btn"
+            [disabled]="!canSaveNote()"
+            (click)="saveNote()"
+          >
+            {{ noteSubmitLabel() }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isDeleteNoteModalOpen()) {
+    <div class="note-delete-modal-backdrop" (click)="closeDeleteNoteModal()">
+      <section
+        class="note-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-note-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="note-delete-modal-header">
+          <h2 id="delete-note-modal-title">Delete Note</h2>
+          <button
+            type="button"
+            class="note-delete-modal-close"
+            aria-label="Close delete note modal"
+            (click)="closeDeleteNoteModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="note-delete-modal-body">
+          <p>
+            Delete
+            <strong>{{ pendingDeleteNote()?.name ?? 'this note' }}</strong>
+            from this inspection?
+          </p>
+          <p>This action cannot be undone.</p>
+        </div>
+
+        <div class="note-delete-modal-actions">
+          <button type="button" class="note-delete-cancel-btn" (click)="closeDeleteNoteModal()">
+            Cancel
+          </button>
+          <button type="button" class="note-delete-confirm-btn" (click)="confirmDeleteNote()">
+            Delete
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isDocumentModalOpen()) {
+    <div class="document-modal-backdrop" (click)="closeDocumentModal()">
+      <section
+        class="document-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="document-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="document-modal-header">
+          <h2 id="document-modal-title">{{ documentModalTitle() }}</h2>
+          <button
+            type="button"
+            class="document-modal-close"
+            aria-label="Close add document modal"
+            (click)="closeDocumentModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="document-modal-body">
+          <label class="document-modal-field">
+            <span>Name</span>
+            <div class="document-select-wrap">
+              <select
+                class="document-input document-select"
+                [value]="documentNameInput()"
+                (change)="updateDocumentName($event)"
+                autofocus
+              >
+                @for (option of noteNameOptions(); track option) {
+                  <option [value]="option">{{ option }}</option>
+                }
+              </select>
+            </div>
+          </label>
+
+          <label class="document-modal-field">
+            <span>File Name</span>
+            <input
+              type="text"
+              class="document-input"
+              [value]="documentFileNameInput()"
+              (input)="updateDocumentFileName($event)"
+              placeholder="Enter a document title"
+            />
+          </label>
+
+          <div class="document-modal-field">
+            <span>Upload</span>
+            <div class="document-upload-card">
+              <input
+                #documentUploadInput
+                type="file"
+                class="document-file-input"
+                (change)="updateDocumentUpload($event)"
+              />
+
+              <div class="document-upload-icon" aria-hidden="true">
+                <span class="document-upload-arrow"></span>
+              </div>
+
+              <p class="document-upload-copy">Drag and drop your file here or</p>
+
+              <button
+                type="button"
+                class="document-upload-link"
+                (click)="documentUploadInput.click()"
+              >
+                Select from device
+              </button>
+
+              @if (documentUploadName()) {
+                <div class="document-upload-pill">{{ documentUploadName() }}</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="document-modal-actions">
+          <button
+            type="button"
+            class="document-save-btn"
+            [disabled]="!canSaveDocument()"
+            (click)="saveDocument()"
+          >
+            {{ documentSubmitLabel() }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isDeleteDocumentModalOpen()) {
+    <div class="document-delete-modal-backdrop" (click)="closeDeleteDocumentModal()">
+      <section
+        class="document-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-document-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="document-delete-modal-header">
+          <h2 id="delete-document-modal-title">Delete Document</h2>
+          <button
+            type="button"
+            class="document-delete-modal-close"
+            aria-label="Close delete document modal"
+            (click)="closeDeleteDocumentModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="document-delete-modal-body">
+          <p>
+            Delete
+            <strong>{{ pendingDeleteDocument()?.fileName ?? 'this document' }}</strong>
+            from this inspection?
+          </p>
+          <p>This action cannot be undone.</p>
+        </div>
+
+        <div class="document-delete-modal-actions">
+          <button
+            type="button"
+            class="document-delete-cancel-btn"
+            (click)="closeDeleteDocumentModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="document-delete-confirm-btn"
+            (click)="confirmDeleteDocument()"
+          >
+            Delete
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

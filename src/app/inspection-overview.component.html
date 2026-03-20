@@ -1,0 +1,261 @@
+<div class="overview-page" data-node-id="17:177">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="overview-main">
+    <section class="overview-header">
+      <div>
+        <p class="eyebrow">Inspection Operations</p>
+        <h1>Inspection Plan Overview</h1>
+      </div>
+      <a class="back-link" routerLink="/">Back To Dashboard</a>
+    </section>
+
+    <section class="toolbar" aria-label="Filters and sorting">
+      <div class="toolbar-group">
+        <span>Filter by:</span>
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by due date</span>
+          <select [value]="dueDateFilter()" (change)="updateDueDateFilter($event)">
+            <option value="all">Due Date: All</option>
+            <option value="next-7-days">Due Date: Next 7 Days</option>
+            <option value="next-30-days">Due Date: 8 to 30 Days</option>
+            <option value="after-30-days">Due Date: After 30 Days</option>
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by priority score</span>
+          <select [value]="priorityFilter()" (change)="updatePriorityFilter($event)">
+            <option value="all">Priority Score: All</option>
+            <option value="high">Priority Score: High</option>
+            <option value="medium">Priority Score: Medium</option>
+            <option value="low">Priority Score: Low</option>
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by inspection status</span>
+          <select [value]="statusFilter()" (change)="updateStatusFilter($event)">
+            <option value="all">Status: All</option>
+            <option value="Scheduled">Status: Scheduled</option>
+            <option value="Planned">Status: Planned</option>
+            <option value="Good">Status: Good</option>
+            <option value="Satisfactory">Status: Satisfactory</option>
+            <option value="Unsatisfactory">Status: Unsatisfactory</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="toolbar-group">
+        <span>Sort by:</span>
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Sort by priority score</span>
+          <select [value]="selectedPrioritySort()" (change)="updatePrioritySort($event)">
+            <option value="default">Priority Score: Highest First</option>
+            <option value="desc">Priority Score: Highest First</option>
+            <option value="asc">Priority Score: Lowest First</option>
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Sort by status</span>
+          <select [value]="selectedStatusSort()" (change)="updateStatusSort($event)">
+            <option value="default">Status: Default</option>
+            <option value="asc">Status: A to Z</option>
+            <option value="desc">Status: Z to A</option>
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Sort by appointment</span>
+          <select [value]="selectedAppointmentSort()" (change)="updateAppointmentSort($event)">
+            <option value="default">Appointment: Default</option>
+            <option value="asc">Appointment: Soonest First</option>
+            <option value="desc">Appointment: Latest First</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Inspection plan table">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('subjectName')">
+                  Subject Name {{ sortIndicator('subjectName') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('nextDue')">
+                  Next Due {{ sortIndicator('nextDue') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('priority')">
+                  Priority {{ sortIndicator('priority') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('inspectionReason')">
+                  Inspection Reason {{ sortIndicator('inspectionReason') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('inspectionStatus')">
+                  Inspection Status {{ sortIndicator('inspectionStatus') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('inspectionType')">
+                  Inspection Type {{ sortIndicator('inspectionType') }}
+                </button>
+              </th>
+              <th>Actions ▼</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (visibleRows().length === 0) {
+              <tr>
+                <td class="empty-results-cell" colspan="7">
+                  No inspection plans match the selected filters.
+                </td>
+              </tr>
+            } @else {
+              @for (row of visibleRows(); track row.inspectionId) {
+                <tr>
+                  <td>
+                    <a
+                      class="subject-link"
+                      [routerLink]="['/inspection-overview/subject', row.subjectId]"
+                    >
+                      {{ row.subjectName }}
+                    </a>
+                  </td>
+                  <td>{{ row.nextDue }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="priority-trigger"
+                      (click)="openPriorityModal(row)"
+                      [attr.aria-label]="'View priority score details for ' + row.subjectName"
+                    >
+                      <span class="priority-cell">
+                        {{ row.priority }}
+                        <span class="priority-info" aria-hidden="true">?</span>
+                      </span>
+                    </button>
+                  </td>
+                  <td>{{ row.inspectionReason }}</td>
+                  <td>
+                    <a
+                      class="status-pill status-link"
+                      [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+                      [class.warning]="requiresAttention(row.inspectionStatus)"
+                      (click)="closePriorityModal()"
+                    >
+                      {{ row.inspectionStatus }}
+                    </a>
+                  </td>
+                  <td>{{ row.inspectionType }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="action-btn"
+                      [class.emphasis]="row.emphasizedAction"
+                      [routerLink]="['/inspection-overview/create-inspection']"
+                    >
+                      Create Inspection
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  @if (selectedPriorityContext(); as context) {
+    <div class="modal-backdrop" (click)="closePriorityModal()">
+      <section
+        class="priority-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="priority-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="priority-modal-header">
+          <div>
+            <p class="priority-modal-kicker">Priority Score</p>
+            <div class="priority-score-row">
+              <h2 id="priority-modal-title" class="priority-score-value">{{ context.score }}</h2>
+              <span
+                class="priority-chip"
+                [class.medium]="context.level === 'Medium'"
+                [class.low]="context.level === 'Low'"
+              >
+                <span class="priority-chip-dot" aria-hidden="true"></span>
+                {{ context.level }}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close-btn"
+            aria-label="Close priority score details"
+            (click)="closePriorityModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="priority-modal-divider"></div>
+
+        <div class="priority-modal-body">
+          <div class="priority-section">
+            <h3>Why This Is Prioritized</h3>
+            <p>{{ context.why }}</p>
+          </div>
+
+          <div class="priority-metrics-grid">
+            <div class="metric-block">
+              <h4>Last Inspection Score</h4>
+              <p>{{ context.lastInspectionScore }}</p>
+            </div>
+            <div class="metric-block">
+              <h4>Planning Cycle</h4>
+              <p>{{ context.planningCycle }}</p>
+            </div>
+            <div class="metric-block">
+              <h4>Last Inspected</h4>
+              <p>{{ context.lastInspected }}</p>
+            </div>
+            <div class="metric-block">
+              <h4>Entity Type</h4>
+              <p>{{ context.entityType }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+</div>
