@@ -1,0 +1,115 @@
+<div class="subject-page" data-node-id="166:533">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="subject-main">
+    <section class="subject-header">
+      <div class="title-group">
+        <h1>{{ subject().displayName }} <span class="caret">▾</span></h1>
+        <span class="status-badge">
+          <span class="status-dot" aria-hidden="true"></span>
+          {{ subject().subjectStatus }}
+        </span>
+      </div>
+      <a class="back-btn" routerLink="/inspection-overview">Back</a>
+    </section>
+
+    <section class="tabs" aria-label="Subject details tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'summary'"
+        (click)="showSummary()"
+      >
+        Summary
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'history'"
+        (click)="showHistory()"
+      >
+        Inspection History
+      </button>
+    </section>
+
+    @if (activeTab() === 'summary') {
+      <section class="details-card" aria-label="Subject information">
+        <h2>Subject Information</h2>
+        <div class="field-grid">
+          <div class="field">
+            <label>First Name</label>
+            <p>{{ subject().firstName }}</p>
+          </div>
+          <div class="field">
+            <label>Middle Name</label>
+            <p>{{ subject().middleName }}</p>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <p>{{ subject().lastName }}</p>
+          </div>
+          <div class="field">
+            <label>Subject Status</label>
+            <p>{{ subject().subjectStatus }}</p>
+          </div>
+          <div class="field">
+            <label>Subject Type</label>
+            <p>{{ subject().subjectType }}</p>
+          </div>
+          <div class="field">
+            <label>Next Due</label>
+            <p>{{ subject().nextDue }}</p>
+          </div>
+        </div>
+      </section>
+    } @else {
+      <section class="details-card" aria-label="Inspection history">
+        <h2>Inspection History</h2>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Inspection Reason</th>
+                <th>Inspection Status</th>
+                <th>Inspection Type</th>
+                <th>Completed On</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of history(); track item.completedOn + item.inspectionReason + $index) {
+                <tr>
+                  <td>{{ item.inspectionReason }}</td>
+                  <td>
+                    <span
+                      class="history-status-pill"
+                      [class.warning]="item.inspectionStatus === 'Planned'"
+                    >
+                      {{ item.inspectionStatus }}
+                    </span>
+                  </td>
+                  <td>{{ item.inspectionType }}</td>
+                  <td>{{ item.completedOn }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  </main>
+</div>
