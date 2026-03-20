@@ -1,0 +1,199 @@
+<div class="dashboard" data-node-id="173:3802">
+  <header class="top-nav" data-node-id="173:4736">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <div class="brand" aria-label="EIIP home">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </div>
+      <button type="button" class="tab-link">View CSTIMS</button>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <section class="title-row" data-node-id="173:4707" aria-label="Dashboard title">
+      <div class="title-block">
+        <h1>Supervisor Dashboard <span class="caret">▾</span></h1>
+        <div class="collaborators" aria-label="Collaborators">
+          @for (initial of collaboratorInitials(); track initial) {
+            <span class="avatar">{{ initial }}</span>
+          }
+          <span class="collaborator-line" aria-hidden="true">────────</span>
+        </div>
+      </div>
+      <button type="button" class="settings-btn" aria-label="Dashboard settings">⚙</button>
+    </section>
+
+    <section class="summary-header-row">
+      <h2>Weekly Summary</h2>
+      <a class="overview-btn" routerLink="/inspection-overview">View Inspection Overview</a>
+    </section>
+
+    <section class="summary-cards" aria-label="Weekly summary cards" data-node-id="173:4752">
+      @for (card of summaryCards(); track card.label) {
+        <article class="stat-card">
+          <div class="card-top">
+            <p>{{ card.label }}</p>
+            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
+          </div>
+          <strong>{{ card.value }}</strong>
+        </article>
+      }
+    </section>
+
+    <section class="section-heading-row">
+      <h2>Operational Visibility</h2>
+    </section>
+
+    <section class="visibility-grid" aria-label="Operational visibility panels">
+      <article class="panel examiner-panel">
+        <h3>Third Party Examiners</h3>
+        @if (examinerGroups()[0]; as group) {
+          <p class="total-line">
+            <strong>{{ group.total }}</strong> Total Active
+          </p>
+          <div class="progress-row">
+            <span>New</span>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="(group.newCount / group.total) * 100"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <span>Established</span>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="(group.established / group.total) * 100"
+              ></div>
+            </div>
+          </div>
+        }
+
+        <hr />
+
+        <h3>State Examiners</h3>
+        @if (examinerGroups()[1]; as stateGroup) {
+          <p class="total-line">
+            <strong>{{ stateGroup.total }}</strong> Total Active
+          </p>
+          <div class="progress-row">
+            <span>New</span>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="(stateGroup.newCount / stateGroup.total) * 100"
+              ></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <span>Established</span>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="(stateGroup.established / stateGroup.total) * 100"
+              ></div>
+            </div>
+          </div>
+        }
+
+        <hr />
+
+        <div class="totals-row">
+          <p>
+            Total Active <strong>{{ totalExaminers() }}</strong>
+          </p>
+          <p>
+            New (Total) <strong>{{ totalNewExaminers() }}</strong>
+          </p>
+        </div>
+      </article>
+
+      <div class="panel-stack">
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <h3>Inspection Results</h3>
+            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
+          </div>
+          <div class="bar-chart" aria-label="Inspection result chart">
+            @for (item of inspectionResults(); track item.label) {
+              <div class="bar-group">
+                <div class="bar-rail">
+                  <div
+                    class="bar"
+                    [style.height.%]="(item.value / inspectionResultsMax()) * 100"
+                  ></div>
+                </div>
+                <span>{{ item.label }}</span>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-header">
+            <h3>Reasons for Inspection</h3>
+            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
+          </div>
+          <div class="bar-chart" aria-label="Reasons for inspection chart">
+            @for (item of reasonsForInspection(); track item.label) {
+              <div class="bar-group">
+                <div class="bar-rail">
+                  <div
+                    class="bar"
+                    [style.height.%]="(item.value / reasonsForInspectionMax()) * 100"
+                  ></div>
+                </div>
+                <span>{{ item.label }}</span>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="activity-section" data-node-id="173:4705">
+      <h2>Recent Inspection Activity</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Subject Name ▼</th>
+              <th>Next Due ▼</th>
+              <th>Priority ▼</th>
+              <th>Inspection Reason ▼</th>
+              <th>Inspection Status ▼</th>
+              <th>Inspection Type ▼</th>
+              <th>Actions ▼</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of activityRows(); track $index) {
+              <tr>
+                <td>{{ row.subjectName }}</td>
+                <td>{{ row.nextDue }}</td>
+                <td>{{ row.priority }}</td>
+                <td>{{ row.inspectionReason }}</td>
+                <td>
+                  <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
+                    {{ row.inspectionStatus }}
+                  </span>
+                </td>
+                <td>{{ row.inspectionType }}</td>
+                <td><button type="button" class="action-btn">Create Inspection</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>

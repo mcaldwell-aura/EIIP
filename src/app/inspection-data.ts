@@ -1,0 +1,175 @@
+export type InspectionStatus = 'Scheduled' | 'Planned' | 'Good' | 'Satisfactory' | 'Unsatisfactory';
+
+export type InspectionType = 'Overt' | 'Covert';
+
+export type InspectionRecord = {
+  inspectionId: string;
+  subjectId: string;
+  subjectName: string;
+  nextDue: string;
+  priority: number;
+  inspectionReason: string;
+  inspectionStatus: InspectionStatus;
+  inspectionType: InspectionType;
+  emphasizedAction?: boolean;
+  assignedInspector: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  appointmentLocation: string;
+  notes: string[];
+  documents: string[];
+};
+
+export const INSPECTIONS: InspectionRecord[] = [
+  {
+    inspectionId: '892749',
+    subjectId: 'fred-johnson',
+    subjectName: 'Fred Johnson',
+    nextDue: '03-21-26',
+    priority: 93,
+    inspectionReason: 'ReExam Inspection',
+    inspectionStatus: 'Scheduled',
+    inspectionType: 'Overt',
+    assignedInspector: 'Monique Hale',
+    appointmentDate: '04-12-2026',
+    appointmentTime: '12:30pm MST',
+    appointmentLocation: 'Example Location',
+    notes: [
+      'Subject file reviewed and inspection scope confirmed with supervisory staff.',
+      'Pre-visit checklist completed and appointment confirmation sent.',
+    ],
+    documents: ['Inspection Brief.pdf', 'Prior Findings Summary.docx'],
+  },
+  {
+    inspectionId: '892751',
+    subjectId: 'jamie-carter',
+    subjectName: 'Jamie Carter',
+    nextDue: '03-21-26',
+    priority: 97,
+    inspectionReason: 'Complaint Review',
+    inspectionStatus: 'Planned',
+    inspectionType: 'Overt',
+    assignedInspector: 'Unassigned',
+    appointmentDate: '04-19-2026',
+    appointmentTime: '9:00am MST',
+    appointmentLocation: 'Phoenix Field Office',
+    notes: ['Planning packet is awaiting final scheduling approval.'],
+    documents: ['Complaint Intake.pdf'],
+  },
+  {
+    inspectionId: '892756',
+    subjectId: 'andrea-banks',
+    subjectName: 'Andrea Banks',
+    nextDue: '03-21-26',
+    priority: 98,
+    inspectionReason: 'Targeted Follow-up',
+    inspectionStatus: 'Scheduled',
+    inspectionType: 'Covert',
+    assignedInspector: 'Jordan Alvarez',
+    appointmentDate: '04-22-2026',
+    appointmentTime: '2:15pm MST',
+    appointmentLocation: 'Mesa Branch',
+    notes: ['Follow-up priority elevated due to repeat findings in prior quarter.'],
+    documents: ['Case Notes.txt', 'Risk Matrix.xlsx'],
+  },
+  {
+    inspectionId: '892760',
+    subjectId: 'maria-ellis',
+    subjectName: 'Maria Ellis',
+    nextDue: '03-21-26',
+    priority: 16,
+    inspectionReason: 'Routine Review',
+    inspectionStatus: 'Scheduled',
+    inspectionType: 'Overt',
+    assignedInspector: 'Darren Ng',
+    appointmentDate: '04-29-2026',
+    appointmentTime: '11:00am MST',
+    appointmentLocation: 'Tempe North',
+    notes: ['Routine site visit remains on schedule.'],
+    documents: ['Site Checklist.pdf'],
+  },
+  {
+    inspectionId: '892764',
+    subjectId: 'alec-wright',
+    subjectName: 'Alec Wright',
+    nextDue: '03-21-26',
+    priority: 12,
+    inspectionReason: 'Routine Review',
+    inspectionStatus: 'Scheduled',
+    inspectionType: 'Covert',
+    assignedInspector: 'Priya Shah',
+    appointmentDate: '05-02-2026',
+    appointmentTime: '8:45am MST',
+    appointmentLocation: 'Remote Review',
+    notes: ['Remote observation plan approved.'],
+    documents: ['Remote Review Packet.pdf'],
+  },
+  {
+    inspectionId: '892772',
+    subjectId: 'riley-clark',
+    subjectName: 'Riley Clark',
+    nextDue: '03-21-26',
+    priority: 95,
+    inspectionReason: 'Performance Review',
+    inspectionStatus: 'Good',
+    inspectionType: 'Covert',
+    emphasizedAction: true,
+    assignedInspector: 'Monique Hale',
+    appointmentDate: '03-30-2026',
+    appointmentTime: '10:30am MST',
+    appointmentLocation: 'Tucson Central',
+    notes: ['Prior findings resolved. Summary ready for closeout.'],
+    documents: ['Inspector Summary.pdf', 'Closeout Memo.docx'],
+  },
+  {
+    inspectionId: '892779',
+    subjectId: 'devon-mills',
+    subjectName: 'Devon Mills',
+    nextDue: '03-21-26',
+    priority: 15,
+    inspectionReason: 'Annual Review',
+    inspectionStatus: 'Satisfactory',
+    inspectionType: 'Overt',
+    emphasizedAction: true,
+    assignedInspector: 'Leah Stone',
+    appointmentDate: '04-05-2026',
+    appointmentTime: '1:00pm MST',
+    appointmentLocation: 'Flagstaff Office',
+    notes: ['Annual review package is complete and ready for archival.'],
+    documents: ['Annual Review.pdf'],
+  },
+  {
+    inspectionId: '892784',
+    subjectId: 'noah-brooks',
+    subjectName: 'Noah Brooks',
+    nextDue: '03-21-26',
+    priority: 97,
+    inspectionReason: 'Deficiency Review',
+    inspectionStatus: 'Unsatisfactory',
+    inspectionType: 'Covert',
+    emphasizedAction: true,
+    assignedInspector: 'Unassigned',
+    appointmentDate: '04-17-2026',
+    appointmentTime: '3:45pm MST',
+    appointmentLocation: 'Scottsdale East',
+    notes: ['Assignment pending supervisor review because additional resources may be needed.'],
+    documents: ['Deficiency Report.pdf', 'Escalation Worksheet.xlsx'],
+  },
+  {
+    inspectionId: '892790',
+    subjectId: 'taylor-owens',
+    subjectName: 'Taylor Owens',
+    nextDue: '03-21-26',
+    priority: 99,
+    inspectionReason: 'Corrective Action Review',
+    inspectionStatus: 'Unsatisfactory',
+    inspectionType: 'Overt',
+    emphasizedAction: true,
+    assignedInspector: 'Jordan Alvarez',
+    appointmentDate: '04-14-2026',
+    appointmentTime: '4:00pm MST',
+    appointmentLocation: 'Glendale Service Center',
+    notes: ['Corrective action follow-up requires updated evidence before completion.'],
+    documents: ['Corrective Action Plan.pdf', 'Evidence Checklist.docx'],
+  },
+];
