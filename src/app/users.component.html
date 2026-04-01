@@ -1,0 +1,152 @@
+<app-nav-menu />
+<div class="users-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="users-main">
+    <section class="users-header">
+      <div>
+        <p class="eyebrow">User Directory</p>
+        <h1>Users</h1>
+      </div>
+      <div class="header-actions">
+        <a class="primary-btn" routerLink="/users/add">Add User</a>
+        <a class="back-link" routerLink="/">Back To Dashboard</a>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="User filters">
+      <div class="toolbar-group search-group">
+        <label class="search-field">
+          <span class="visually-hidden">Search users by first or last name</span>
+          <input
+            type="search"
+            [value]="userSearchTerm()"
+            (input)="updateUserSearchTerm($event)"
+            placeholder="Search User Name"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-group">
+        <span>Filter by:</span>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by role</span>
+          <select [value]="roleFilter()" (change)="updateRoleFilter($event)">
+            <option value="all">Role: All</option>
+            @for (role of roles; track role) {
+              <option [value]="role">Role: {{ role }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by active status</span>
+          <select [value]="activeFilter()" (change)="updateActiveFilter($event)">
+            <option value="all">Status: All</option>
+            <option value="active">Status: Active</option>
+            <option value="inactive">Status: Inactive</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Users list">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('firstName')">
+                  First Name {{ sortIndicator('firstName') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('lastName')">
+                  Last Name {{ sortIndicator('lastName') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('role')">
+                  Role {{ sortIndicator('role') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('active')">
+                  Active {{ sortIndicator('active') }}
+                </button>
+              </th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (pagedRows().length === 0) {
+              <tr>
+                <td class="empty-results-cell" colspan="5">No users found.</td>
+              </tr>
+            } @else {
+              @for (row of pagedRows(); track row.userId) {
+                <tr>
+                  <td>{{ row.firstName }}</td>
+                  <td>{{ row.lastName }}</td>
+                  <td>{{ row.role }}</td>
+                  <td>{{ activeLabel(row.active) }}</td>
+                  <td class="action-cell">
+                    <a
+                      class="edit-btn"
+                      [routerLink]="['/users', row.userId, 'edit']"
+                      [attr.aria-label]="'Edit ' + row.firstName + ' ' + row.lastName"
+                    >
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-row">
+        <p class="pagination-copy">{{ pageSummary() }}</p>
+        <div class="pagination-actions">
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="!canGoToPreviousPage()"
+            (click)="goToPreviousPage()"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="!canGoToNextPage()"
+            (click)="goToNextPage()"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

@@ -1,12 +1,18 @@
+<app-nav-menu />
 <div class="subject-page" data-node-id="166:533">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
       <a class="brand" routerLink="/">
         <span class="brand-mark">✶</span>
         <span class="brand-text">EIIP</span>
       </a>
       <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
@@ -49,7 +55,7 @@
 
     @if (activeTab() === 'summary') {
       <section class="details-card" aria-label="Subject information">
-        <h2>Subject Information</h2>
+        <h2>Candidate Information</h2>
         <div class="field-grid">
           <div class="field">
             <label>First Name</label>

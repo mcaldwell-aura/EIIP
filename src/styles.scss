@@ -18,3 +18,31 @@ select,
 textarea {
   font: inherit;
 }
+
+.top-nav .nav-left {
+  gap: 0.55rem;
+}
+
+.top-nav .brand {
+  margin-right: 0.2rem;
+}
+
+.top-nav .nav-text-link {
+  flex: 0 1 auto;
+}
+
+@media (max-width: 1280px) {
+  .top-nav .tab-link {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1120px) {
+  .top-nav .nav-left {
+    gap: 0.45rem;
+  }
+
+  .top-nav .nav-text-link {
+    font-size: 0.8rem;
+  }
+}

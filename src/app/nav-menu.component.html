@@ -1,0 +1,35 @@
+@if (menuService.isOpen()) {
+  <!-- Backdrop -->
+  <div
+    class="menu-backdrop"
+    (click)="close()"
+    (keydown.escape)="close()"
+    role="presentation"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Drawer -->
+  <nav class="menu-drawer" role="navigation" aria-label="Main navigation menu">
+    <div class="menu-header">
+      <div class="menu-brand">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </div>
+      <button type="button" class="menu-close-btn" (click)="close()" aria-label="Close menu">
+        ✕
+      </button>
+    </div>
+
+    <div class="menu-section">
+      <p class="menu-section-label">Menu</p>
+      <ul class="menu-list">
+        <li>
+          <a class="menu-item" routerLink="/users" (click)="close()">
+            <span class="menu-item-icon" aria-hidden="true">◷</span>
+            Users
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+}

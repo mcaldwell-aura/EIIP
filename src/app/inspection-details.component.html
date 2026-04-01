@@ -1,12 +1,18 @@
+<app-nav-menu />
 <div class="details-page">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
       <a class="brand" routerLink="/">
         <span class="brand-mark">✶</span>
         <span class="brand-text">EIIP</span>
       </a>
       <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
@@ -22,13 +28,21 @@
         <div>
           <div class="title-row">
             <h1>Inspection #{{ inspection().inspectionId }}</h1>
-            <span
+            <label
               class="status-badge"
-              [class.warning]="requiresAttention(inspection().inspectionStatus)"
+              [class.warning]="requiresAttention(currentInspectionStatus())"
             >
               <span class="status-dot" aria-hidden="true"></span>
-              {{ inspection().inspectionStatus }}
-            </span>
+              <select
+                aria-label="Inspection status"
+                [value]="currentInspectionStatus()"
+                (change)="updateInspectionStatus($event)"
+              >
+                @for (status of inspectionStatusOptions; track status) {
+                  <option [value]="status">{{ status }}</option>
+                }
+              </select>
+            </label>
           </div>
         </div>
 
@@ -46,6 +60,14 @@
         (click)="selectTab('summary')"
       >
         Summary
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'appointments'"
+        (click)="selectTab('appointments')"
+      >
+        Appointments
       </button>
       <button
         type="button"
@@ -68,73 +90,131 @@
     @switch (activeTab()) {
       @case ('summary') {
         <section class="content-grid">
-          <article class="details-card feature-card" aria-label="Inspection information">
-            <div class="card-header">
+          <article class="details-card summary-form-card" aria-label="Inspection summary form">
+            <div class="card-header solo-header">
               <div>
-                <h2>Inspection Information</h2>
+                <h2>Summary</h2>
               </div>
             </div>
 
-            <div class="field-grid">
-              <div class="field">
-                <label>Inspection ID</label>
-                <p>{{ inspection().inspectionId }}</p>
-              </div>
-              <div class="field">
-                <label>Inspection Status</label>
-                <p>{{ inspection().inspectionStatus }}</p>
-              </div>
-              <div class="field">
-                <label>Inspection Type</label>
-                <p>{{ inspection().inspectionType }}</p>
-              </div>
-              <div class="field field-wide">
-                <label>Subject Name</label>
-                <p>{{ inspection().subjectName }}</p>
-              </div>
-              <div class="field field-wide field-with-action">
-                <label>Assigned Inspector</label>
+            <div class="summary-field-grid">
+              <label class="summary-field">
+                <span>Candidate</span>
+                <input type="text" [value]="summaryForm().candidate" readonly />
+              </label>
+
+              <div class="summary-field summary-field-with-action">
+                <span>Inspector (Optional)</span>
                 <div class="field-action-row">
-                  <p [class.placeholder]="!isAssigned(assignedInspector())">
-                    {{ assignedInspector() }}
-                  </p>
+                  <input
+                    type="text"
+                    [value]="summaryForm().inspector"
+                    (input)="updateSummaryInspector($event)"
+                    placeholder="Search active users"
+                    list="active-inspector-options"
+                  />
                   <button type="button" class="assign-btn" (click)="openAssignInspectorModal()">
                     Assign Inspector
                   </button>
                 </div>
               </div>
-              <div class="field field-wide reason-field">
-                <label>Inspection Reason</label>
-                <p>{{ inspection().inspectionReason }}</p>
-              </div>
+
+              <label class="summary-field">
+                <span>Inspection Reason</span>
+                <select
+                  [value]="summaryForm().inspectionReason"
+                  (change)="updateSummaryInspectionReason($event)"
+                  required
+                >
+                  <option value="" disabled>Select reason</option>
+                  @for (reason of inspectionReasonOptions; track reason) {
+                    <option [value]="reason">{{ reason }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="summary-field">
+                <span>Inspection Type</span>
+                <select
+                  [value]="summaryForm().inspectionType"
+                  (change)="updateSummaryInspectionType($event)"
+                  required
+                >
+                  <option value="" disabled>Select type</option>
+                  @for (inspectionType of inspectionTypeOptions; track inspectionType) {
+                    <option [value]="inspectionType">{{ inspectionType }}</option>
+                  }
+                </select>
+              </label>
             </div>
+
+            <datalist id="active-inspector-options">
+              @for (inspector of activeInspectorOptions(); track inspector.name) {
+                <option [value]="inspector.name"></option>
+              }
+            </datalist>
           </article>
 
-          <article class="details-card appointment-card" aria-label="Appointment details">
-            <div class="card-header">
-              <div>
-                <h2>Appointment Details</h2>
-              </div>
-              <button type="button" class="primary-btn" (click)="openAppointmentModal()">
-                Update Appointment
-              </button>
-            </div>
+          <div class="summary-save-row">
+            <button
+              type="button"
+              class="primary-btn"
+              [disabled]="!canSaveSummary()"
+              (click)="saveSummary()"
+            >
+              Save
+            </button>
+          </div>
+        </section>
+      }
 
-            <div class="field-grid compact-grid">
-              <div class="field">
-                <label>Date</label>
-                <p>{{ inspection().appointmentDate }}</p>
-              </div>
-              <div class="field">
-                <label>Time</label>
-                <p>{{ inspection().appointmentTime }}</p>
-              </div>
-              <div class="field">
-                <label>Location</label>
-                <p>{{ inspection().appointmentLocation }}</p>
-              </div>
+      @case ('appointments') {
+        <section
+          class="details-card auxiliary-card appointments-card"
+          aria-label="Inspection appointments"
+        >
+          <div class="card-header">
+            <div>
+              <h2>Appointments</h2>
             </div>
-          </article>
+            <button type="button" class="primary-btn" (click)="openNewAppointmentModal()">
+              New Appointment
+            </button>
+          </div>
+
+          <div class="appointments-table-wrap">
+            <table class="appointments-table">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Location</th>
+                  <th>Comments</th>
+                  <th>Actions ▼</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (appointment of appointmentRows(); track appointment.dateTime + $index) {
+                  <tr>
+                    <td>{{ appointment.dateTime }}</td>
+                    <td>{{ appointment.location || 'N/A' }}</td>
+                    <td>{{ appointment.comments || 'N/A' }}</td>
+                    <td class="appointment-actions-cell">
+                      <div class="appointment-actions">
+                        <button
+                          type="button"
+                          class="table-action-btn"
+                          aria-label="Edit appointment"
+                          (click)="openAppointmentRowModal(appointment, $index)"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </section>
       }
 
@@ -262,6 +342,16 @@
     }
   </main>
 
+  @if (showSaveToast()) {
+    <div class="save-toast" role="status" aria-live="polite">Inspection saved successfully</div>
+  }
+
+  @if (showAppointmentCreatedToast()) {
+    <div class="save-toast appointment-created-toast" role="status" aria-live="polite">
+      Appointment created successfully
+    </div>
+  }
+
   @if (isAppointmentModalOpen()) {
     <div class="appointment-modal-backdrop" (click)="closeAppointmentModal()">
       <section
@@ -272,33 +362,44 @@
         (click)="$event.stopPropagation()"
       >
         <div class="appointment-modal-header">
-          <h2 id="appointment-modal-title">Appointment Scheduler</h2>
-          <button
-            type="button"
-            class="appointment-modal-close"
-            aria-label="Close appointment scheduler"
-            (click)="closeAppointmentModal()"
-          >
-            ×
-          </button>
+          <h2 id="appointment-modal-title">
+            {{ appointmentModalMode() === 'create' ? 'New Appointment' : 'Appointment Details' }}
+          </h2>
+          <div class="appointment-modal-header-actions">
+            <label
+              class="status-badge appointment-status-badge"
+              [class.warning]="appointmentStatusInput() === 'Canceled'"
+            >
+              <span class="status-dot" aria-hidden="true"></span>
+              <select
+                aria-label="Appointment status"
+                [value]="appointmentStatusInput()"
+                (change)="updateAppointmentStatus($event)"
+              >
+                @for (status of appointmentStatusOptions; track status) {
+                  <option [value]="status">{{ status }}</option>
+                }
+              </select>
+            </label>
+
+            <button
+              type="button"
+              class="appointment-modal-close"
+              aria-label="Close appointment details"
+              (click)="closeAppointmentModal()"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <div class="appointment-form-grid">
           <label class="appointment-field">
-            <span>Date</span>
+            <span>Date/Time</span>
             <input
               type="text"
-              [value]="appointmentDateInput()"
-              (input)="updateAppointmentDate($event)"
-            />
-          </label>
-
-          <label class="appointment-field">
-            <span>Time</span>
-            <input
-              type="text"
-              [value]="appointmentTimeInput()"
-              (input)="updateAppointmentTime($event)"
+              [value]="appointmentDateTimeInput()"
+              (input)="updateAppointmentDateTime($event)"
             />
           </label>
 
@@ -310,49 +411,31 @@
               (input)="updateAppointmentLocation($event)"
             />
           </label>
+
+          <label class="appointment-field appointment-field-wide">
+            <span>Comments</span>
+            <textarea
+              [value]="appointmentCommentsInput()"
+              (input)="updateAppointmentComments($event)"
+            ></textarea>
+          </label>
         </div>
+
+        @if (appointmentValidationMessage()) {
+          <p class="appointment-validation-message" role="alert">
+            {{ appointmentValidationMessage() }}
+          </p>
+        }
 
         <div class="appointment-submit-row">
-          <button type="button" class="primary-btn" (click)="continueAppointmentUpdate()">
-            Continue
+          <button
+            type="button"
+            class="primary-btn"
+            [disabled]="!canSaveAppointment()"
+            (click)="saveAppointment()"
+          >
+            {{ appointmentModalMode() === 'create' ? 'Create Appointment' : 'Save' }}
           </button>
-        </div>
-
-        <div class="upcoming-section">
-          <h3>Upcoming Appointments</h3>
-          <div class="upcoming-table-wrap">
-            <table class="upcoming-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Location</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (
-                  appointment of upcomingAppointments();
-                  track appointment.date + appointment.time + $index
-                ) {
-                  <tr>
-                    <td>{{ appointment.date }}</td>
-                    <td>{{ appointment.time }}</td>
-                    <td>{{ appointment.location }}</td>
-                    <td>
-                      <button
-                        type="button"
-                        class="primary-btn select-appointment-btn"
-                        (click)="selectAppointment(appointment)"
-                      >
-                        Select
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
         </div>
       </section>
     </div>

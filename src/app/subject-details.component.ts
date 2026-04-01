@@ -1,5 +1,7 @@
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NavMenuComponent } from './nav-menu.component';
+import { NavMenuService } from './nav-menu.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 type SubjectProfile = {
@@ -125,13 +127,14 @@ const SUBJECTS: Record<string, SubjectProfile> = {
 
 @Component({
   selector: 'app-subject-details',
-  imports: [RouterLink],
+  imports: [RouterLink, NavMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './subject-details.component.html',
   styleUrl: './subject-details.component.scss',
 })
 export class SubjectDetailsComponent {
   private readonly route = inject(ActivatedRoute);
+  protected readonly menuService = inject(NavMenuService);
   private readonly paramMap = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });

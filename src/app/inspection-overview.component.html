@@ -1,12 +1,18 @@
+<app-nav-menu />
 <div class="overview-page" data-node-id="17:177">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
       <a class="brand" routerLink="/">
         <span class="brand-mark">✶</span>
         <span class="brand-text">EIIP</span>
       </a>
       <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
@@ -52,6 +58,7 @@
           <span class="visually-hidden">Filter by inspection status</span>
           <select [value]="statusFilter()" (change)="updateStatusFilter($event)">
             <option value="all">Status: All</option>
+            <option value="Pending">Status: Pending</option>
             <option value="Scheduled">Status: Scheduled</option>
             <option value="Planned">Status: Planned</option>
             <option value="Good">Status: Good</option>
@@ -99,7 +106,7 @@
             <tr>
               <th>
                 <button type="button" class="column-sort-btn" (click)="setSort('subjectName')">
-                  Subject Name {{ sortIndicator('subjectName') }}
+                  Candidate Name {{ sortIndicator('subjectName') }}
                 </button>
               </th>
               <th>
@@ -113,13 +120,13 @@
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('inspectionReason')">
-                  Inspection Reason {{ sortIndicator('inspectionReason') }}
+                <button type="button" class="column-sort-btn" (click)="setSort('inspectionStatus')">
+                  Inspection Status {{ sortIndicator('inspectionStatus') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('inspectionStatus')">
-                  Inspection Status {{ sortIndicator('inspectionStatus') }}
+                <button type="button" class="column-sort-btn" (click)="setSort('inspectionReason')">
+                  Inspection Reason {{ sortIndicator('inspectionReason') }}
                 </button>
               </th>
               <th>
@@ -127,13 +134,18 @@
                   Inspection Type {{ sortIndicator('inspectionType') }}
                 </button>
               </th>
-              <th>Actions ▼</th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('appointment')">
+                  Appointment {{ sortIndicator('appointment') }}
+                </button>
+              </th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             @if (visibleRows().length === 0) {
               <tr>
-                <td class="empty-results-cell" colspan="7">
+                <td class="empty-results-cell" colspan="8">
                   No inspection plans match the selected filters.
                 </td>
               </tr>
@@ -162,7 +174,6 @@
                       </span>
                     </button>
                   </td>
-                  <td>{{ row.inspectionReason }}</td>
                   <td>
                     <a
                       class="status-pill status-link"
@@ -173,16 +184,31 @@
                       {{ row.inspectionStatus }}
                     </a>
                   </td>
+                  <td>{{ row.inspectionReason }}</td>
                   <td>{{ row.inspectionType }}</td>
                   <td>
-                    <button
-                      type="button"
-                      class="action-btn"
-                      [class.emphasis]="row.emphasizedAction"
-                      [routerLink]="['/inspection-overview/create-inspection']"
-                    >
-                      Create Inspection
-                    </button>
+                    @if (row.appointmentTooltip) {
+                      <span class="appointment-chip" [attr.title]="row.appointmentTooltip">
+                        {{ row.appointmentText }}
+                      </span>
+                    } @else {
+                      <span class="appointment-empty">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (row.canCreateInspection) {
+                      <button
+                        type="button"
+                        class="action-btn icon-action-btn"
+                        [attr.aria-label]="'Create a new inspection for ' + row.subjectName"
+                        (click)="openNewInspectionModal(row)"
+                      >
+                        <span class="action-icon" aria-hidden="true">＋</span>
+                        New Inspection
+                      </button>
+                    } @else {
+                      <span class="action-placeholder">—</span>
+                    }
                   </td>
                 </tr>
               }
@@ -254,6 +280,186 @@
               <p>{{ context.entityType }}</p>
             </div>
           </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (isNewInspectionModalOpen() && newInspectionCandidate(); as candidate) {
+    <div class="modal-backdrop" (click)="closeNewInspectionModal()">
+      <section
+        class="new-inspection-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-inspection-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="new-inspection-modal-header">
+          <div>
+            <p class="priority-modal-kicker">Create Inspection</p>
+            <h2 id="new-inspection-modal-title">New Inspection</h2>
+          </div>
+
+          <button
+            type="button"
+            class="modal-close-btn"
+            aria-label="Close new inspection modal"
+            (click)="closeNewInspectionModal()"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="priority-modal-divider"></div>
+
+        <div class="new-inspection-modal-body">
+          <label class="new-inspection-field new-inspection-field-wide">
+            <span>Candidate Name</span>
+            <input type="text" [value]="candidate.subjectName" readonly />
+          </label>
+
+          <label class="new-inspection-field">
+            <span>Inspection Reason *</span>
+            <select [value]="inspectionReasonInput()" (change)="updateInspectionReason($event)">
+              <option value="" disabled>Select reason</option>
+              @for (reason of inspectionReasonOptions; track reason) {
+                <option [value]="reason">{{ reason }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="new-inspection-field">
+            <span>Inspection Type *</span>
+            <select [value]="inspectionTypeInput()" (change)="updateInspectionType($event)">
+              <option value="" disabled>Select type</option>
+              @for (inspectionType of inspectionTypeOptions; track inspectionType) {
+                <option [value]="inspectionType">{{ inspectionType }}</option>
+              }
+            </select>
+          </label>
+
+          <section
+            class="new-inspection-section new-inspection-field-wide"
+            aria-label="Inspector selection"
+          >
+            <div class="new-inspection-section-header">
+              <h3>Inspector</h3>
+              <span>Optional</span>
+            </div>
+
+            <label class="new-inspection-field search-field-inline">
+              <span class="visually-hidden">Search active inspectors</span>
+              <input
+                type="search"
+                [value]="inspectorSearchTerm()"
+                (input)="updateInspectorSearchTerm($event)"
+                placeholder="Search active users"
+              />
+            </label>
+
+            <div class="selection-list" role="listbox" aria-label="Active users">
+              @for (inspectorName of activeInspectorNames(); track inspectorName) {
+                <label class="selection-option">
+                  <input
+                    type="checkbox"
+                    [checked]="isInspectorSelected(inspectorName)"
+                    (change)="toggleInspectorSelection(inspectorName)"
+                  />
+                  <span>{{ inspectorName }}</span>
+                </label>
+              }
+            </div>
+
+            @if (selectedInspectors().length > 0) {
+              <div class="selected-pill-list" aria-label="Selected inspectors">
+                @for (inspectorName of selectedInspectors(); track inspectorName) {
+                  <span class="selected-pill">{{ inspectorName }}</span>
+                }
+              </div>
+            }
+          </section>
+
+          <section
+            class="new-inspection-section new-inspection-field-wide"
+            aria-label="Appointment section"
+          >
+            <div class="new-inspection-section-header">
+              <h3>Appointment</h3>
+              <span>Optional</span>
+            </div>
+
+            <div class="appointment-inline-grid">
+              <label class="new-inspection-field">
+                <span>Inspection Date</span>
+                <input
+                  type="datetime-local"
+                  [value]="appointmentDateTimeInput()"
+                  (input)="updateAppointmentDateTime($event)"
+                />
+              </label>
+
+              <label class="new-inspection-field">
+                <span>Inspection Location</span>
+                <input
+                  type="search"
+                  list="active-location-options"
+                  [value]="appointmentLocationInput()"
+                  (input)="updateAppointmentLocation($event)"
+                  placeholder="Search active locations"
+                />
+              </label>
+            </div>
+
+            <datalist id="active-location-options">
+              @for (locationName of activeLocationNames; track locationName) {
+                <option [value]="locationName"></option>
+              }
+            </datalist>
+
+            <div class="appointment-inline-actions">
+              <button
+                type="button"
+                class="secondary-modal-btn add-appointment-btn"
+                (click)="addAppointment()"
+              >
+                Add Appointment
+              </button>
+            </div>
+
+            @if (stagedAppointments().length > 0) {
+              <div class="staged-appointments-list">
+                @for (
+                  appointment of stagedAppointments();
+                  track appointment.dateTime + appointment.location + $index
+                ) {
+                  <div class="staged-appointment-row">
+                    <div>
+                      <strong>{{ appointment.dateTime || 'TBD' }}</strong>
+                      <p>{{ appointment.location || 'No location selected' }}</p>
+                    </div>
+                    <button
+                      type="button"
+                      class="text-action-btn"
+                      (click)="removeAppointment($index)"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+
+          @if (newInspectionValidationMessage()) {
+            <p class="modal-validation-message">{{ newInspectionValidationMessage() }}</p>
+          }
+        </div>
+
+        <div class="new-inspection-modal-footer">
+          <button type="button" class="secondary-modal-btn" (click)="closeNewInspectionModal()">
+            Cancel
+          </button>
+          <button type="button" class="action-btn" (click)="saveNewInspection()">Save</button>
         </div>
       </section>
     </div>

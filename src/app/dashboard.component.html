@@ -1,12 +1,18 @@
+<app-nav-menu />
 <div class="dashboard" data-node-id="173:3802">
   <header class="top-nav" data-node-id="173:4736">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
       <div class="brand" aria-label="EIIP home">
         <span class="brand-mark">✶</span>
         <span class="brand-text">EIIP</span>
       </div>
       <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
@@ -19,7 +25,7 @@
   <main class="dashboard-main">
     <section class="title-row" data-node-id="173:4707" aria-label="Dashboard title">
       <div class="title-block">
-        <h1>Supervisor Dashboard <span class="caret">▾</span></h1>
+        <h1>Dashboard</h1>
         <div class="collaborators" aria-label="Collaborators">
           @for (initial of collaboratorInitials(); track initial) {
             <span class="avatar">{{ initial }}</span>
@@ -52,70 +58,31 @@
     </section>
 
     <section class="visibility-grid" aria-label="Operational visibility panels">
-      <article class="panel examiner-panel">
-        <h3>Third Party Examiners</h3>
-        @if (examinerGroups()[0]; as group) {
-          <p class="total-line">
-            <strong>{{ group.total }}</strong> Total Active
-          </p>
-          <div class="progress-row">
-            <span>New</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(group.newCount / group.total) * 100"
-              ></div>
-            </div>
+      <div class="visibility-counters">
+        <article class="panel counter-panel">
+          <div class="counter-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path
+                d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3 0-7 1.5-7 4.5V20h14v-2.5C16 14.5 12 13 9 13Zm9.5-2.5a3.5 3.5 0 1 0-2.55-5.9 5.8 5.8 0 0 1 0 4.8 3.49 3.49 0 0 0 2.55 1.1Zm.5 2.5c-.72 0-1.52.08-2.35.24A6.5 6.5 0 0 1 18 17.5V20h4v-1.7c0-2.23-1.87-4.03-5-4.3Z"
+              />
+            </svg>
           </div>
-          <div class="progress-row">
-            <span>Established</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(group.established / group.total) * 100"
-              ></div>
-            </div>
+          <h3>Active Examiners</h3>
+          <p class="counter-value">{{ totalExaminers() }}</p>
+        </article>
+
+        <article class="panel counter-panel due-counter-panel">
+          <h3>Inspections Due</h3>
+          <div class="due-counter-grid">
+            @for (counter of inspectionsDueCounters(); track counter.label) {
+              <div class="due-counter-item">
+                <span class="due-counter-label">Next {{ counter.label }}</span>
+                <strong class="due-counter-value-pill">{{ counter.count }}</strong>
+              </div>
+            }
           </div>
-        }
-
-        <hr />
-
-        <h3>State Examiners</h3>
-        @if (examinerGroups()[1]; as stateGroup) {
-          <p class="total-line">
-            <strong>{{ stateGroup.total }}</strong> Total Active
-          </p>
-          <div class="progress-row">
-            <span>New</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(stateGroup.newCount / stateGroup.total) * 100"
-              ></div>
-            </div>
-          </div>
-          <div class="progress-row">
-            <span>Established</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(stateGroup.established / stateGroup.total) * 100"
-              ></div>
-            </div>
-          </div>
-        }
-
-        <hr />
-
-        <div class="totals-row">
-          <p>
-            Total Active <strong>{{ totalExaminers() }}</strong>
-          </p>
-          <p>
-            New (Total) <strong>{{ totalNewExaminers() }}</strong>
-          </p>
-        </div>
-      </article>
+        </article>
+      </div>
 
       <div class="panel-stack">
         <article class="panel chart-panel">
@@ -162,33 +129,147 @@
 
     <section class="activity-section" data-node-id="173:4705">
       <h2>Recent Inspection Activity</h2>
+      <section class="activity-toolbar" aria-label="Activity filters and sorting">
+        <div class="toolbar-group">
+          <span>Filter by:</span>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection type</span>
+            <select [value]="activityTypeFilter()" (change)="updateActivityTypeFilter($event)">
+              <option value="all">Inspection Type: All</option>
+              <option value="Overt">Inspection Type: Overt</option>
+              <option value="Covert">Inspection Type: Covert</option>
+            </select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection reason</span>
+            <select [value]="activityReasonFilter()" (change)="updateActivityReasonFilter($event)">
+              <option value="all">Reason: All</option>
+              <option value="Follow Up">Reason: Follow Up</option>
+              <option value="Investigate">Reason: Investigate</option>
+              <option value="Biennial">Reason: Biennial</option>
+              <option value="Re-Examination">Reason: Re-Examination</option>
+            </select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection status</span>
+            <select [value]="activityStatusFilter()" (change)="updateActivityStatusFilter($event)">
+              <option value="all">Status: All</option>
+              <option value="Completed">Status: Completed</option>
+              <option value="Closed">Status: Closed</option>
+              <option value="In Review">Status: In Review</option>
+              <option value="Escalated">Status: Escalated</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="toolbar-group">
+          <span>Sort by:</span>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by inspection date</span>
+            <select [value]="selectedDateSort()" (change)="updateActivityDateSort($event)">
+              <option value="default">Inspection Date: Newest First</option>
+              <option value="desc">Inspection Date: Newest First</option>
+              <option value="asc">Inspection Date: Oldest First</option>
+            </select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by candidate name</span>
+            <select
+              [value]="selectedCandidateSort()"
+              (change)="updateActivityCandidateSort($event)"
+            >
+              <option value="default">Candidate Name: Default</option>
+              <option value="asc">Candidate Name: A to Z</option>
+              <option value="desc">Candidate Name: Z to A</option>
+            </select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by priority</span>
+            <select [value]="selectedPrioritySort()" (change)="updateActivityPrioritySort($event)">
+              <option value="default">Priority: Highest First</option>
+              <option value="desc">Priority: Highest First</option>
+              <option value="asc">Priority: Lowest First</option>
+            </select>
+          </label>
+        </div>
+      </section>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Subject Name ▼</th>
-              <th>Next Due ▼</th>
-              <th>Priority ▼</th>
-              <th>Inspection Reason ▼</th>
-              <th>Inspection Status ▼</th>
-              <th>Inspection Type ▼</th>
-              <th>Actions ▼</th>
+              <th [attr.aria-sort]="getAriaSort('candidateName')">
+                <button type="button" class="sort-btn" (click)="setActivitySort('candidateName')">
+                  Candidate Name {{ getSortIndicator('candidateName') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionDate')">
+                <button type="button" class="sort-btn" (click)="setActivitySort('inspectionDate')">
+                  Inspection Date {{ getSortIndicator('inspectionDate') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('nextDue')">
+                <button type="button" class="sort-btn" (click)="setActivitySort('nextDue')">
+                  Next Due {{ getSortIndicator('nextDue') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('priority')">
+                <button type="button" class="sort-btn" (click)="setActivitySort('priority')">
+                  Priority {{ getSortIndicator('priority') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionReason')">
+                <button
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionReason')"
+                >
+                  Inspection Reason {{ getSortIndicator('inspectionReason') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionType')">
+                <button type="button" class="sort-btn" (click)="setActivitySort('inspectionType')">
+                  Inspection Type {{ getSortIndicator('inspectionType') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionStatus')">
+                <button
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionStatus')"
+                >
+                  Inspection Status {{ getSortIndicator('inspectionStatus') }}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (row of activityRows(); track $index) {
+            @for (
+              row of filteredSortedActivityRows();
+              track row.candidateName + row.inspectionDate
+            ) {
               <tr>
-                <td>{{ row.subjectName }}</td>
-                <td>{{ row.nextDue }}</td>
+                <td>{{ row.candidateName }}</td>
+                <td>{{ formatDateTime(row.inspectionDate) }}</td>
+                <td>{{ formatDate(row.nextDue) }}</td>
                 <td>{{ row.priority }}</td>
                 <td>{{ row.inspectionReason }}</td>
+                <td>{{ row.inspectionType }}</td>
                 <td>
                   <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
                     {{ row.inspectionStatus }}
                   </span>
                 </td>
-                <td>{{ row.inspectionType }}</td>
-                <td><button type="button" class="action-btn">Create Inspection</button></td>
+              </tr>
+            }
+            @if (!filteredSortedActivityRows().length) {
+              <tr>
+                <td class="empty-message" colspan="7">No inspections match the current filter.</td>
               </tr>
             }
           </tbody>

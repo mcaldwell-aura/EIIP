@@ -1,0 +1,124 @@
+<app-nav-menu />
+<div class="edit-user-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="details-main">
+    <section class="page-header">
+      <div class="title-wrap">
+        <div class="title-row">
+          <h1>Add User</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <article class="details-card">
+        <div class="card-header solo-header">
+          <h2>Add User</h2>
+        </div>
+
+        @if (showSearchStep()) {
+          <div class="search-form-row">
+            <div class="summary-field search-field-wide">
+              <span>Username *</span>
+              <input type="text" [value]="username()" (input)="updateUsername($event)" />
+              @if (usernameValidationMessage()) {
+                <p class="validation-message">{{ usernameValidationMessage() }}</p>
+              }
+            </div>
+
+            <div class="search-action-row">
+              <button type="button" class="primary-btn" (click)="searchUser()">Search</button>
+              <button type="button" class="back-btn" (click)="cancelSearch()">Cancel</button>
+            </div>
+          </div>
+        }
+
+        @if (showDetailsStep()) {
+          <div class="summary-field-grid add-user-grid">
+            <div class="summary-field">
+              <span>Username</span>
+              <input type="text" [value]="matchedUsername()" readonly />
+            </div>
+
+            <div class="summary-field">
+              <span>First Name</span>
+              <input type="text" [value]="matchedFirstName()" readonly />
+            </div>
+
+            <div class="summary-field">
+              <span>Last Name</span>
+              <input type="text" [value]="matchedLastName()" readonly />
+            </div>
+
+            <div class="summary-field summary-field-wide">
+              <span>Email *</span>
+              <input type="email" [value]="email()" (input)="updateEmail($event)" />
+              @if (emailValidationMessage()) {
+                <p class="validation-message">{{ emailValidationMessage() }}</p>
+              }
+            </div>
+
+            <div class="summary-field checkbox-field">
+              <span>Active</span>
+              <label class="checkbox-row">
+                <input
+                  type="checkbox"
+                  [checked]="activeChecked()"
+                  (change)="updateActive($event)"
+                />
+                <span>Active</span>
+              </label>
+            </div>
+
+            <div class="summary-field">
+              <span>Role *</span>
+              <select [value]="role()" (change)="updateRole($event)">
+                <option value="">Select a role</option>
+                @for (roleOption of assignableRoles; track roleOption) {
+                  <option [value]="roleOption">{{ roleOption }}</option>
+                }
+              </select>
+              @if (roleValidationMessage()) {
+                <p class="validation-message">{{ roleValidationMessage() }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="summary-save-row add-user-actions">
+            <button type="button" class="back-btn" (click)="cancelDetails()">Cancel</button>
+            <button type="button" class="primary-btn" (click)="saveUser()">Save</button>
+          </div>
+        }
+      </article>
+    </section>
+
+    @if (showErrorToast()) {
+      <div class="error-toast">{{ errorToastMessage() }}</div>
+    }
+
+    @if (successToastVisible()) {
+      <div class="save-toast">User saved successfully.</div>
+    }
+  </main>
+</div>

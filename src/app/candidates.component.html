@@ -1,0 +1,141 @@
+<app-nav-menu />
+<div class="candidates-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
+        ☰
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">✶</span>
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link active-nav-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
+      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
+      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+    </div>
+  </header>
+
+  <main class="candidates-main">
+    <section class="candidates-header">
+      <div>
+        <p class="eyebrow">Candidate Directory</p>
+        <h1>Candidates</h1>
+      </div>
+      <a class="back-link" routerLink="/">Back To Dashboard</a>
+    </section>
+
+    <section class="toolbar" aria-label="Candidate filters">
+      <div class="toolbar-group search-group">
+        <label class="search-field">
+          <span class="visually-hidden">Search candidates by name, type, or active status</span>
+          <input
+            type="search"
+            [value]="candidateSearchTerm()"
+            (input)="updateCandidateSearchTerm($event)"
+            placeholder="Search name, type, or active status"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-group">
+        <span>Filter by:</span>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by candidate type</span>
+          <select [value]="candidateTypeFilter()" (change)="updateCandidateTypeFilter($event)">
+            <option value="all">Candidate Type: All</option>
+            <option value="Individual">Candidate Type: Individual</option>
+            <option value="Organization">Candidate Type: Organization</option>
+          </select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by active status</span>
+          <select [value]="activeFilter()" (change)="updateActiveFilter($event)">
+            <option value="active">Status: Active</option>
+            <option value="all">Status: All</option>
+            <option value="inactive">Status: Inactive</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Candidates table">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('candidateType')">
+                  Candidate Type {{ sortIndicator('candidateType') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('candidateName')">
+                  Candidate Name {{ sortIndicator('candidateName') }}
+                </button>
+              </th>
+              <th>
+                <button type="button" class="column-sort-btn" (click)="setSort('nextDueDate')">
+                  Next Due Date {{ sortIndicator('nextDueDate') }}
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (pagedRows().length === 0) {
+              <tr>
+                <td class="empty-results-cell" colspan="3">
+                  No candidates match the selected filters.
+                </td>
+              </tr>
+            } @else {
+              @for (row of pagedRows(); track row.candidateId) {
+                <tr>
+                  <td>{{ row.candidateType }}</td>
+                  <td>
+                    <a
+                      class="candidate-name-link"
+                      [routerLink]="['/candidates', row.candidateId]"
+                      >{{ candidateDisplayName(row) }}</a
+                    >
+                  </td>
+                  <td>{{ formatDate(row.nextDueDate) }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-row">
+        <p class="pagination-copy">{{ pageSummary() }}</p>
+        <div class="pagination-actions">
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="!canGoToPreviousPage()"
+            (click)="goToPreviousPage()"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="!canGoToNextPage()"
+            (click)="goToNextPage()"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

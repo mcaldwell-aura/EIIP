@@ -1,9 +1,16 @@
 import { Routes } from '@angular/router';
-import { CreateInspectionComponent } from './create-inspection.component';
+import { CandidatesComponent } from './candidates.component';
 import { DashboardComponent } from './dashboard.component';
 import { InspectionDetailsComponent } from './inspection-details.component';
 import { InspectionOverviewComponent } from './inspection-overview.component';
 import { SubjectDetailsComponent } from './subject-details.component';
+import { CandidateDetailComponent } from './candidate-detail.component';
+import { UsersComponent } from './users.component';
+import { EditUserComponent } from './edit-user.component';
+import { AddUserComponent } from './add-user.component';
+import { LocationsComponent } from './locations.component';
+import { LocationDetailComponent } from './location-detail.component';
+import { InspectorDashboardComponent } from './inspector-dashboard.component';
 
 export const routes: Routes = [
   {
@@ -11,12 +18,40 @@ export const routes: Routes = [
     component: DashboardComponent,
   },
   {
+    path: 'inspector-dashboard',
+    component: InspectorDashboardComponent,
+  },
+  {
     path: 'inspection-overview',
     component: InspectionOverviewComponent,
   },
   {
-    path: 'inspection-overview/create-inspection',
-    component: CreateInspectionComponent,
+    path: 'candidates',
+    component: CandidatesComponent,
+  },
+  {
+    path: 'candidates/:candidateId',
+    component: CandidateDetailComponent,
+  },
+  {
+    path: 'users',
+    component: UsersComponent,
+  },
+  {
+    path: 'users/add',
+    component: AddUserComponent,
+  },
+  {
+    path: 'users/:userId/edit',
+    component: EditUserComponent,
+  },
+  {
+    path: 'locations',
+    component: LocationsComponent,
+  },
+  {
+    path: 'locations/:locationId',
+    component: LocationDetailComponent,
   },
   {
     path: 'inspection-overview/inspection/:inspectionId',
