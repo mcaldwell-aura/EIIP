@@ -1,8 +1,13 @@
+import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 
 type SubjectProfile = {
   id: string;
@@ -127,7 +132,14 @@ const SUBJECTS: Record<string, SubjectProfile> = {
 
 @Component({
   selector: 'app-subject-details',
-  imports: [RouterLink, NavMenuComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './subject-details.component.html',
   styleUrl: './subject-details.component.scss',

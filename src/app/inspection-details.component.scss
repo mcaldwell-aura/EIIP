@@ -1292,6 +1292,11 @@ h2 {
 .document-modal-field {
   display: grid;
   gap: 0.45rem;
+  margin-bottom: 1.25rem;
+}
+
+.document-modal-field:last-child {
+  margin-bottom: 0;
 }
 
 .note-modal-field span {
@@ -1679,16 +1684,28 @@ h2 {
 .appointment-modal-close:hover,
 .assign-inspector-modal-close:hover,
 .note-modal-close:hover,
-.note-save-btn:hover:not(:disabled),
 .document-modal-close:hover,
-.document-save-btn:hover:not(:disabled),
 .note-delete-modal-close:hover,
-.note-delete-cancel-btn:hover,
-.note-delete-confirm-btn:hover,
-.document-delete-modal-close:hover,
-.document-delete-cancel-btn:hover,
-.document-delete-confirm-btn:hover {
+.document-delete-modal-close:hover {
   box-shadow: 0 10px 20px rgba(23, 42, 84, 0.14);
+  transform: translateY(-1px);
+}
+
+.note-save-btn:hover:not(:disabled),
+.document-save-btn:hover:not(:disabled),
+.note-delete-cancel-btn:hover,
+.document-delete-cancel-btn:hover {
+  background: #0a2e8a !important;
+  border-color: #08266f !important;
+  color: #fff !important;
+  box-shadow: 0 10px 20px rgba(10, 46, 138, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.note-delete-confirm-btn:hover,
+.document-delete-confirm-btn:hover {
+  background: linear-gradient(90deg, #a53049, #8b1c2c) !important;
+  box-shadow: 0 10px 20px rgba(139, 28, 44, 0.32) !important;
   transform: translateY(-1px);
 }
 
@@ -1697,7 +1714,6 @@ h2 {
   transform: translateY(-1px);
 }
 
-.tab-btn:hover,
 .tab-btn.active {
   box-shadow: none;
   transform: none;

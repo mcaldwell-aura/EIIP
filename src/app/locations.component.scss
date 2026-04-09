@@ -224,6 +224,8 @@ h1 {
   justify-content: space-between;
   margin-top: 1.15rem;
   padding: 0.85rem 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .toolbar-group {
@@ -270,9 +272,9 @@ h1 {
   border-color: #d7e1f3;
   color: #24314d;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  padding: 0.48rem 0.7rem;
+  padding: 0.3rem 0.5rem;
 }
 
 .filter-chip-select {
@@ -282,30 +284,27 @@ h1 {
   position: relative;
 }
 
-.filter-chip-select select {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
+/* PrimeNG select sizing tuned to table typography and compact toolbar layout. */
+:host ::ng-deep .toolbar .filter-chip-select .p-select {
+  border-radius: 8px;
+  font-size: 0.86rem;
   min-height: 2rem;
-  padding: 0.48rem 2rem 0.48rem 0.7rem;
+  width: 10.25rem;
 }
 
-.filter-chip-select::after {
-  color: #516287;
-  content: '▾';
-  font-size: 0.78rem;
-  pointer-events: none;
-  position: absolute;
-  right: 0.7rem;
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-label {
+  font-size: 0.86rem;
+  line-height: 1.2;
+  padding: 0.36rem 0.58rem;
 }
 
-.filter-chip-select select:focus {
-  outline: none;
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-dropdown {
+  width: 1.9rem;
+}
+
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-dropdown .p-icon {
+  height: 0.72rem;
+  width: 0.72rem;
 }
 
 .table-card {
@@ -315,6 +314,8 @@ h1 {
   box-shadow: 0 14px 28px rgba(21, 39, 82, 0.1);
   margin-top: 1rem;
   padding: 1rem 1rem 0.9rem;
+  position: relative;
+  z-index: 1;
 }
 
 .table-wrap {
@@ -376,6 +377,94 @@ td {
   text-align: center;
 }
 
+.header-actions {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.new-location-btn {
+  align-items: center;
+  background: linear-gradient(90deg, #1f56d8, #1660f4);
+  border-color: transparent;
+  box-shadow: 0 10px 18px rgba(25, 84, 219, 0.24);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  justify-content: center;
+  padding: 0.6rem 0.95rem;
+}
+
+.new-location-form {
+  padding-top: 0.25rem;
+}
+
+.new-location-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.new-location-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.new-location-field span {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.new-location-field-wide {
+  grid-column: 1 / -1;
+}
+
+.new-location-toggle-row {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0.6rem;
+}
+
+.new-location-toggle-row span {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.new-location-validation {
+  color: #9b2c2c;
+  font-size: 0.84rem;
+  font-weight: 600;
+  margin: 0.9rem 0 0;
+}
+
+.new-location-modal-footer {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.cancel-btn {
+  background: #fff;
+  border-color: #d5def2;
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.save-btn {
+  background: linear-gradient(90deg, #1f56d8, #1660f4);
+  border-color: transparent;
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
 .visually-hidden {
   border: 0;
   clip: rect(0 0 0 0);
@@ -428,6 +517,24 @@ input:focus-visible {
   .table-wrap {
     margin-inline: -0.1rem;
   }
+
+  .header-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .new-location-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .new-location-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .new-location-field-wide {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 560px) {
@@ -440,6 +547,10 @@ input:focus-visible {
 
   .brand-text {
     font-size: 1.28rem;
+  }
+
+  :host ::ng-deep .toolbar .filter-chip-select .p-select {
+    width: min(100%, 15rem);
   }
 
   .toolbar {

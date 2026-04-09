@@ -9,10 +9,19 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
-import { InspectionStoreService } from './inspection-store.service';
-import { NavMenuComponent } from './nav-menu.component';
+import { InspectionStoreService, type StoredAppointmentRow } from './inspection-store.service';
+import { LocationStoreService } from './location-store.service';
 import { NavMenuService } from './nav-menu.service';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
 
 type DetailsTab = 'summary' | 'appointments' | 'notes' | 'documents';
 
@@ -49,7 +58,7 @@ type InspectorOption = {
 
 type SelectableInspectionStatus = InspectionStatus | 'Excellent' | 'Marginal' | 'Canceled';
 
-type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled';
+type AppointmentStatus = 'Scheduled' | 'Cancelled';
 
 type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
 type InspectionTypeOption = 'Overt' | 'Covert';
@@ -63,7 +72,17 @@ type SummaryFormValue = {
 
 @Component({
   selector: 'app-inspection-details',
-  imports: [RouterLink, NavMenuComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+    DialogModule,
+    SelectModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown.escape)': 'handleEscape()',
@@ -74,6 +93,7 @@ type SummaryFormValue = {
 export class InspectionDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly inspectionStore = inject(InspectionStoreService);
+  private readonly locationStore = inject(LocationStoreService);
   protected readonly menuService = inject(NavMenuService);
   private saveToastTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private appointmentToastTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -147,9 +167,17 @@ export class InspectionDetailsComponent implements OnInit {
   ];
   protected readonly appointmentStatusOptions: readonly AppointmentStatus[] = [
     'Scheduled',
-    'Completed',
-    'Canceled',
+    'Cancelled',
   ];
+  protected readonly appointmentStatusSelectOptions = this.appointmentStatusOptions.map(
+    (status) => ({ label: status, value: status }),
+  );
+  protected readonly activeLocationOptions = computed(() =>
+    this.locationStore
+      .locations()
+      .filter((location) => location.active)
+      .map((location) => ({ label: location.locationName, value: location.locationName })),
+  );
   protected readonly currentInspectionStatus = computed<SelectableInspectionStatus>(
     () =>
       this.inspectionStatusByInspection()[this.inspection().inspectionId] ??
@@ -368,7 +396,9 @@ export class InspectionDetailsComponent implements OnInit {
 
     return [
       {
-        dateTime: `${inspection.appointmentDate} ${inspection.appointmentTime}`.trim(),
+        dateTime: this.toDateTimeInputValue(
+          `${inspection.appointmentDate} ${inspection.appointmentTime}`.trim(),
+        ),
         location: inspection.appointmentLocation,
         comments: inspection.notes[0] ?? '',
         status: currentStatus,
@@ -377,12 +407,17 @@ export class InspectionDetailsComponent implements OnInit {
   });
   protected readonly appointmentRows = computed<AppointmentRow[]>(() => {
     const inspectionId = this.inspection().inspectionId;
+    const fromStore = this.inspectionStore.getAppointmentRows(inspectionId);
 
-    return (
-      this.appointmentRowsByInspection()[inspectionId] ??
-      this.inspectionStore.getAppointmentRows(inspectionId) ??
-      this.baseAppointmentRows()
-    );
+    if (this.appointmentRowsByInspection()[inspectionId]) {
+      return this.appointmentRowsByInspection()[inspectionId] ?? [];
+    }
+
+    if (fromStore) {
+      return fromStore.map((row) => this.toAppointmentRow(row));
+    }
+
+    return this.baseAppointmentRows();
   });
   protected readonly canSaveAppointment = computed(
     () => this.appointmentDateTimeInput().trim().length > 0,
@@ -545,16 +580,16 @@ export class InspectionDetailsComponent implements OnInit {
     this.appointmentDateTimeInput.set((event.target as HTMLInputElement).value);
   }
 
-  protected updateAppointmentLocation(event: Event): void {
-    this.appointmentLocationInput.set((event.target as HTMLInputElement).value);
+  protected updateAppointmentLocation(location: string | null): void {
+    this.appointmentLocationInput.set(location ?? '');
   }
 
   protected updateAppointmentComments(event: Event): void {
     this.appointmentCommentsInput.set((event.target as HTMLTextAreaElement).value);
   }
 
-  protected updateAppointmentStatus(event: Event): void {
-    this.appointmentStatusInput.set((event.target as HTMLSelectElement).value as AppointmentStatus);
+  protected updateAppointmentStatus(status: AppointmentStatus): void {
+    this.appointmentStatusInput.set(status);
   }
 
   protected saveAppointment(): void {
@@ -571,8 +606,15 @@ export class InspectionDetailsComponent implements OnInit {
       return;
     }
 
-    if (parsedDateTime < Date.now()) {
-      this.appointmentValidationMessage.set('Appointment Date/Time cannot be in the past.');
+    if (this.appointmentStatusInput() === 'Scheduled' && parsedDateTime <= Date.now()) {
+      this.appointmentValidationMessage.set(
+        'Scheduled appointments must have a future Appointment Date/Time.',
+      );
+      return;
+    }
+
+    if (this.appointmentCommentsInput().trim().length > 500) {
+      this.appointmentValidationMessage.set('Comments must be 500 characters or fewer.');
       return;
     }
 
@@ -585,8 +627,18 @@ export class InspectionDetailsComponent implements OnInit {
       status: this.appointmentStatusInput(),
     };
 
+    const inspectionId = this.inspection().inspectionId;
+
     if (this.appointmentModalMode() === 'create') {
-      this.updateCurrentAppointments((appointments) => [nextAppointment, ...appointments]);
+      const nextAppointments = [nextAppointment, ...this.appointmentRows()];
+      this.updateCurrentAppointments(() => nextAppointments);
+      this.inspectionStore.appendAppointmentAuditEntry(inspectionId, {
+        inspectionId,
+        action: 'create',
+        timestampIso: new Date().toISOString(),
+        before: null,
+        after: this.toStoredAppointmentRow(nextAppointment),
+      });
       this.showAppointmentCreatedToast.set(true);
 
       if (this.appointmentToastTimeoutId !== null) {
@@ -608,13 +660,55 @@ export class InspectionDetailsComponent implements OnInit {
       return;
     }
 
-    this.updateCurrentAppointments((appointments) =>
-      appointments.map((appointment, index) =>
-        index === activeIndex ? nextAppointment : appointment,
-      ),
+    const currentAppointments = this.appointmentRows();
+    const previousAppointment = currentAppointments[activeIndex] ?? null;
+    const nextAppointments = currentAppointments.map((appointment, index) =>
+      index === activeIndex ? nextAppointment : appointment,
     );
 
+    this.updateCurrentAppointments(() => nextAppointments);
+    this.inspectionStore.appendAppointmentAuditEntry(inspectionId, {
+      inspectionId,
+      action: 'edit',
+      timestampIso: new Date().toISOString(),
+      before: previousAppointment ? this.toStoredAppointmentRow(previousAppointment) : null,
+      after: this.toStoredAppointmentRow(nextAppointment),
+    });
+    this.showAppointmentCreatedToast.set(true);
+
+    if (this.appointmentToastTimeoutId !== null) {
+      clearTimeout(this.appointmentToastTimeoutId);
+    }
+
+    this.appointmentToastTimeoutId = setTimeout(() => {
+      this.showAppointmentCreatedToast.set(false);
+      this.appointmentToastTimeoutId = null;
+    }, 3000);
+
     this.closeAppointmentModal();
+  }
+
+  protected formatAppointmentDateTime(dateTime: string): string {
+    const parsed = new Date(dateTime);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return dateTime || 'N/A';
+    }
+
+    const date = new Intl.DateTimeFormat('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    })
+      .format(parsed)
+      .replace(/\//g, '-');
+    const time = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(parsed);
+
+    return `${date} ${time}`;
   }
 
   protected openNoteModal(): void {
@@ -899,18 +993,24 @@ export class InspectionDetailsComponent implements OnInit {
   ): void {
     const inspectionId = this.inspection().inspectionId;
     const currentAppointments = this.appointmentRows();
+    const nextAppointments = updater([...currentAppointments]);
 
     this.appointmentRowsByInspection.update((existing) => ({
       ...existing,
-      [inspectionId]: updater([...currentAppointments]),
+      [inspectionId]: nextAppointments,
     }));
+
+    this.inspectionStore.saveAppointmentRows(
+      inspectionId,
+      nextAppointments.map((appointment) => this.toStoredAppointmentRow(appointment)),
+    );
   }
 
   private getDefaultAppointmentStatus(): AppointmentStatus {
     const currentStatus = this.currentInspectionStatus();
 
     if (currentStatus === 'Canceled') {
-      return 'Canceled';
+      return 'Cancelled';
     }
 
     if (
@@ -921,7 +1021,71 @@ export class InspectionDetailsComponent implements OnInit {
       return 'Scheduled';
     }
 
-    return 'Completed';
+    return 'Scheduled';
+  }
+
+  private toStoredAppointmentRow(row: AppointmentRow): StoredAppointmentRow {
+    return {
+      dateTime: row.dateTime,
+      location: row.location,
+      comments: row.comments,
+      status: row.status,
+    };
+  }
+
+  private toAppointmentRow(row: StoredAppointmentRow): AppointmentRow {
+    return {
+      dateTime: this.toDateTimeInputValue(row.dateTime),
+      location: row.location,
+      comments: row.comments,
+      status: row.status === 'Scheduled' ? 'Scheduled' : 'Cancelled',
+    };
+  }
+
+  private toDateTimeInputValue(rawValue: string): string {
+    const trimmed = rawValue.trim();
+
+    if (!trimmed) {
+      return '';
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const directParsed = new Date(trimmed);
+
+    if (!Number.isNaN(directParsed.getTime())) {
+      const year = directParsed.getFullYear();
+      const month = `${directParsed.getMonth() + 1}`.padStart(2, '0');
+      const day = `${directParsed.getDate()}`.padStart(2, '0');
+      const hour = `${directParsed.getHours()}`.padStart(2, '0');
+      const minute = `${directParsed.getMinutes()}`.padStart(2, '0');
+      return `${year}-${month}-${day}T${hour}:${minute}`;
+    }
+
+    const legacyMatch = trimmed.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+
+    if (!legacyMatch) {
+      return '';
+    }
+
+    const month = legacyMatch[1];
+    const day = legacyMatch[2];
+    const year = legacyMatch[3];
+    const minute = legacyMatch[5];
+    const period = legacyMatch[6].toLowerCase();
+    let hour = Number.parseInt(legacyMatch[4], 10);
+
+    if (period === 'pm' && hour < 12) {
+      hour += 12;
+    }
+
+    if (period === 'am' && hour === 12) {
+      hour = 0;
+    }
+
+    return `${year}-${month}-${day}T${`${hour}`.padStart(2, '0')}:${minute}`;
   }
 
   private triggerSaveToast(): void {

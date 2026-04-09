@@ -1,13 +1,19 @@
 export type CandidateType = 'Individual' | 'Organization';
+export type NameSuffix = 'Jr.' | 'Sr.' | 'II' | 'III' | 'IV';
 
 export type CandidateRecord = {
   candidateId: string;
   firstMiddleLast: string | null;
   organizationName: string | null;
   candidateType: CandidateType;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  suffix?: NameSuffix | null;
+  externalIdentifier?: string | null;
   startDate: string;
   endDate: string | null;
-  nextDueDate: string;
+  nextDueDate: string | null;
 };
 
 const FIRST_NAMES = [

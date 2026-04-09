@@ -158,6 +158,15 @@
   padding: 1.6rem 1.25rem 2.8rem;
 }
 
+.eyebrow {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
 .page-header {
   display: grid;
   gap: 0.4rem;
@@ -312,10 +321,14 @@ h2 {
 .summary-field-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .summary-field-grid > .summary-field:first-child {
+  grid-column: 1 / -1;
+}
+
+.summary-field-wide {
   grid-column: 1 / -1;
 }
 
@@ -332,7 +345,8 @@ h2 {
 }
 
 .summary-field input,
-.summary-field select {
+.summary-field select,
+:host ::ng-deep .summary-field .p-select {
   background: var(--field-bg);
   border: 1px solid var(--field-border);
   border-radius: 8px;
@@ -348,6 +362,21 @@ h2 {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
   outline: none;
+}
+
+:host ::ng-deep .summary-field .p-select {
+  min-height: 2.6rem;
+}
+
+:host ::ng-deep .summary-field .p-select .p-select-label {
+  color: #2a3652;
+  padding: 0.55rem 0.75rem;
+}
+
+:host ::ng-deep .summary-field .p-select.p-focus {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
 }
 
 .summary-field input:read-only {
@@ -374,6 +403,90 @@ h2 {
   justify-content: flex-end;
   margin-top: 1.1rem;
   width: 100%;
+}
+
+.notes-table-wrap {
+  overflow-x: auto;
+}
+
+.notes-table {
+  border-collapse: collapse;
+  min-width: 980px;
+  width: 100%;
+}
+
+.notes-table th,
+.notes-table td {
+  border-bottom: 1px solid #d8e1f0;
+  padding: 0.72rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.notes-table th {
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.notes-table td {
+  color: #2a3652;
+  font-size: 0.86rem;
+}
+
+.table-sort-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  text-align: left;
+  text-transform: inherit;
+}
+
+.table-sort-btn:focus-visible {
+  border-radius: 6px;
+  box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
+  outline: none;
+}
+
+.inspection-status-text {
+  color: #2a3652;
+  font-weight: 600;
+}
+
+.inspection-history-comments-col {
+  min-width: 20rem;
+  width: 38%;
+}
+
+.inspection-history-comment-text {
+  line-height: 1.4;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty-history-message {
+  color: #60708f;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
 }
 
 .save-toast {
@@ -420,6 +533,11 @@ a:focus-visible {
   .primary-btn,
   .back-btn {
     width: 100%;
+  }
+
+  .candidate-header-info,
+  .summary-field-grid {
+    grid-template-columns: 1fr;
   }
 
   .candidate-header-info {

@@ -1,24 +1,36 @@
-<app-nav-menu />
 <div class="candidates-page">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
-        ☰
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </a>
-      <button type="button" class="tab-link">View CSTIMS</button>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
       <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
       <a class="nav-text-link active-nav-link" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
-      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
-      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
     </div>
   </header>
 
@@ -28,7 +40,20 @@
         <p class="eyebrow">Candidate Directory</p>
         <h1>Candidates</h1>
       </div>
-      <a class="back-link" routerLink="/">Back To Dashboard</a>
+      <div class="header-actions">
+        <a class="back-link" routerLink="/">Back</a>
+        @if (hasManageCandidatesPermission) {
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="new-candidate-btn"
+            (click)="openNewCandidateDialog()"
+          >
+            New Candidate
+          </button>
+        }
+      </div>
     </section>
 
     <section class="toolbar" aria-label="Candidate filters">
@@ -36,6 +61,7 @@
         <label class="search-field">
           <span class="visually-hidden">Search candidates by name, type, or active status</span>
           <input
+            pInputText
             type="search"
             [value]="candidateSearchTerm()"
             (input)="updateCandidateSearchTerm($event)"
@@ -49,93 +75,211 @@
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Filter by candidate type</span>
-          <select [value]="candidateTypeFilter()" (change)="updateCandidateTypeFilter($event)">
-            <option value="all">Candidate Type: All</option>
-            <option value="Individual">Candidate Type: Individual</option>
-            <option value="Organization">Candidate Type: Organization</option>
-          </select>
+          <p-select
+            [options]="candidateTypeOptions"
+            [ngModel]="candidateTypeFilterValue()"
+            (ngModelChange)="updateCandidateTypeFilter($event)"
+            placeholder="Candidate Type: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+          ></p-select>
         </label>
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Filter by active status</span>
-          <select [value]="activeFilter()" (change)="updateActiveFilter($event)">
-            <option value="active">Status: Active</option>
-            <option value="all">Status: All</option>
-            <option value="inactive">Status: Inactive</option>
-          </select>
+          <p-select
+            [options]="activeFilterOptions"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="updateActiveFilter($event)"
+            placeholder="Status: Active"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+          ></p-select>
         </label>
       </div>
     </section>
 
     <section class="table-card" aria-label="Candidates table">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('candidateType')">
-                  Candidate Type {{ sortIndicator('candidateType') }}
-                </button>
-              </th>
-              <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('candidateName')">
-                  Candidate Name {{ sortIndicator('candidateName') }}
-                </button>
-              </th>
-              <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('nextDueDate')">
-                  Next Due Date {{ sortIndicator('nextDueDate') }}
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (pagedRows().length === 0) {
-              <tr>
-                <td class="empty-results-cell" colspan="3">
-                  No candidates match the selected filters.
-                </td>
-              </tr>
-            } @else {
-              @for (row of pagedRows(); track row.candidateId) {
-                <tr>
-                  <td>{{ row.candidateType }}</td>
-                  <td>
-                    <a
-                      class="candidate-name-link"
-                      [routerLink]="['/candidates', row.candidateId]"
-                      >{{ candidateDisplayName(row) }}</a
-                    >
-                  </td>
-                  <td>{{ formatDate(row.nextDueDate) }}</td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination-row">
-        <p class="pagination-copy">{{ pageSummary() }}</p>
-        <div class="pagination-actions">
-          <button
-            type="button"
-            class="pagination-btn"
-            [disabled]="!canGoToPreviousPage()"
-            (click)="goToPreviousPage()"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            class="pagination-btn"
-            [disabled]="!canGoToNextPage()"
-            (click)="goToNextPage()"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      <p-table [value]="pagedRows()" tableStyleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="candidateType">
+              Candidate Type <p-sortIcon field="candidateType"></p-sortIcon>
+            </th>
+            <th pSortableColumn="candidateName">
+              Candidate Name <p-sortIcon field="candidateName"></p-sortIcon>
+            </th>
+            <th pSortableColumn="nextDueDate">
+              Next Due Date <p-sortIcon field="nextDueDate"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.candidateType }}</td>
+            <td>
+              <a class="candidate-name-link" [routerLink]="['/candidates', row.candidateId]">{{
+                candidateDisplayName(row)
+              }}</a>
+            </td>
+            <td>{{ formatDate(row.nextDueDate) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3">No candidates match the selected filters.</td>
+          </tr>
+        </ng-template>
+      </p-table>
     </section>
   </main>
+
+  <p-dialog
+    [visible]="newCandidateDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="true"
+    [closable]="true"
+    header="New Candidate"
+    styleClass="new-candidate-modal"
+    [style]="{ width: 'min(720px, 95vw)' }"
+    (onHide)="cancelNewCandidate()"
+  >
+    <div class="new-candidate-form">
+      <div class="new-candidate-grid">
+        <label class="new-candidate-field">
+          <span>Candidate Type *</span>
+          <p-select
+            [options]="candidateTypeModalOptions"
+            [ngModel]="newCandidateCandidateType()"
+            optionLabel="label"
+            optionValue="value"
+            (ngModelChange)="newCandidateCandidateType.set($event)"
+          ></p-select>
+        </label>
+
+        @if (showNewCandidateIndividualFields()) {
+          <label class="new-candidate-field">
+            <span>First Name *</span>
+            <input
+              pInputText
+              type="text"
+              maxlength="50"
+              [ngModel]="newCandidateFirstName()"
+              (ngModelChange)="newCandidateFirstName.set($event)"
+            />
+          </label>
+
+          <label class="new-candidate-field">
+            <span>Middle Name</span>
+            <input
+              pInputText
+              type="text"
+              maxlength="50"
+              [ngModel]="newCandidateMiddleName()"
+              (ngModelChange)="newCandidateMiddleName.set($event)"
+            />
+          </label>
+
+          <label class="new-candidate-field">
+            <span>Last Name *</span>
+            <input
+              pInputText
+              type="text"
+              maxlength="70"
+              [ngModel]="newCandidateLastName()"
+              (ngModelChange)="newCandidateLastName.set($event)"
+            />
+          </label>
+
+          <label class="new-candidate-field">
+            <span>Suffix</span>
+            <p-select
+              [options]="nameSuffixOptions"
+              [showClear]="true"
+              [ngModel]="newCandidateSuffix() || null"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select a suffix"
+              (ngModelChange)="newCandidateSuffix.set($event ?? '')"
+            ></p-select>
+          </label>
+        }
+
+        @if (showNewCandidateOrganizationFields()) {
+          <label class="new-candidate-field new-candidate-field-wide">
+            <span>Organization Name *</span>
+            <input
+              pInputText
+              type="text"
+              maxlength="256"
+              [ngModel]="newCandidateOrganizationName()"
+              (ngModelChange)="newCandidateOrganizationName.set($event)"
+            />
+          </label>
+        }
+
+        <label class="new-candidate-field">
+          <span>Next Due Date</span>
+          <input
+            pInputText
+            type="date"
+            [ngModel]="newCandidateNextDueDate()"
+            (ngModelChange)="newCandidateNextDueDate.set($event)"
+          />
+        </label>
+
+        <label class="new-candidate-field new-candidate-field-wide">
+          <span>External Identifier</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newCandidateExternalIdentifier()"
+            (ngModelChange)="newCandidateExternalIdentifier.set($event)"
+          />
+        </label>
+
+        <label class="new-candidate-field">
+          <span>Start Date *</span>
+          <input
+            pInputText
+            type="date"
+            [ngModel]="newCandidateStartDate()"
+            (ngModelChange)="newCandidateStartDate.set($event)"
+          />
+        </label>
+
+        <label class="new-candidate-field">
+          <span>End Date</span>
+          <input
+            pInputText
+            type="date"
+            [ngModel]="newCandidateEndDate()"
+            (ngModelChange)="newCandidateEndDate.set($event)"
+          />
+        </label>
+      </div>
+
+      @if (newCandidateValidationMessage()) {
+        <p class="new-candidate-validation" role="alert">{{ newCandidateValidationMessage() }}</p>
+      }
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="new-candidate-modal-footer">
+        <button pButton pRipple type="button" class="cancel-btn" (click)="cancelNewCandidate()">
+          Cancel
+        </button>
+        <button pButton pRipple type="button" class="save-btn" (click)="saveNewCandidate()">
+          Save
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-toast position="bottom-right"></p-toast>
 </div>
+
+
+

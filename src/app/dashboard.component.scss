@@ -489,24 +489,30 @@ h2 {
   border-radius: 14px;
   box-shadow: var(--card-shadow);
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 1.1rem;
+  justify-content: flex-start;
   margin-bottom: 0.75rem;
+  overflow-x: auto;
   padding: 0.85rem 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .toolbar-group {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.55rem;
 }
 
 .toolbar-group span {
   color: var(--text-soft);
+  display: inline-flex;
   font-size: 0.8rem;
   font-weight: 700;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .filter-chip {
@@ -529,25 +535,27 @@ h2 {
   position: relative;
 }
 
-.filter-chip-select select {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
+:host ::ng-deep .activity-toolbar .filter-chip-select .p-select {
+  border-radius: 8px;
   font-size: 0.8rem;
-  font-weight: 600;
   min-height: 2rem;
-  padding: 0.48rem 2rem 0.48rem 0.7rem;
+  width: 9.75rem;
 }
 
-.filter-chip-select::after {
-  color: var(--text-soft);
-  content: '▾';
-  pointer-events: none;
-  position: absolute;
-  right: 0.7rem;
+:host ::ng-deep .activity-toolbar .filter-chip-select .p-select .p-select-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.36rem 0.58rem;
+}
+
+:host ::ng-deep .activity-toolbar .filter-chip-select .p-select .p-select-dropdown {
+  width: 1.9rem;
+}
+
+:host ::ng-deep .activity-toolbar .filter-chip-select .p-select .p-select-dropdown .p-icon {
+  height: 0.72rem;
+  width: 0.72rem;
 }
 
 .visually-hidden {
@@ -564,6 +572,8 @@ h2 {
 
 .activity-section .table-wrap {
   margin-top: 0.15rem;
+  position: relative;
+  z-index: 1;
 }
 
 .table-wrap {
@@ -724,6 +734,17 @@ a:focus-visible {
   .activity-toolbar {
     align-items: flex-start;
     flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  :host ::ng-deep .activity-toolbar .filter-chip-select .p-select {
+    width: min(100%, 16rem);
   }
 
   .summary-cards {

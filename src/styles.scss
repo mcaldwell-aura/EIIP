@@ -1,6 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap');
+@import 'primeicons/primeicons.css';
 
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+  --p-primary-color: #1f56d8;
+  --p-surface-ground: #ffffff;
+  --p-surface-card: #ffffff;
+  --p-text-color: #18223a;
+  --p-content-border-color: #d8e0f2;
+  --app-btn-hover-bg: #0a2e8a;
+  --app-btn-hover-border: #08266f;
+  --app-btn-hover-text: #ffffff;
+  /* Dropdown option hover — light blue consistent with brand palette. */
+  --p-select-option-focus-background: #dae9ff;
+  --p-select-option-focus-color: #18223a;
+}
+
+/* Inspection overview toolbar selects use appendTo="body", so panel styles must be global. */
+.toolbar-select-panel {
+  --p-select-option-selected-background: #f3f4f6;
+  --p-select-option-selected-color: #24314d;
+  --p-select-option-focus-background: #e5e7eb;
+  --p-select-option-focus-color: #24314d;
+}
+
+.toolbar-select-panel .p-select-option.p-select-option-selected,
+.toolbar-select-panel .p-select-option.p-highlight {
+  background: #f3f4f6 !important;
+  color: #24314d !important;
+}
+
+.toolbar-select-panel .p-select-option.p-focus,
+.toolbar-select-panel .p-select-option.p-select-option-selected.p-focus,
+.toolbar-select-panel .p-select-option.p-highlight.p-focus {
+  background: #e5e7eb !important;
+  color: #24314d !important;
+}
 
 html,
 body {
@@ -17,6 +53,30 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+/* Prime-inspired defaults for legacy native controls to preserve existing layouts. */
+button,
+input,
+select,
+textarea {
+  border-radius: 10px;
+}
+
+input,
+select,
+textarea {
+  background: #fff;
+  border: 1px solid #d7e1f3;
+  color: #24314d;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--p-primary-color);
+  box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
+  outline: none;
 }
 
 .top-nav .nav-left {
@@ -45,4 +105,160 @@ textarea {
   .top-nav .nav-text-link {
     font-size: 0.8rem;
   }
+}
+
+/* Enforce a consistent darker-blue hover state for all button-like actions. */
+button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
+    .table-sort-btn
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.table-action-btn),
+button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
+    .table-sort-btn
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
+    .note-delete-confirm-btn
+  ):not(.document-delete-confirm-btn),
+button:active:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
+    .table-sort-btn
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
+    .note-delete-confirm-btn
+  ):not(.document-delete-confirm-btn),
+.p-button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
+    .table-sort-btn
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
+    .note-delete-confirm-btn
+  ):not(.document-delete-confirm-btn),
+.p-button:active:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
+    .table-sort-btn
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
+    .note-delete-confirm-btn
+  ):not(.document-delete-confirm-btn),
+a.edit-btn:hover,
+a.edit-btn:active {
+  background: var(--app-btn-hover-bg) !important;
+  border-color: var(--app-btn-hover-border) !important;
+  color: var(--app-btn-hover-text) !important;
+}
+
+/* Delete buttons use a dark red hover instead of dark blue. */
+button.delete-action-btn:not(:disabled):hover,
+button.delete-action-btn:not(:disabled):active,
+button.note-delete-confirm-btn:not(:disabled):hover,
+button.note-delete-confirm-btn:not(:disabled):active,
+button.document-delete-confirm-btn:not(:disabled):hover,
+button.document-delete-confirm-btn:not(:disabled):active,
+.p-button.delete-action-btn:not(:disabled):hover,
+.p-button.delete-action-btn:not(:disabled):active,
+.p-button.note-delete-confirm-btn:not(:disabled):hover,
+.p-button.note-delete-confirm-btn:not(:disabled):active,
+.p-button.document-delete-confirm-btn:not(:disabled):hover,
+.p-button.document-delete-confirm-btn:not(:disabled):active {
+  background: linear-gradient(90deg, #a53049, #8b1c2c) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 10px 20px rgba(139, 28, 44, 0.32) !important;
+}
+
+/* Table interactions should never get a filled background state. */
+button.column-sort-btn,
+button.sort-btn,
+button.table-sort-btn,
+button.priority-trigger,
+.p-button.column-sort-btn,
+.p-button.sort-btn,
+.p-button.table-sort-btn,
+.p-button.priority-trigger,
+button.column-sort-btn:hover,
+button.column-sort-btn:active,
+button.sort-btn:hover,
+button.sort-btn:active,
+button.table-sort-btn:hover,
+button.table-sort-btn:active,
+button.priority-trigger:hover,
+button.priority-trigger:active,
+button.column-sort-btn:focus,
+button.sort-btn:focus,
+button.table-sort-btn:focus,
+button.priority-trigger:focus,
+.p-button.column-sort-btn:hover,
+.p-button.column-sort-btn:active,
+.p-button.sort-btn:hover,
+.p-button.sort-btn:active,
+.p-button.table-sort-btn:hover,
+.p-button.table-sort-btn:active,
+.p-button.priority-trigger:hover,
+.p-button.priority-trigger:active,
+.p-button.column-sort-btn:focus,
+.p-button.sort-btn:focus,
+.p-button.table-sort-btn:focus,
+.p-button.priority-trigger:focus {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+/* Prime table sortable-column hover/active states should stay neutral. */
+.p-datatable .p-sortable-column:not(.p-highlight):hover,
+.p-datatable .p-sortable-column:focus-visible,
+.p-datatable .p-sortable-column.p-highlight,
+.p-datatable .p-sortable-column.p-highlight:hover {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Exception: only New Inspection buttons keep dark-blue hover fill. */
+button.icon-action-btn:hover:not(:disabled),
+button.icon-action-btn:active:not(:disabled),
+.p-button.icon-action-btn:hover:not(:disabled),
+.p-button.icon-action-btn:active:not(:disabled),
+a.icon-action-btn:hover,
+a.icon-action-btn:active {
+  background: var(--app-btn-hover-bg) !important;
+  border-color: var(--app-btn-hover-border) !important;
+  color: var(--app-btn-hover-text) !important;
+}
+
+/* Tabs should stay visually unchanged on hover; cursor is enough affordance. */
+.tabs button.tab-btn:hover:not(:disabled):not(.active),
+.tabs button.tab-btn:active:not(:disabled):not(.active),
+.tabs .p-button.tab-btn:hover:not(:disabled):not(.active),
+.tabs .p-button.tab-btn:active:not(:disabled):not(.active) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-bottom-color: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-soft) !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.tabs button.tab-btn.active:hover:not(:disabled),
+.tabs button.tab-btn.active:active:not(:disabled),
+.tabs .p-button.tab-btn.active:hover:not(:disabled),
+.tabs .p-button.tab-btn.active:active:not(:disabled) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  border-bottom-color: var(--accent) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--accent) !important;
+  outline: none !important;
+  transform: none !important;
+}
+
+.tabs .tab-btn:hover .p-button-label,
+.tabs .tab-btn:active .p-button-label,
+.tabs .tab-btn:hover .p-button-icon,
+.tabs .tab-btn:active .p-button-icon {
+  color: inherit !important;
+}
+
+.tabs .tab-btn:hover::before,
+.tabs .tab-btn:active::before {
+  opacity: inherit !important;
+  filter: none !important;
 }

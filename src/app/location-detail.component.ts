@@ -1,15 +1,14 @@
-import { Location } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import {
-  ARIZONA_COUNTIES,
-  STATES,
-  type LocationRecord,
-  type StateOption,
-} from './locations.data';
+import { ARIZONA_COUNTIES, STATES, type LocationRecord, type StateOption } from './locations.data';
 import { LocationStoreService } from './location-store.service';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 
 type LocationDetailForm = {
   locationName: string;
@@ -25,7 +24,14 @@ type LocationDetailForm = {
 
 @Component({
   selector: 'app-location-detail',
-  imports: [RouterModule, NavMenuComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './location-detail.component.html',
   styleUrl: './location-detail.component.scss',
@@ -61,6 +67,14 @@ export class LocationDetailComponent {
   protected readonly locationName = computed(() => this.form().locationName || 'Location');
 
   constructor() {
+    const navState = this.router.getCurrentNavigation()?.extras.state;
+    if (navState?.['locationSaved'] === true) {
+      this.saveToastVisible.set(true);
+      setTimeout(() => {
+        this.saveToastVisible.set(false);
+      }, 3000);
+    }
+
     this.route.paramMap.subscribe((params) => {
       const id = params.get('locationId');
 
@@ -78,7 +92,10 @@ export class LocationDetailComponent {
     this.browserLocation.back();
   }
 
-  protected updateField<K extends keyof LocationDetailForm>(key: K, value: LocationDetailForm[K]): void {
+  protected updateField<K extends keyof LocationDetailForm>(
+    key: K,
+    value: LocationDetailForm[K],
+  ): void {
     this.form.update((current) => ({
       ...current,
       [key]: value,

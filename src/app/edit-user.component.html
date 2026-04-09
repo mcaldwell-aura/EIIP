@@ -1,24 +1,36 @@
-<app-nav-menu />
 <div class="edit-user-page">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
-        ☰
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </a>
-      <button type="button" class="tab-link">View CSTIMS</button>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
       <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
       <a class="nav-text-link" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
-      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
-      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
     </div>
   </header>
 
@@ -29,18 +41,16 @@
           <div class="title-row">
             <h1>Edit User</h1>
           </div>
-          @if (userExists()) {
-            <div class="user-header-info">
-              <div class="header-info-item">
-                <span class="header-label">User</span>
-                <p class="header-value">{{ fullName() }}</p>
-              </div>
-              <div class="header-info-item">
-                <span class="header-label">User Id</span>
-                <p class="header-value">{{ userId }}</p>
-              </div>
+          <div *ngIf="userExists()" class="user-header-info">
+            <div class="header-info-item">
+              <span class="header-label">User</span>
+              <p class="header-value">{{ fullName() }}</p>
             </div>
-          }
+            <div class="header-info-item">
+              <span class="header-label">User Id</span>
+              <p class="header-value">{{ userId }}</p>
+            </div>
+          </div>
         </div>
 
         <div class="header-actions">
@@ -55,57 +65,69 @@
           <h2>User Details</h2>
         </div>
 
-        @if (!userExists()) {
-          <p class="empty-copy">User not found.</p>
-        } @else {
+        <ng-container *ngIf="userExists(); else userNotFound">
           <div class="summary-field-grid">
             <div class="summary-field">
               <span>Username</span>
-              <input type="text" [value]="username()" readonly />
+              <input pInputText type="text" [value]="username()" readonly />
             </div>
 
             <div class="summary-field">
               <span>First Name</span>
-              <input type="text" [value]="firstName()" (input)="updateFirstName($event)" />
+              <input
+                pInputText
+                type="text"
+                [value]="firstName()"
+                (input)="updateFirstName($event)"
+              />
             </div>
 
             <div class="summary-field">
               <span>Last Name</span>
-              <input type="text" [value]="lastName()" (input)="updateLastName($event)" />
+              <input pInputText type="text" [value]="lastName()" (input)="updateLastName($event)" />
             </div>
 
             <div class="summary-field">
               <span>Email</span>
-              <input type="email" [value]="email()" (input)="updateEmail($event)" />
+              <input pInputText type="email" [value]="email()" (input)="updateEmail($event)" />
             </div>
 
             <div class="summary-field">
               <span>Role</span>
-              <select [value]="role()" (change)="updateRole($event)">
-                @for (roleOption of roles; track roleOption) {
-                  <option [value]="roleOption">{{ roleOption }}</option>
-                }
-              </select>
+              <p-select
+                [options]="roles"
+                [ngModel]="role()"
+                (ngModelChange)="updateRole($event)"
+                placeholder="Select role"
+              ></p-select>
             </div>
 
             <div class="summary-field">
               <span>Active</span>
-              <select [value]="activeValue()" (change)="updateActive($event)">
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
+              <p-select
+                [options]="activeOptions"
+                [ngModel]="active()"
+                (ngModelChange)="updateActive($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select status"
+              ></p-select>
             </div>
           </div>
-
-          <div class="summary-save-row">
-            <button type="button" class="primary-btn" (click)="saveUser()">Save</button>
-          </div>
-        }
+        </ng-container>
+        <ng-template #userNotFound>
+          <p class="empty-copy">User not found.</p>
+        </ng-template>
       </article>
+
+      <div *ngIf="userExists()" class="summary-save-row">
+        <button pButton pRipple type="button" class="primary-btn" (click)="saveUser()">Save</button>
+      </div>
     </section>
 
-    @if (saveToastVisible()) {
-      <div class="save-toast">User saved successfully.</div>
-    }
+    <p-toast position="bottom-right"></p-toast>
   </main>
 </div>
+
+
+

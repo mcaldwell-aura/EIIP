@@ -1,15 +1,31 @@
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { Router, RouterModule } from '@angular/router';
-import { ASSIGNABLE_USER_ROLES, type AccountRepositoryUser, type AssignableUserRole } from './users.data';
+import {
+  ASSIGNABLE_USER_ROLES,
+  type AccountRepositoryUser,
+  type AssignableUserRole,
+} from './users.data';
 import { UserStoreService } from './user-store.service';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 
 type AddUserStep = 'search' | 'details';
 
 @Component({
   selector: 'app-add-user',
-  imports: [RouterModule, NavMenuComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './add-user.component.html',
   styleUrl: './add-user.component.scss',
@@ -36,7 +52,9 @@ export class AddUserComponent {
   protected readonly assignableRoles = ASSIGNABLE_USER_ROLES;
   protected readonly activeChecked = computed(() => this.active());
   protected readonly matchedUsername = computed(() => this.matchedRepositoryUser()?.username ?? '');
-  protected readonly matchedFirstName = computed(() => this.matchedRepositoryUser()?.firstName ?? '');
+  protected readonly matchedFirstName = computed(
+    () => this.matchedRepositoryUser()?.firstName ?? '',
+  );
   protected readonly matchedLastName = computed(() => this.matchedRepositoryUser()?.lastName ?? '');
   protected readonly showSearchStep = computed(() => this.step() === 'search');
   protected readonly showDetailsStep = computed(() => this.step() === 'details');

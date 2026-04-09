@@ -1,9 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { USER_ROLES, type UserRecord, type UserRole } from './users.data';
 import { UserStoreService } from './user-store.service';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
 
 type UserSortColumn = 'firstName' | 'lastName' | 'role' | 'active';
 type SortDirection = 'asc' | 'desc';
@@ -16,7 +24,17 @@ type SortState = {
 
 @Component({
   selector: 'app-users',
-  imports: [RouterModule, NavMenuComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+    SelectModule,
+    TableModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
@@ -28,7 +46,7 @@ export class UsersComponent {
 
   protected readonly rows = this.userStore.users;
   protected readonly userSearchTerm = signal('');
-  protected readonly roleFilter = signal<UserRole | 'all'>('all');
+  protected readonly roleFilterValue = signal<UserRole | 'all'>('all');
   protected readonly activeFilter = signal<ActiveFilter>('all');
   protected readonly currentPage = signal(1);
   protected readonly sortState = signal<SortState>({
@@ -37,10 +55,20 @@ export class UsersComponent {
   });
 
   protected readonly roles = USER_ROLES;
+  protected readonly roleOptions = [
+    { label: 'Role: All', value: 'all' as const },
+    { label: 'Role: Inspector', value: 'Inspector' },
+    { label: 'Role: Viewer', value: 'Viewer' },
+  ];
+  protected readonly activeFilterOptions = [
+    { label: 'Status: All', value: 'all' },
+    { label: 'Status: Active', value: 'active' },
+    { label: 'Status: Inactive', value: 'inactive' },
+  ];
 
   protected readonly filteredSortedRows = computed(() => {
     const userSearchTerm = this.userSearchTerm().trim().toLowerCase();
-    const roleFilter = this.roleFilter();
+    const roleFilter = this.roleFilterValue();
     const activeFilter = this.activeFilter();
     const sortState = this.sortState();
 
@@ -113,13 +141,13 @@ export class UsersComponent {
     this.currentPage.set(1);
   }
 
-  protected updateRoleFilter(event: Event): void {
-    this.roleFilter.set((event.target as HTMLSelectElement).value as UserRole | 'all');
+  protected updateRoleFilter(value: UserRole | 'all'): void {
+    this.roleFilterValue.set(value);
     this.currentPage.set(1);
   }
 
-  protected updateActiveFilter(event: Event): void {
-    this.activeFilter.set((event.target as HTMLSelectElement).value as ActiveFilter);
+  protected updateActiveFilter(value: ActiveFilter): void {
+    this.activeFilter.set(value);
     this.currentPage.set(1);
   }
 

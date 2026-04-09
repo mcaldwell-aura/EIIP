@@ -1,24 +1,36 @@
-<app-nav-menu />
 <div class="overview-page" data-node-id="17:177">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu" (click)="menuService.toggle()">
-        ☰
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </a>
-      <button type="button" class="tab-link">View CSTIMS</button>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
       <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
       <a class="nav-text-link" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
-      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
-      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
     </div>
   </header>
 
@@ -36,35 +48,44 @@
         <span>Filter by:</span>
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Filter by due date</span>
-          <select [value]="dueDateFilter()" (change)="updateDueDateFilter($event)">
-            <option value="all">Due Date: All</option>
-            <option value="next-7-days">Due Date: Next 7 Days</option>
-            <option value="next-30-days">Due Date: 8 to 30 Days</option>
-            <option value="after-30-days">Due Date: After 30 Days</option>
-          </select>
+          <p-select
+            [options]="dueDateFilterOptions"
+            [ngModel]="dueDateFilter()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Due Date: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updateDueDateFilter($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Filter by priority score</span>
-          <select [value]="priorityFilter()" (change)="updatePriorityFilter($event)">
-            <option value="all">Priority Score: All</option>
-            <option value="high">Priority Score: High</option>
-            <option value="medium">Priority Score: Medium</option>
-            <option value="low">Priority Score: Low</option>
-          </select>
+          <p-select
+            [options]="priorityFilterOptions"
+            [ngModel]="priorityFilter()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Priority Score: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updatePriorityFilter($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Filter by inspection status</span>
-          <select [value]="statusFilter()" (change)="updateStatusFilter($event)">
-            <option value="all">Status: All</option>
-            <option value="Pending">Status: Pending</option>
-            <option value="Scheduled">Status: Scheduled</option>
-            <option value="Planned">Status: Planned</option>
-            <option value="Good">Status: Good</option>
-            <option value="Satisfactory">Status: Satisfactory</option>
-            <option value="Unsatisfactory">Status: Unsatisfactory</option>
-          </select>
+          <p-select
+            [options]="statusFilterOptions"
+            [ngModel]="statusFilter()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Status: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updateStatusFilter($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
       </div>
 
@@ -72,162 +93,226 @@
         <span>Sort by:</span>
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Sort by priority score</span>
-          <select [value]="selectedPrioritySort()" (change)="updatePrioritySort($event)">
-            <option value="default">Priority Score: Highest First</option>
-            <option value="desc">Priority Score: Highest First</option>
-            <option value="asc">Priority Score: Lowest First</option>
-          </select>
+          <p-select
+            [options]="prioritySortOptions"
+            [ngModel]="selectedPrioritySort()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Priority Score: Highest First"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updatePrioritySort($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Sort by status</span>
-          <select [value]="selectedStatusSort()" (change)="updateStatusSort($event)">
-            <option value="default">Status: Default</option>
-            <option value="asc">Status: A to Z</option>
-            <option value="desc">Status: Z to A</option>
-          </select>
+          <p-select
+            [options]="statusSortOptions"
+            [ngModel]="selectedStatusSort()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Status: Default"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updateStatusSort($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
 
         <label class="filter-chip filter-chip-select">
           <span class="visually-hidden">Sort by appointment</span>
-          <select [value]="selectedAppointmentSort()" (change)="updateAppointmentSort($event)">
-            <option value="default">Appointment: Default</option>
-            <option value="asc">Appointment: Soonest First</option>
-            <option value="desc">Appointment: Latest First</option>
-          </select>
+          <p-select
+            [options]="appointmentSortOptions"
+            [ngModel]="selectedAppointmentSort()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Appointment: Default"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (onChange)="updateAppointmentSort($any({ target: { value: $event.value } }))"
+          ></p-select>
         </label>
       </div>
     </section>
 
     <section class="table-card" aria-label="Inspection plan table">
       <div class="table-wrap">
-        <table>
-          <thead>
+        <p-table [value]="visibleRows()">
+          <ng-template pTemplate="header">
             <tr>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('subjectName')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('subjectName')"
+                >
                   Candidate Name {{ sortIndicator('subjectName') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('nextDue')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('nextDue')"
+                >
                   Next Due {{ sortIndicator('nextDue') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('priority')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('priority')"
+                >
                   Priority {{ sortIndicator('priority') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('inspectionStatus')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('inspectionStatus')"
+                >
                   Inspection Status {{ sortIndicator('inspectionStatus') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('inspectionReason')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('inspectionReason')"
+                >
                   Inspection Reason {{ sortIndicator('inspectionReason') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('inspectionType')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('inspectionType')"
+                >
                   Inspection Type {{ sortIndicator('inspectionType') }}
                 </button>
               </th>
               <th>
-                <button type="button" class="column-sort-btn" (click)="setSort('appointment')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="column-sort-btn"
+                  (click)="setSort('appointment')"
+                >
                   Appointment {{ sortIndicator('appointment') }}
                 </button>
               </th>
               <th>Actions</th>
             </tr>
-          </thead>
-          <tbody>
-            @if (visibleRows().length === 0) {
-              <tr>
-                <td class="empty-results-cell" colspan="8">
-                  No inspection plans match the selected filters.
-                </td>
-              </tr>
-            } @else {
-              @for (row of visibleRows(); track row.inspectionId) {
-                <tr>
-                  <td>
-                    <a
-                      class="subject-link"
-                      [routerLink]="['/inspection-overview/subject', row.subjectId]"
-                    >
-                      {{ row.subjectName }}
-                    </a>
-                  </td>
-                  <td>{{ row.nextDue }}</td>
-                  <td>
-                    <button
-                      type="button"
-                      class="priority-trigger"
-                      (click)="openPriorityModal(row)"
-                      [attr.aria-label]="'View priority score details for ' + row.subjectName"
-                    >
-                      <span class="priority-cell">
-                        {{ row.priority }}
-                        <span class="priority-info" aria-hidden="true">?</span>
-                      </span>
-                    </button>
-                  </td>
-                  <td>
-                    <a
-                      class="status-pill status-link"
-                      [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
-                      [class.warning]="requiresAttention(row.inspectionStatus)"
-                      (click)="closePriorityModal()"
-                    >
-                      {{ row.inspectionStatus }}
-                    </a>
-                  </td>
-                  <td>{{ row.inspectionReason }}</td>
-                  <td>{{ row.inspectionType }}</td>
-                  <td>
-                    @if (row.appointmentTooltip) {
-                      <span class="appointment-chip" [attr.title]="row.appointmentTooltip">
-                        {{ row.appointmentText }}
-                      </span>
-                    } @else {
-                      <span class="appointment-empty">—</span>
-                    }
-                  </td>
-                  <td>
-                    @if (row.canCreateInspection) {
-                      <button
-                        type="button"
-                        class="action-btn icon-action-btn"
-                        [attr.aria-label]="'Create a new inspection for ' + row.subjectName"
-                        (click)="openNewInspectionModal(row)"
-                      >
-                        <span class="action-icon" aria-hidden="true">＋</span>
-                        New Inspection
-                      </button>
-                    } @else {
-                      <span class="action-placeholder">—</span>
-                    }
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>
+                <a
+                  class="subject-link"
+                  [routerLink]="['/candidates', row.subjectId]"
+                  (click)="closePriorityModal()"
+                >
+                  {{ row.subjectName }}
+                </a>
+              </td>
+              <td>{{ row.nextDue }}</td>
+              <td>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="priority-trigger"
+                  (click)="openPriorityModal(row)"
+                  [attr.aria-label]="'View priority score details for ' + row.subjectName"
+                >
+                  <span class="priority-cell">
+                    {{ row.priority }}
+                    <span class="priority-info" aria-hidden="true">?</span>
+                  </span>
+                </button>
+              </td>
+              <td>
+                <a
+                  class="status-pill status-link"
+                  [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+                  [class.warning]="requiresAttention(row.inspectionStatus)"
+                  (click)="closePriorityModal()"
+                >
+                  {{ row.inspectionStatus }}
+                </a>
+              </td>
+              <td>{{ row.inspectionReason }}</td>
+              <td>{{ row.inspectionType }}</td>
+              <td>
+                <ng-container *ngIf="row.appointmentTooltip; else noAppointment">
+                  <span class="appointment-chip" [attr.title]="row.appointmentTooltip">
+                    {{ row.appointmentText }}
+                  </span>
+                </ng-container>
+                <ng-template #noAppointment>
+                  <span class="appointment-empty">—</span>
+                </ng-template>
+              </td>
+              <td>
+                <ng-container *ngIf="row.canCreateInspection; else noAction">
+                  <button
+                    pButton
+                    pRipple
+                    type="button"
+                    class="action-btn icon-action-btn"
+                    [attr.aria-label]="'Create a new inspection for ' + row.subjectName"
+                    (click)="openNewInspectionModal(row)"
+                  >
+                    <span class="action-icon" aria-hidden="true">＋</span>
+                    New Inspection
+                  </button>
+                </ng-container>
+                <ng-template #noAction>
+                  <span class="action-placeholder">—</span>
+                </ng-template>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td class="empty-results-cell" colspan="8">
+                No inspection plans match the selected filters.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
     </section>
   </main>
 
-  @if (selectedPriorityContext(); as context) {
-    <div class="modal-backdrop" (click)="closePriorityModal()">
-      <section
-        class="priority-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="priority-modal-title"
-        (click)="$event.stopPropagation()"
-      >
+  <p-dialog
+    [(visible)]="priorityDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="true"
+    [dismissableMask]="true"
+    [header]="'Priority Score'"
+    [style]="{ width: 'min(420px, 95vw)' }"
+    (onHide)="closePriorityModal()"
+  >
+    <ng-container *ngIf="selectedPriorityContext() as context">
+      <div class="priority-modal">
         <div class="priority-modal-header">
           <div>
             <p class="priority-modal-kicker">Priority Score</p>
@@ -243,15 +328,6 @@
               </span>
             </div>
           </div>
-
-          <button
-            type="button"
-            class="modal-close-btn"
-            aria-label="Close priority score details"
-            (click)="closePriorityModal()"
-          >
-            ×
-          </button>
         </div>
 
         <div class="priority-modal-divider"></div>
@@ -281,33 +357,24 @@
             </div>
           </div>
         </div>
-      </section>
-    </div>
-  }
+      </div>
+    </ng-container>
+  </p-dialog>
 
-  @if (isNewInspectionModalOpen() && newInspectionCandidate(); as candidate) {
-    <div class="modal-backdrop" (click)="closeNewInspectionModal()">
-      <section
-        class="new-inspection-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-inspection-modal-title"
-        (click)="$event.stopPropagation()"
-      >
+  <p-dialog
+    [(visible)]="newInspectionDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="true"
+    [dismissableMask]="true"
+    [header]="'New Inspection'"
+    [style]="{ width: 'min(980px, 96vw)' }"
+    (onHide)="closeNewInspectionModal()"
+  >
+    <ng-container *ngIf="newInspectionCandidate() as candidate">
+      <div class="new-inspection-modal">
         <div class="new-inspection-modal-header">
-          <div>
-            <p class="priority-modal-kicker">Create Inspection</p>
-            <h2 id="new-inspection-modal-title">New Inspection</h2>
-          </div>
-
-          <button
-            type="button"
-            class="modal-close-btn"
-            aria-label="Close new inspection modal"
-            (click)="closeNewInspectionModal()"
-          >
-            ×
-          </button>
+          <p class="priority-modal-kicker">Create Inspection</p>
         </div>
 
         <div class="priority-modal-divider"></div>
@@ -315,27 +382,31 @@
         <div class="new-inspection-modal-body">
           <label class="new-inspection-field new-inspection-field-wide">
             <span>Candidate Name</span>
-            <input type="text" [value]="candidate.subjectName" readonly />
+            <input pInputText type="text" [value]="candidate.subjectName" readonly />
           </label>
 
           <label class="new-inspection-field">
             <span>Inspection Reason *</span>
-            <select [value]="inspectionReasonInput()" (change)="updateInspectionReason($event)">
-              <option value="" disabled>Select reason</option>
-              @for (reason of inspectionReasonOptions; track reason) {
-                <option [value]="reason">{{ reason }}</option>
-              }
-            </select>
+            <p-select
+              [options]="inspectionReasonDropdownOptions"
+              [ngModel]="inspectionReasonInput() || null"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select reason"
+              (onChange)="updateInspectionReason($any({ target: { value: $event.value ?? '' } }))"
+            ></p-select>
           </label>
 
           <label class="new-inspection-field">
             <span>Inspection Type *</span>
-            <select [value]="inspectionTypeInput()" (change)="updateInspectionType($event)">
-              <option value="" disabled>Select type</option>
-              @for (inspectionType of inspectionTypeOptions; track inspectionType) {
-                <option [value]="inspectionType">{{ inspectionType }}</option>
-              }
-            </select>
+            <p-select
+              [options]="inspectionTypeDropdownOptions"
+              [ngModel]="inspectionTypeInput() || null"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select type"
+              (onChange)="updateInspectionType($any({ target: { value: $event.value ?? '' } }))"
+            ></p-select>
           </label>
 
           <section
@@ -350,6 +421,7 @@
             <label class="new-inspection-field search-field-inline">
               <span class="visually-hidden">Search active inspectors</span>
               <input
+                pInputText
                 type="search"
                 [value]="inspectorSearchTerm()"
                 (input)="updateInspectorSearchTerm($event)"
@@ -358,25 +430,25 @@
             </label>
 
             <div class="selection-list" role="listbox" aria-label="Active users">
-              @for (inspectorName of activeInspectorNames(); track inspectorName) {
-                <label class="selection-option">
-                  <input
-                    type="checkbox"
-                    [checked]="isInspectorSelected(inspectorName)"
-                    (change)="toggleInspectorSelection(inspectorName)"
-                  />
-                  <span>{{ inspectorName }}</span>
-                </label>
-              }
+              <label *ngFor="let inspectorName of activeInspectorNames()" class="selection-option">
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="isInspectorSelected(inspectorName)"
+                  (onChange)="toggleInspectorSelection(inspectorName)"
+                ></p-checkbox>
+                <span>{{ inspectorName }}</span>
+              </label>
             </div>
 
-            @if (selectedInspectors().length > 0) {
-              <div class="selected-pill-list" aria-label="Selected inspectors">
-                @for (inspectorName of selectedInspectors(); track inspectorName) {
-                  <span class="selected-pill">{{ inspectorName }}</span>
-                }
-              </div>
-            }
+            <div
+              *ngIf="selectedInspectors().length > 0"
+              class="selected-pill-list"
+              aria-label="Selected inspectors"
+            >
+              <span *ngFor="let inspectorName of selectedInspectors()" class="selected-pill">{{
+                inspectorName
+              }}</span>
+            </div>
           </section>
 
           <section
@@ -391,16 +463,19 @@
             <div class="appointment-inline-grid">
               <label class="new-inspection-field">
                 <span>Inspection Date</span>
-                <input
-                  type="datetime-local"
-                  [value]="appointmentDateTimeInput()"
-                  (input)="updateAppointmentDateTime($event)"
-                />
+                <p-datepicker
+                  [ngModel]="appointmentDateTimeValue"
+                  (ngModelChange)="appointmentDateTimeValue = $event"
+                  [showTime]="true"
+                  [showSeconds]="false"
+                  [showIcon]="true"
+                ></p-datepicker>
               </label>
 
               <label class="new-inspection-field">
                 <span>Inspection Location</span>
                 <input
+                  pInputText
                   type="search"
                   list="active-location-options"
                   [value]="appointmentLocationInput()"
@@ -411,13 +486,16 @@
             </div>
 
             <datalist id="active-location-options">
-              @for (locationName of activeLocationNames; track locationName) {
-                <option [value]="locationName"></option>
-              }
+              <option
+                *ngFor="let locationName of activeLocationNames"
+                [value]="locationName"
+              ></option>
             </datalist>
 
             <div class="appointment-inline-actions">
               <button
+                pButton
+                pRipple
                 type="button"
                 class="secondary-modal-btn add-appointment-btn"
                 (click)="addAppointment()"
@@ -426,42 +504,60 @@
               </button>
             </div>
 
-            @if (stagedAppointments().length > 0) {
-              <div class="staged-appointments-list">
-                @for (
-                  appointment of stagedAppointments();
-                  track appointment.dateTime + appointment.location + $index
-                ) {
-                  <div class="staged-appointment-row">
-                    <div>
-                      <strong>{{ appointment.dateTime || 'TBD' }}</strong>
-                      <p>{{ appointment.location || 'No location selected' }}</p>
-                    </div>
-                    <button
-                      type="button"
-                      class="text-action-btn"
-                      (click)="removeAppointment($index)"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                }
+            <div *ngIf="stagedAppointments().length > 0" class="staged-appointments-list">
+              <div
+                *ngFor="let appointment of stagedAppointments(); let appointmentIndex = index"
+                class="staged-appointment-row"
+              >
+                <div>
+                  <strong>{{ appointment.dateTime || 'TBD' }}</strong>
+                  <p>{{ appointment.location || 'No location selected' }}</p>
+                </div>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="text-action-btn"
+                  (click)="removeAppointment(appointmentIndex)"
+                >
+                  Remove
+                </button>
               </div>
-            }
+            </div>
           </section>
 
-          @if (newInspectionValidationMessage()) {
-            <p class="modal-validation-message">{{ newInspectionValidationMessage() }}</p>
-          }
+          <p *ngIf="newInspectionValidationMessage()" class="modal-validation-message">
+            {{ newInspectionValidationMessage() }}
+          </p>
         </div>
+      </div>
+    </ng-container>
 
-        <div class="new-inspection-modal-footer">
-          <button type="button" class="secondary-modal-btn" (click)="closeNewInspectionModal()">
-            Cancel
-          </button>
-          <button type="button" class="action-btn" (click)="saveNewInspection()">Save</button>
-        </div>
-      </section>
-    </div>
-  }
+    <ng-template pTemplate="footer">
+      <div class="new-inspection-modal-footer">
+        <button
+          pButton
+          pRipple
+          type="button"
+          class="secondary-modal-btn"
+          (click)="closeNewInspectionModal()"
+        >
+          Cancel
+        </button>
+        <button
+          pButton
+          pRipple
+          type="button"
+          class="action-btn"
+          [disabled]="!canSaveNewInspection()"
+          (click)="saveNewInspection()"
+        >
+          Save
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
 </div>
+
+
+

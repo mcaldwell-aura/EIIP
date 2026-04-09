@@ -1,5 +1,4 @@
 @if (menuService.isOpen()) {
-  <!-- Backdrop -->
   <div
     class="menu-backdrop"
     (click)="close()"
@@ -8,11 +7,10 @@
     aria-hidden="true"
   ></div>
 
-  <!-- Drawer -->
   <nav class="menu-drawer" role="navigation" aria-label="Main navigation menu">
     <div class="menu-header">
       <div class="menu-brand">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </div>
       <button type="button" class="menu-close-btn" (click)="close()" aria-label="Close menu">
@@ -29,7 +27,28 @@
             Users
           </a>
         </li>
+        <li>
+          <a class="menu-item" routerLink="/inspection-overview" (click)="close()">
+            <span class="menu-item-icon" aria-hidden="true">◦</span>
+            Inspection Plan
+          </a>
+        </li>
+        <li>
+          <a class="menu-item" routerLink="/candidates" (click)="close()">
+            <span class="menu-item-icon" aria-hidden="true">◦</span>
+            Candidates
+          </a>
+        </li>
+        <li>
+          <a class="menu-item" routerLink="/locations" (click)="close()">
+            <span class="menu-item-icon" aria-hidden="true">◦</span>
+            Locations
+          </a>
+        </li>
       </ul>
     </div>
   </nav>
 }
+
+
+

@@ -1,8 +1,15 @@
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { NavMenuComponent } from './nav-menu.component';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
 import { NavMenuService } from './nav-menu.service';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
 
 type SummaryCard = {
   label: string;
@@ -58,9 +65,23 @@ type SortState = {
   direction: SortDirection;
 };
 
+type SelectOption<T extends string> = {
+  label: string;
+  value: T;
+};
+
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, NavMenuComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    SelectModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -232,6 +253,40 @@ export class DashboardComponent {
   protected readonly activityStatusFilter = signal<ActivityStatusFilter>('all');
   protected readonly activityTypeFilter = signal<ActivityTypeFilter>('all');
   protected readonly activityReasonFilter = signal<ActivityReasonFilter>('all');
+  protected readonly activityTypeFilterOptions: SelectOption<ActivityTypeFilter>[] = [
+    { label: 'Inspection Type: All', value: 'all' },
+    { label: 'Inspection Type: Overt', value: 'Overt' },
+    { label: 'Inspection Type: Covert', value: 'Covert' },
+  ];
+  protected readonly activityReasonFilterOptions: SelectOption<ActivityReasonFilter>[] = [
+    { label: 'Reason: All', value: 'all' },
+    { label: 'Reason: Follow Up', value: 'Follow Up' },
+    { label: 'Reason: Investigate', value: 'Investigate' },
+    { label: 'Reason: Biennial', value: 'Biennial' },
+    { label: 'Reason: Re-Examination', value: 'Re-Examination' },
+  ];
+  protected readonly activityStatusFilterOptions: SelectOption<ActivityStatusFilter>[] = [
+    { label: 'Status: All', value: 'all' },
+    { label: 'Status: Completed', value: 'Completed' },
+    { label: 'Status: Closed', value: 'Closed' },
+    { label: 'Status: In Review', value: 'In Review' },
+    { label: 'Status: Escalated', value: 'Escalated' },
+  ];
+  protected readonly activityDateSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Inspection Date: Newest First', value: 'default' },
+    { label: 'Inspection Date: Newest First', value: 'desc' },
+    { label: 'Inspection Date: Oldest First', value: 'asc' },
+  ];
+  protected readonly activityCandidateSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Candidate Name: Default', value: 'default' },
+    { label: 'Candidate Name: A to Z', value: 'asc' },
+    { label: 'Candidate Name: Z to A', value: 'desc' },
+  ];
+  protected readonly activityPrioritySortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Priority: Highest First', value: 'default' },
+    { label: 'Priority: Highest First', value: 'desc' },
+    { label: 'Priority: Lowest First', value: 'asc' },
+  ];
 
   protected readonly filteredSortedActivityRows = computed(() => {
     const now = Date.now();

@@ -1,11 +1,22 @@
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LOCATIONS } from './locations.data';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { type InspectionRecord, type InspectionStatus } from './inspection-data';
 import { InspectionStoreService } from './inspection-store.service';
 import { USERS } from './users.data';
+
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { TextareaModule } from 'primeng/textarea';
 
 type DueDateFilter = 'all' | 'next-7-days' | 'next-30-days' | 'after-30-days';
 type PriorityFilter = 'all' | 'high' | 'medium' | 'low';
@@ -21,6 +32,10 @@ type SortDirection = 'asc' | 'desc';
 type ToolbarSortSelection = 'default' | 'asc' | 'desc' | 'attention-first';
 type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
 type InspectionTypeOption = 'Overt' | 'Covert';
+type SelectOption<T extends string> = {
+  label: string;
+  value: T;
+};
 
 type PriorityContext = {
   why: string;
@@ -63,7 +78,20 @@ const PRIORITY_CONTEXT: Record<string, PriorityContext> = {
 
 @Component({
   selector: 'app-inspection-overview',
-  imports: [RouterLink, NavMenuComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    CheckboxModule,
+    DatePickerModule,
+    DialogModule,
+    RippleModule,
+    InputTextModule,
+    SelectModule,
+    TableModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inspection-overview.component.html',
   styleUrl: './inspection-overview.component.scss',
@@ -100,6 +128,49 @@ export class InspectionOverviewComponent {
     'Periodic',
   ];
   protected readonly inspectionTypeOptions: readonly InspectionTypeOption[] = ['Overt', 'Covert'];
+  protected readonly dueDateFilterOptions: SelectOption<DueDateFilter>[] = [
+    { label: 'Due Date: All', value: 'all' },
+    { label: 'Due Date: Next 7 Days', value: 'next-7-days' },
+    { label: 'Due Date: 8 to 30 Days', value: 'next-30-days' },
+    { label: 'Due Date: After 30 Days', value: 'after-30-days' },
+  ];
+  protected readonly priorityFilterOptions: SelectOption<PriorityFilter>[] = [
+    { label: 'Priority Score: All', value: 'all' },
+    { label: 'Priority Score: High', value: 'high' },
+    { label: 'Priority Score: Medium', value: 'medium' },
+    { label: 'Priority Score: Low', value: 'low' },
+  ];
+  protected readonly statusFilterOptions: SelectOption<InspectionStatus | 'all'>[] = [
+    { label: 'Status: All', value: 'all' },
+    { label: 'Status: Pending', value: 'Pending' },
+    { label: 'Status: Scheduled', value: 'Scheduled' },
+    { label: 'Status: Planned', value: 'Planned' },
+    { label: 'Status: Good', value: 'Good' },
+    { label: 'Status: Satisfactory', value: 'Satisfactory' },
+    { label: 'Status: Unsatisfactory', value: 'Unsatisfactory' },
+  ];
+  protected readonly prioritySortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Priority Score: Highest First', value: 'default' },
+    { label: 'Priority Score: Highest First', value: 'desc' },
+    { label: 'Priority Score: Lowest First', value: 'asc' },
+  ];
+  protected readonly statusSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Status: Default', value: 'default' },
+    { label: 'Status: A to Z', value: 'asc' },
+    { label: 'Status: Z to A', value: 'desc' },
+  ];
+  protected readonly appointmentSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Appointment: Default', value: 'default' },
+    { label: 'Appointment: Soonest First', value: 'asc' },
+    { label: 'Appointment: Latest First', value: 'desc' },
+  ];
+  protected readonly inspectionReasonDropdownOptions: SelectOption<InspectionReasonOption>[] =
+    this.inspectionReasonOptions.map((reason) => ({ label: reason, value: reason }));
+  protected readonly inspectionTypeDropdownOptions: SelectOption<InspectionTypeOption>[] =
+    this.inspectionTypeOptions.map((inspectionType) => ({
+      label: inspectionType,
+      value: inspectionType,
+    }));
   protected readonly activeInspectorNames = computed(() => {
     const searchTerm = this.inspectorSearchTerm().trim().toLowerCase();
 
@@ -235,6 +306,43 @@ export class InspectionOverviewComponent {
       this.inspectionReasonInput().length > 0 &&
       this.inspectionTypeInput().length > 0,
   );
+  protected get priorityDialogVisible(): boolean {
+    return this.selectedPriorityRow() !== null;
+  }
+
+  protected set priorityDialogVisible(visible: boolean) {
+    if (!visible) {
+      this.closePriorityModal();
+    }
+  }
+
+  protected get newInspectionDialogVisible(): boolean {
+    return this.isNewInspectionModalOpen();
+  }
+
+  protected set newInspectionDialogVisible(visible: boolean) {
+    if (!visible) {
+      this.closeNewInspectionModal();
+      return;
+    }
+
+    this.isNewInspectionModalOpen.set(true);
+  }
+
+  protected get appointmentDateTimeValue(): Date | null {
+    const dateTime = this.appointmentDateTimeInput().trim();
+
+    if (dateTime.length === 0) {
+      return null;
+    }
+
+    const parsedDate = new Date(dateTime);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+
+  protected set appointmentDateTimeValue(value: Date | null) {
+    this.appointmentDateTimeInput.set(value ? this.formatDateTimeInputValue(value) : '');
+  }
 
   protected requiresAttention(status: InspectionStatus): boolean {
     return status === 'Pending' || status === 'Planned' || status === 'Unsatisfactory';
@@ -316,6 +424,13 @@ export class InspectionOverviewComponent {
   protected closeNewInspectionModal(): void {
     this.isNewInspectionModalOpen.set(false);
     this.newInspectionCandidate.set(null);
+    this.inspectionReasonInput.set('');
+    this.inspectionTypeInput.set('');
+    this.inspectorSearchTerm.set('');
+    this.selectedInspectors.set([]);
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+    this.stagedAppointments.set([]);
     this.newInspectionValidationMessage.set('');
   }
 
@@ -654,6 +769,16 @@ export class InspectionOverviewComponent {
       dateTime,
       location,
     };
+  }
+
+  private formatDateTimeInputValue(value: Date): string {
+    const year = value.getFullYear();
+    const month = `${value.getMonth() + 1}`.padStart(2, '0');
+    const day = `${value.getDate()}`.padStart(2, '0');
+    const hours = `${value.getHours()}`.padStart(2, '0');
+    const minutes = `${value.getMinutes()}`.padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   private dayDifferenceFromToday(date: Date): number {

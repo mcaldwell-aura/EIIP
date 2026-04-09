@@ -10,7 +10,17 @@ export type StoredAppointmentRow = {
   dateTime: string;
   location: string;
   comments: string;
-  status: 'Scheduled' | 'Completed' | 'Canceled';
+  status: 'Scheduled' | 'Cancelled' | 'Completed' | 'Canceled';
+};
+
+type AppointmentAuditAction = 'create' | 'edit';
+
+export type AppointmentAuditEntry = {
+  inspectionId: string;
+  action: AppointmentAuditAction;
+  timestampIso: string;
+  before: StoredAppointmentRow | null;
+  after: StoredAppointmentRow;
 };
 
 export type CreateInspectionInput = {
@@ -31,12 +41,28 @@ export type CreateInspectionInput = {
 export class InspectionStoreService {
   private readonly inspectionsState = signal<InspectionRecord[]>([...INSPECTIONS]);
   private readonly appointmentRowsState = signal<Record<string, StoredAppointmentRow[]>>({});
+  // Backend/system-side audit trail; intentionally not exposed to UI.
+  private readonly appointmentAuditTrailState = signal<Record<string, AppointmentAuditEntry[]>>({});
   private readonly pendingSuccessToastInspectionIdState = signal<string | null>(null);
 
   readonly inspections = this.inspectionsState.asReadonly();
 
   getAppointmentRows(inspectionId: string): StoredAppointmentRow[] | undefined {
     return this.appointmentRowsState()[inspectionId];
+  }
+
+  saveAppointmentRows(inspectionId: string, rows: StoredAppointmentRow[]): void {
+    this.appointmentRowsState.update((existing) => ({
+      ...existing,
+      [inspectionId]: rows,
+    }));
+  }
+
+  appendAppointmentAuditEntry(inspectionId: string, entry: AppointmentAuditEntry): void {
+    this.appointmentAuditTrailState.update((existing) => ({
+      ...existing,
+      [inspectionId]: [...(existing[inspectionId] ?? []), entry],
+    }));
   }
 
   createInspection(input: CreateInspectionInput): string {

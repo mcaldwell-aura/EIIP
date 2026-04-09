@@ -1,9 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { NavMenuComponent } from './nav-menu.component';
 import { NavMenuService } from './nav-menu.service';
 import { InspectionRecord, INSPECTIONS } from './inspection-data';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 
 type SortDirection = 'asc' | 'desc';
 type UpcomingSortKey =
@@ -48,7 +52,14 @@ type RecentlyCompletedRow = {
 
 @Component({
   selector: 'app-inspector-dashboard',
-  imports: [RouterModule, NavMenuComponent, CommonModule],
+  imports: [
+    RouterModule,
+    CommonModule,
+    ButtonModule,
+    RippleModule,
+    InputTextModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inspector-dashboard.component.html',
   styleUrl: './inspector-dashboard.component.scss',

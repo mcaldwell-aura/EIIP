@@ -246,6 +246,8 @@ h1 {
   justify-content: space-between;
   margin-top: 1.15rem;
   padding: 0.85rem 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .toolbar-group {
@@ -292,9 +294,9 @@ h1 {
   border-color: #d7e1f3;
   color: #24314d;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  padding: 0.48rem 0.7rem;
+  padding: 0.3rem 0.5rem;
 }
 
 .filter-chip-select {
@@ -304,25 +306,27 @@ h1 {
   position: relative;
 }
 
-.filter-chip-select select {
-  appearance: none;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
+/* PrimeNG select sizing tuned to table typography and compact toolbar layout. */
+:host ::ng-deep .toolbar .filter-chip-select .p-select {
+  border-radius: 8px;
+  font-size: 0.86rem;
   min-height: 2rem;
-  padding: 0.48rem 2rem 0.48rem 0.7rem;
+  width: 10.25rem;
 }
 
-.filter-chip-select::after {
-  color: var(--text-soft);
-  content: '▾';
-  pointer-events: none;
-  position: absolute;
-  right: 0.7rem;
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-label {
+  font-size: 0.86rem;
+  line-height: 1.2;
+  padding: 0.36rem 0.58rem;
+}
+
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-dropdown {
+  width: 1.9rem;
+}
+
+:host ::ng-deep .toolbar .filter-chip-select .p-select .p-select-dropdown .p-icon {
+  height: 0.72rem;
+  width: 0.72rem;
 }
 
 .table-card {
@@ -333,6 +337,8 @@ h1 {
   margin-top: 1rem;
   min-height: 34rem;
   padding: 0.35rem 0.9rem 0.85rem;
+  position: relative;
+  z-index: 1;
 }
 
 .table-wrap {
@@ -482,6 +488,10 @@ select:focus-visible {
 
   .pagination-btn {
     width: 100%;
+  }
+
+  :host ::ng-deep .toolbar .filter-chip-select .p-select {
+    width: min(100%, 15rem);
   }
 
   .brand-text {
