@@ -7,6 +7,8 @@
   --p-primary-color: #1f56d8;
   --p-surface-ground: #ffffff;
   --p-surface-card: #ffffff;
+  --p-surface-section: #ffffff;
+  --p-datatable-header-background: #ffffff;
   --p-text-color: #18223a;
   --p-content-border-color: #d8e0f2;
   --app-btn-hover-bg: #0a2e8a;
@@ -261,4 +263,44 @@ a.icon-action-btn:active {
 .tabs .tab-btn:active::before {
   opacity: inherit !important;
   filter: none !important;
+}
+
+/* Fix PrimeNG DataTable black background issue */
+:host ::ng-deep .p-datatable {
+  background: #ffffff !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #ffffff !important;
+  color: #18223a !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  background: #ffffff !important;
+  color: #2a3652 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover > td {
+  background: #f8f9fc !important;
+  color: #2a3652 !important;
+}
+
+/* Fix PrimeNG Dialog/Modal black background issue */
+:host ::ng-deep .p-dialog {
+  background: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #d8e0f2 !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  background: #ffffff !important;
+  color: #18223a !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-footer {
+  background: #ffffff !important;
+  border-top: 1px solid #d8e0f2 !important;
 }
