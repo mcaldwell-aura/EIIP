@@ -27,8 +27,7 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              "src/404.html"
+              }
             ],
             "styles": ["src/styles.scss"],
             "server": "src/main.server.ts",
