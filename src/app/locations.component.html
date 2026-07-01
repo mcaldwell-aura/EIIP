@@ -1,0 +1,275 @@
+<div class="locations-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link active-nav-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="locations-main">
+    <section class="locations-header">
+      <div>
+        <p class="eyebrow">Location Directory</p>
+        <h1>Locations</h1>
+      </div>
+      <div class="header-actions">
+        <a class="back-link" routerLink="/">Back</a>
+        @if (hasManageLocationsPermission) {
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="new-location-btn"
+            (click)="openNewLocationDialog()"
+          >
+            + New Location
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Location filters">
+      <div class="toolbar-group search-group">
+        <label class="search-field">
+          <span class="visually-hidden">Search locations by location name</span>
+          <input
+            pInputText
+            type="search"
+            [value]="nameSearchTerm()"
+            (input)="updateNameSearchTerm($event)"
+            placeholder="Search Location Name"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-group">
+        <span>Filter by:</span>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by active status</span>
+          <p-select
+            [options]="activeFilterOptions"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="updateActiveFilter($event)"
+            placeholder="Status: Active"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+          ></p-select>
+        </label>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Locations list">
+      <p-table [value]="pagedRows()" tableStyleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="locationName" style="width: 20%">
+              Location Name <p-sortIcon field="locationName"></p-sortIcon>
+            </th>
+            <th pSortableColumn="address" style="width: 25%">
+              Address <p-sortIcon field="address"></p-sortIcon>
+            </th>
+            <th pSortableColumn="city" style="width: 12%">
+              City <p-sortIcon field="city"></p-sortIcon>
+            </th>
+            <th pSortableColumn="county" style="width: 12%">
+              County <p-sortIcon field="county"></p-sortIcon>
+            </th>
+            <th pSortableColumn="state" style="width: 10%">
+              State <p-sortIcon field="state"></p-sortIcon>
+            </th>
+            <th pSortableColumn="zip" style="width: 10%">
+              ZIP <p-sortIcon field="zip"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>
+              <a class="location-name-link" [routerLink]="['/locations', row.locationId]">
+                {{ row.locationName }}
+              </a>
+            </td>
+            <td>{{ locationAddress(row) }}</td>
+            <td>{{ row.city }}</td>
+            <td>{{ row.county }}</td>
+            <td>{{ row.state }}</td>
+            <td>{{ row.zip }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">No locations found.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  </main>
+
+  <p-dialog
+    [visible]="newLocationDialogVisible()"
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="true"
+    [closable]="true"
+    header="New Location"
+    styleClass="new-location-modal"
+    [style]="{ width: 'min(720px, 95vw)' }"
+    (onHide)="cancelNewLocation()"
+  >
+    <div class="new-location-form">
+      <div class="new-location-grid">
+        <label class="new-location-field new-location-field-wide">
+          <span>Location Name *</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newLocationName()"
+            (ngModelChange)="newLocationName.set($event)"
+          />
+        </label>
+
+        <label class="new-location-field new-location-field-wide">
+          <span>Address Line 1 *</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newLocationAddressLine1()"
+            (ngModelChange)="newLocationAddressLine1.set($event)"
+          />
+        </label>
+
+        <label class="new-location-field new-location-field-wide">
+          <span>Address Line 2</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newLocationAddressLine2()"
+            (ngModelChange)="newLocationAddressLine2.set($event)"
+          />
+        </label>
+
+        <label class="new-location-field">
+          <span>City *</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newLocationCity()"
+            (ngModelChange)="newLocationCity.set($event)"
+          />
+        </label>
+
+        <label class="new-location-field">
+          <span>County</span>
+          <p-select
+            [options]="countyOptions"
+            [ngModel]="newLocationCounty() || null"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select county"
+            appendTo="body"
+            (ngModelChange)="newLocationCounty.set($event ?? '')"
+          ></p-select>
+        </label>
+
+        <label class="new-location-field">
+          <span>State *</span>
+          <p-select
+            [options]="stateOptions"
+            [ngModel]="newLocationState()"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            (ngModelChange)="newLocationState.set($event)"
+          ></p-select>
+        </label>
+
+        <label class="new-location-field">
+          <span>ZIP *</span>
+          <input
+            pInputText
+            type="text"
+            inputmode="numeric"
+            maxlength="5"
+            [value]="newLocationZip()"
+            (input)="updateNewLocationZip($event)"
+          />
+        </label>
+
+        <label class="new-location-field new-location-field-wide">
+          <span>External Identifier</span>
+          <input
+            pInputText
+            type="text"
+            maxlength="256"
+            [ngModel]="newLocationExternalIdentifier()"
+            (ngModelChange)="newLocationExternalIdentifier.set($event)"
+          />
+        </label>
+
+        <div class="new-location-field new-location-toggle-row">
+          <span>Active</span>
+          <p-toggleswitch
+            [ngModel]="newLocationActive()"
+            (ngModelChange)="newLocationActive.set($event)"
+          ></p-toggleswitch>
+        </div>
+      </div>
+
+      @if (newLocationValidationMessage()) {
+        <p class="new-location-validation" role="alert">{{ newLocationValidationMessage() }}</p>
+      }
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="new-location-modal-footer">
+        <button pButton pRipple type="button" class="cancel-btn" (click)="cancelNewLocation()">
+          Cancel
+        </button>
+        <button pButton pRipple type="button" class="save-btn" (click)="saveNewLocation()">
+          Save
+        </button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-toast position="bottom-right"></p-toast>
+</div>
+
+
+
+

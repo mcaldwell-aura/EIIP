@@ -1,18 +1,37 @@
 <div class="subject-page" data-node-id="166:533">
   <header class="top-nav">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
       <a class="brand" routerLink="/">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </a>
-      <button type="button" class="tab-link">View CSTIMS</button>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
-      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
-      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
     </div>
   </header>
 
@@ -30,6 +49,8 @@
 
     <section class="tabs" aria-label="Subject details tabs">
       <button
+        pButton
+        pRipple
         type="button"
         class="tab-btn"
         [class.active]="activeTab() === 'summary'"
@@ -38,6 +59,8 @@
         Summary
       </button>
       <button
+        pButton
+        pRipple
         type="button"
         class="tab-btn"
         [class.active]="activeTab() === 'history'"
@@ -47,9 +70,9 @@
       </button>
     </section>
 
-    @if (activeTab() === 'summary') {
+    <ng-container *ngIf="activeTab() === 'summary'; else historyTab">
       <section class="details-card" aria-label="Subject information">
-        <h2>Subject Information</h2>
+        <h2>Candidate Information</h2>
         <div class="field-grid">
           <div class="field">
             <label>First Name</label>
@@ -77,7 +100,8 @@
           </div>
         </div>
       </section>
-    } @else {
+    </ng-container>
+    <ng-template #historyTab>
       <section class="details-card" aria-label="Inspection history">
         <h2>Inspection History</h2>
         <div class="history-table-wrap">
@@ -91,25 +115,27 @@
               </tr>
             </thead>
             <tbody>
-              @for (item of history(); track item.completedOn + item.inspectionReason + $index) {
-                <tr>
-                  <td>{{ item.inspectionReason }}</td>
-                  <td>
-                    <span
-                      class="history-status-pill"
-                      [class.warning]="item.inspectionStatus === 'Planned'"
-                    >
-                      {{ item.inspectionStatus }}
-                    </span>
-                  </td>
-                  <td>{{ item.inspectionType }}</td>
-                  <td>{{ item.completedOn }}</td>
-                </tr>
-              }
+              <tr *ngFor="let item of history()">
+                <td>{{ item.inspectionReason }}</td>
+                <td>
+                  <span
+                    class="history-status-pill"
+                    [class.warning]="item.inspectionStatus === 'Planned'"
+                  >
+                    {{ item.inspectionStatus }}
+                  </span>
+                </td>
+                <td>{{ item.inspectionType }}</td>
+                <td>{{ item.completedOn }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </section>
-    }
+    </ng-template>
   </main>
 </div>
+
+
+
+

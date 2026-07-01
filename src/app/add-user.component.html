@@ -1,0 +1,144 @@
+<div class="edit-user-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="details-main">
+    <section class="page-header">
+      <div class="title-wrap">
+        <div class="title-row">
+          <h1>Add User</h1>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <article class="details-card">
+        <div class="card-header solo-header">
+          <h2>Add User</h2>
+        </div>
+
+        <div *ngIf="showSearchStep()" class="search-form-row">
+          <div class="summary-field search-field-wide">
+            <span>Username *</span>
+            <input pInputText type="text" [value]="username()" (input)="updateUsername($event)" />
+            <p *ngIf="usernameValidationMessage()" class="validation-message">
+              {{ usernameValidationMessage() }}
+            </p>
+          </div>
+
+          <div class="search-action-row">
+            <button pButton pRipple type="button" class="primary-btn" (click)="searchUser()">
+              Search
+            </button>
+            <button pButton pRipple type="button" class="back-btn" (click)="cancelSearch()">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <ng-container *ngIf="showDetailsStep()">
+          <div class="summary-field-grid add-user-grid">
+            <div class="summary-field">
+              <span>Username</span>
+              <input pInputText type="text" [value]="matchedUsername()" readonly />
+            </div>
+
+            <div class="summary-field">
+              <span>First Name</span>
+              <input pInputText type="text" [value]="matchedFirstName()" readonly />
+            </div>
+
+            <div class="summary-field">
+              <span>Last Name</span>
+              <input pInputText type="text" [value]="matchedLastName()" readonly />
+            </div>
+
+            <div class="summary-field summary-field-wide">
+              <span>Email *</span>
+              <input pInputText type="email" [value]="email()" (input)="updateEmail($event)" />
+              <p *ngIf="emailValidationMessage()" class="validation-message">
+                {{ emailValidationMessage() }}
+              </p>
+            </div>
+
+            <div class="summary-field checkbox-field">
+              <span>Active</span>
+              <label class="checkbox-row">
+                <input
+                  pInputText
+                  type="checkbox"
+                  [checked]="activeChecked()"
+                  (change)="updateActive($event)"
+                />
+                <span>Active</span>
+              </label>
+            </div>
+
+            <div class="summary-field">
+              <span>Role *</span>
+              <select [value]="role()" (change)="updateRole($event)">
+                <option value="">Select a role</option>
+                <option *ngFor="let roleOption of assignableRoles" [value]="roleOption">
+                  {{ roleOption }}
+                </option>
+              </select>
+              <p *ngIf="roleValidationMessage()" class="validation-message">
+                {{ roleValidationMessage() }}
+              </p>
+            </div>
+          </div>
+
+          <div class="summary-save-row add-user-actions">
+            <button pButton pRipple type="button" class="back-btn" (click)="cancelDetails()">
+              Cancel
+            </button>
+            <button pButton pRipple type="button" class="primary-btn" (click)="saveUser()">
+              Save
+            </button>
+          </div>
+        </ng-container>
+      </article>
+    </section>
+
+    <div *ngIf="showErrorToast()" class="error-toast">{{ errorToastMessage() }}</div>
+
+    <div *ngIf="successToastVisible()" class="save-toast">User saved successfully.</div>
+  </main>
+</div>
+
+
+
+

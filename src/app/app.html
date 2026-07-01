@@ -1,1 +1,115 @@
-<router-outlet />
+<app-nav-menu></app-nav-menu>
+
+<div class="app-shell">
+	<main class="page-content" [class.page-content-shifted]="isDrawerOpen()">
+		<router-outlet />
+	</main>
+
+	@if (isDrawerOpen()) {
+		<aside class="ai-drawer" #drawerPanel role="complementary" aria-label="AI assistant">
+			<div
+				class="ai-resize-handle"
+				role="separator"
+				aria-label="Resize AI assistant"
+				aria-orientation="vertical"
+				(pointerdown)="startResize($event)"
+			></div>
+
+			<header class="ai-header">
+				<h2>AI Assistant</h2>
+				<button type="button" class="ai-close" (click)="closeDrawer()" aria-label="Close AI assistant">
+					<i class="pi pi-times" aria-hidden="true"></i>
+				</button>
+			</header>
+
+			<section class="ai-messages" #messageArea aria-live="polite">
+				@if (messages().length === 0) {
+					<p class="ai-empty-state">
+						Ask a question about inspections, candidates, or location trends.
+					</p>
+				}
+
+				@for (message of messages(); track message.id) {
+					<article class="ai-row" [class.ai-row-user]="message.sender === 'user'">
+						<div class="ai-bubble" [class.ai-bubble-user]="message.sender === 'user'">
+							<p>{{ message.text }}</p>
+
+							@if (message.table; as table) {
+								<div class="ai-inline-table-wrap">
+									<table class="ai-inline-table">
+										<thead>
+											<tr>
+												@for (header of table.headers; track header) {
+													<th>{{ header }}</th>
+												}
+											</tr>
+										</thead>
+										<tbody>
+											@for (row of table.rows; track $index) {
+												<tr>
+													@for (cell of row; track $index) {
+														<td>{{ cell }}</td>
+													}
+												</tr>
+											}
+										</tbody>
+									</table>
+								</div>
+							}
+						</div>
+					</article>
+				}
+
+				@if (isBotTyping()) {
+					<article class="ai-row">
+						<div class="ai-bubble ai-typing" aria-label="Assistant is typing">
+							<span></span>
+							<span></span>
+							<span></span>
+						</div>
+					</article>
+				}
+			</section>
+
+			<footer class="ai-input-area">
+				<label class="sr-only" for="ai-prompt">AI prompt</label>
+				<textarea
+					id="ai-prompt"
+					rows="3"
+					maxlength="1000"
+					[value]="prompt()"
+					(input)="onPromptInput($event)"
+					(keydown)="onPromptKeydown($event)"
+					placeholder="Type your question..."
+				></textarea>
+
+				<div class="ai-input-meta">
+					<p>{{ prompt().length }}/1000</p>
+					<button type="button" (click)="sendPrompt()" [disabled]="!canSend() || isBotTyping()">
+						<span>Send</span>
+						<i class="pi pi-send" aria-hidden="true"></i>
+					</button>
+				</div>
+
+				<p class="ai-note">Chat clears on page navigation or refresh.</p>
+			</footer>
+		</aside>
+	}
+</div>
+
+<button
+	type="button"
+	class="ai-fab"
+	[class.ai-fab-collapsed]="isDrawerOpen()"
+	[style.right.px]="fabRightOffset()"
+	[attr.aria-expanded]="isDrawerOpen()"
+	[attr.aria-label]="isDrawerOpen() ? 'Close AI assistant' : 'Open AI assistant'"
+	(click)="toggleDrawer()"
+>
+	@if (isDrawerOpen()) {
+		<i class="pi pi-chevron-right" aria-hidden="true"></i>
+	} @else {
+		<i class="pi pi-sparkles" aria-hidden="true"></i>
+		<span>Ask AI</span>
+	}
+</button>

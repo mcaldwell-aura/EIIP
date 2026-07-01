@@ -1,0 +1,181 @@
+<div class="details-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="details-main">
+    <section class="page-header">
+      <div class="title-wrap">
+        <div>
+          <p class="eyebrow">Inspection Form Detail</p>
+          <div class="title-row">
+            <h1>Form {{ headerFormId() }}</h1>
+          </div>
+          <div class="form-header-info">
+            <div class="header-info-item">
+              <span class="header-label">Form Type</span>
+              <p class="header-value">{{ headerFormName() }}</p>
+            </div>
+            <div class="header-info-item">
+              <span class="header-label">Inspection</span>
+              <p class="header-value">{{ inspectionId() }}</p>
+            </div>
+          </div>
+        </div>
+        <button pButton pRipple type="button" class="back-btn" (click)="goBackToFormsTab()">
+          Back
+        </button>
+      </div>
+    </section>
+
+    <section class="details-card form-fields-card" *ngIf="hasRenderableForm(); else missingForm">
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Appointment Date</span>
+          <ng-container *ngIf="isEditable(); else viewDateField">
+            <input
+              pInputText
+              type="datetime-local"
+              [value]="appointmentDateTimeInput()"
+              (input)="updateAppointmentDateTime($event)"
+            />
+          </ng-container>
+          <ng-template #viewDateField>
+            <input
+              pInputText
+              type="text"
+              [value]="
+                formatAppointmentDate(
+                  formRecord()?.appointmentDateTime ?? appointmentDateTimeInput()
+                )
+              "
+              readonly
+            />
+          </ng-template>
+        </label>
+
+        <label class="form-field">
+          <span>Inspector</span>
+          <ng-container *ngIf="isEditable(); else viewInspectorField">
+            <input
+              pInputText
+              type="text"
+              [value]="inspectorInput()"
+              (input)="updateInspector($event)"
+            />
+          </ng-container>
+          <ng-template #viewInspectorField>
+            <input
+              pInputText
+              type="text"
+              [value]="formRecord()?.inspector || inspectorInput() || 'Unassigned'"
+              readonly
+            />
+          </ng-template>
+        </label>
+
+        <label class="form-field">
+          <span>Status</span>
+          <ng-container *ngIf="isEditable(); else viewStatusField">
+            <p-select
+              [options]="statusOptions"
+              [ngModel]="statusInput()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              (ngModelChange)="updateStatus($event)"
+            ></p-select>
+          </ng-container>
+          <ng-template #viewStatusField>
+            <input
+              pInputText
+              type="text"
+              [value]="formRecord()?.status || statusInput()"
+              readonly
+            />
+          </ng-template>
+        </label>
+
+        <label class="form-field">
+          <span>Inspection Reason</span>
+          <input pInputText type="text" [value]="inspection()?.inspectionReason ?? ''" readonly />
+        </label>
+
+        <label class="form-field">
+          <span>Inspection Type</span>
+          <input pInputText type="text" [value]="inspection()?.inspectionType ?? ''" readonly />
+        </label>
+      </div>
+
+      <label class="form-field form-field-wide">
+        <span>Comments</span>
+        <ng-container *ngIf="isEditable(); else viewCommentsField">
+          <textarea
+            pInputTextarea
+            rows="4"
+            [value]="commentsInput()"
+            (input)="updateComments($event)"
+          ></textarea>
+        </ng-container>
+        <ng-template #viewCommentsField>
+          <textarea
+            pInputTextarea
+            rows="4"
+            [value]="formRecord()?.comments || commentsInput() || ''"
+            readonly
+          ></textarea>
+        </ng-template>
+      </label>
+
+      <div class="form-actions" *ngIf="isEditable()">
+        <button pButton pRipple type="button" class="secondary-btn" (click)="cancelEdit()">
+          Cancel
+        </button>
+        <button pButton pRipple type="button" class="primary-btn" (click)="saveForm()">Save</button>
+      </div>
+    </section>
+
+    <ng-template #missingForm>
+      <section class="details-card missing-card">
+        <h2>Form Not Found</h2>
+        <p>This form could not be loaded for the selected inspection.</p>
+        <button pButton pRipple type="button" class="back-btn" (click)="goBackToFormsTab()">
+          Back
+        </button>
+      </section>
+    </ng-template>
+  </main>
+
+  <div *ngIf="showSavedToast()" class="save-toast" role="status" aria-live="polite">Form saved</div>
+</div>

@@ -1,33 +1,52 @@
 <div class="dashboard" data-node-id="173:3802">
   <header class="top-nav" data-node-id="173:4736">
     <div class="nav-left">
-      <button type="button" class="icon-btn" aria-label="Open menu">☰</button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
       <div class="brand" aria-label="EIIP home">
-        <span class="brand-mark">✶</span>
+        
         <span class="brand-text">EIIP</span>
       </div>
-      <button type="button" class="tab-link">View CSTIMS</button>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
     <div class="nav-right">
-      <button type="button" class="icon-btn" aria-label="Search">⌕</button>
-      <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
     </div>
   </header>
 
   <main class="dashboard-main">
     <section class="title-row" data-node-id="173:4707" aria-label="Dashboard title">
       <div class="title-block">
-        <h1>Supervisor Dashboard <span class="caret">▾</span></h1>
+        <h1>Dashboard</h1>
         <div class="collaborators" aria-label="Collaborators">
-          @for (initial of collaboratorInitials(); track initial) {
-            <span class="avatar">{{ initial }}</span>
-          }
+          <span *ngFor="let initial of collaboratorInitials()" class="avatar">{{ initial }}</span>
           <span class="collaborator-line" aria-hidden="true">────────</span>
         </div>
       </div>
-      <button type="button" class="settings-btn" aria-label="Dashboard settings">⚙</button>
+      <button pButton pRipple type="button" class="settings-btn" aria-label="Dashboard settings">
+        ⚙
+      </button>
     </section>
 
     <section class="summary-header-row">
@@ -36,15 +55,15 @@
     </section>
 
     <section class="summary-cards" aria-label="Weekly summary cards" data-node-id="173:4752">
-      @for (card of summaryCards(); track card.label) {
-        <article class="stat-card">
-          <div class="card-top">
-            <p>{{ card.label }}</p>
-            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
-          </div>
-          <strong>{{ card.value }}</strong>
-        </article>
-      }
+      <article *ngFor="let card of summaryCards()" class="stat-card">
+        <div class="card-top">
+          <p>{{ card.label }}</p>
+          <button pButton pRipple type="button" class="icon-btn muted" aria-label="More options">
+            •••
+          </button>
+        </div>
+        <strong>{{ card.value }}</strong>
+      </article>
     </section>
 
     <section class="section-heading-row">
@@ -52,109 +71,68 @@
     </section>
 
     <section class="visibility-grid" aria-label="Operational visibility panels">
-      <article class="panel examiner-panel">
-        <h3>Third Party Examiners</h3>
-        @if (examinerGroups()[0]; as group) {
-          <p class="total-line">
-            <strong>{{ group.total }}</strong> Total Active
-          </p>
-          <div class="progress-row">
-            <span>New</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(group.newCount / group.total) * 100"
-              ></div>
+      <div class="visibility-counters">
+        <article class="panel counter-panel">
+          <div class="counter-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path
+                d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3 0-7 1.5-7 4.5V20h14v-2.5C16 14.5 12 13 9 13Zm9.5-2.5a3.5 3.5 0 1 0-2.55-5.9 5.8 5.8 0 0 1 0 4.8 3.49 3.49 0 0 0 2.55 1.1Zm.5 2.5c-.72 0-1.52.08-2.35.24A6.5 6.5 0 0 1 18 17.5V20h4v-1.7c0-2.23-1.87-4.03-5-4.3Z"
+              />
+            </svg>
+          </div>
+          <h3>Active Examiners</h3>
+          <p class="counter-value">{{ totalExaminers() }}</p>
+        </article>
+
+        <article class="panel counter-panel due-counter-panel">
+          <h3>Inspections Due</h3>
+          <div class="due-counter-grid">
+            <div *ngFor="let counter of inspectionsDueCounters()" class="due-counter-item">
+              <span class="due-counter-label">Next {{ counter.label }}</span>
+              <strong class="due-counter-value-pill">{{ counter.count }}</strong>
             </div>
           </div>
-          <div class="progress-row">
-            <span>Established</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(group.established / group.total) * 100"
-              ></div>
-            </div>
-          </div>
-        }
-
-        <hr />
-
-        <h3>State Examiners</h3>
-        @if (examinerGroups()[1]; as stateGroup) {
-          <p class="total-line">
-            <strong>{{ stateGroup.total }}</strong> Total Active
-          </p>
-          <div class="progress-row">
-            <span>New</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(stateGroup.newCount / stateGroup.total) * 100"
-              ></div>
-            </div>
-          </div>
-          <div class="progress-row">
-            <span>Established</span>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="(stateGroup.established / stateGroup.total) * 100"
-              ></div>
-            </div>
-          </div>
-        }
-
-        <hr />
-
-        <div class="totals-row">
-          <p>
-            Total Active <strong>{{ totalExaminers() }}</strong>
-          </p>
-          <p>
-            New (Total) <strong>{{ totalNewExaminers() }}</strong>
-          </p>
-        </div>
-      </article>
+        </article>
+      </div>
 
       <div class="panel-stack">
         <article class="panel chart-panel">
           <div class="panel-header">
             <h3>Inspection Results</h3>
-            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
+            <button pButton pRipple type="button" class="icon-btn muted" aria-label="More options">
+              •••
+            </button>
           </div>
           <div class="bar-chart" aria-label="Inspection result chart">
-            @for (item of inspectionResults(); track item.label) {
-              <div class="bar-group">
-                <div class="bar-rail">
-                  <div
-                    class="bar"
-                    [style.height.%]="(item.value / inspectionResultsMax()) * 100"
-                  ></div>
-                </div>
-                <span>{{ item.label }}</span>
+            <div *ngFor="let item of inspectionResults()" class="bar-group">
+              <div class="bar-rail">
+                <div
+                  class="bar"
+                  [style.height.%]="(item.value / inspectionResultsMax()) * 100"
+                ></div>
               </div>
-            }
+              <span>{{ item.label }}</span>
+            </div>
           </div>
         </article>
 
         <article class="panel chart-panel">
           <div class="panel-header">
             <h3>Reasons for Inspection</h3>
-            <button type="button" class="icon-btn muted" aria-label="More options">•••</button>
+            <button pButton pRipple type="button" class="icon-btn muted" aria-label="More options">
+              •••
+            </button>
           </div>
           <div class="bar-chart" aria-label="Reasons for inspection chart">
-            @for (item of reasonsForInspection(); track item.label) {
-              <div class="bar-group">
-                <div class="bar-rail">
-                  <div
-                    class="bar"
-                    [style.height.%]="(item.value / reasonsForInspectionMax()) * 100"
-                  ></div>
-                </div>
-                <span>{{ item.label }}</span>
+            <div *ngFor="let item of reasonsForInspection()" class="bar-group">
+              <div class="bar-rail">
+                <div
+                  class="bar"
+                  [style.height.%]="(item.value / reasonsForInspectionMax()) * 100"
+                ></div>
               </div>
-            }
+              <span>{{ item.label }}</span>
+            </div>
           </div>
         </article>
       </div>
@@ -162,38 +140,200 @@
 
     <section class="activity-section" data-node-id="173:4705">
       <h2>Recent Inspection Activity</h2>
+      <section class="activity-toolbar" aria-label="Activity filters and sorting">
+        <div class="toolbar-group">
+          <span>Filter by:</span>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection type</span>
+            <p-select
+              [options]="activityTypeFilterOptions"
+              [ngModel]="activityTypeFilter()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityTypeFilter($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection reason</span>
+            <p-select
+              [options]="activityReasonFilterOptions"
+              [ngModel]="activityReasonFilter()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityReasonFilter($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Filter by inspection status</span>
+            <p-select
+              [options]="activityStatusFilterOptions"
+              [ngModel]="activityStatusFilter()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityStatusFilter($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+        </div>
+
+        <div class="toolbar-group">
+          <span>Sort by:</span>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by inspection date</span>
+            <p-select
+              [options]="activityDateSortOptions"
+              [ngModel]="selectedDateSort()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityDateSort($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by candidate name</span>
+            <p-select
+              [options]="activityCandidateSortOptions"
+              [ngModel]="selectedCandidateSort()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityCandidateSort($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+
+          <label class="filter-chip filter-chip-select">
+            <span class="visually-hidden">Sort by priority</span>
+            <p-select
+              [options]="activityPrioritySortOptions"
+              [ngModel]="selectedPrioritySort()"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (onChange)="updateActivityPrioritySort($any({ target: { value: $event.value } }))"
+            ></p-select>
+          </label>
+        </div>
+      </section>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Subject Name ▼</th>
-              <th>Next Due ▼</th>
-              <th>Priority ▼</th>
-              <th>Inspection Reason ▼</th>
-              <th>Inspection Status ▼</th>
-              <th>Inspection Type ▼</th>
-              <th>Actions ▼</th>
+              <th [attr.aria-sort]="getAriaSort('candidateName')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('candidateName')"
+                >
+                  Candidate Name {{ getSortIndicator('candidateName') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionDate')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionDate')"
+                >
+                  Inspection Date {{ getSortIndicator('inspectionDate') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('nextDue')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('nextDue')"
+                >
+                  Next Due {{ getSortIndicator('nextDue') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('priority')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('priority')"
+                >
+                  Priority {{ getSortIndicator('priority') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionReason')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionReason')"
+                >
+                  Inspection Reason {{ getSortIndicator('inspectionReason') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionType')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionType')"
+                >
+                  Inspection Type {{ getSortIndicator('inspectionType') }}
+                </button>
+              </th>
+              <th [attr.aria-sort]="getAriaSort('inspectionStatus')">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="sort-btn"
+                  (click)="setActivitySort('inspectionStatus')"
+                >
+                  Inspection Status {{ getSortIndicator('inspectionStatus') }}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (row of activityRows(); track $index) {
-              <tr>
-                <td>{{ row.subjectName }}</td>
-                <td>{{ row.nextDue }}</td>
-                <td>{{ row.priority }}</td>
-                <td>{{ row.inspectionReason }}</td>
-                <td>
-                  <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
-                    {{ row.inspectionStatus }}
-                  </span>
-                </td>
-                <td>{{ row.inspectionType }}</td>
-                <td><button type="button" class="action-btn">Create Inspection</button></td>
-              </tr>
-            }
+            <tr *ngFor="let row of filteredSortedActivityRows()">
+              <td>{{ row.candidateName }}</td>
+              <td>{{ formatDateTime(row.inspectionDate) }}</td>
+              <td>{{ formatDate(row.nextDue) }}</td>
+              <td>{{ row.priority }}</td>
+              <td>{{ row.inspectionReason }}</td>
+              <td>{{ row.inspectionType }}</td>
+              <td>
+                <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
+                  {{ row.inspectionStatus }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="!filteredSortedActivityRows().length">
+              <td class="empty-message" colspan="7">No inspections match the current filter.</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 </div>
+
+
+
+

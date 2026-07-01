@@ -1,0 +1,141 @@
+<div class="users-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="users-main">
+    <section class="users-header">
+      <div>
+        <p class="eyebrow">User Directory</p>
+        <h1>Users</h1>
+      </div>
+      <div class="header-actions">
+        <a class="primary-btn" routerLink="/users/add">Add User</a>
+        <a class="back-link" routerLink="/">Back To Dashboard</a>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="User filters">
+      <div class="toolbar-group search-group">
+        <label class="search-field">
+          <span class="visually-hidden">Search users by first or last name</span>
+          <input
+            pInputText
+            type="search"
+            [value]="userSearchTerm()"
+            (input)="updateUserSearchTerm($event)"
+            placeholder="Search User Name"
+          />
+        </label>
+      </div>
+
+      <div class="toolbar-group">
+        <span>Filter by:</span>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by role</span>
+          <p-select
+            [options]="roleOptions"
+            [ngModel]="roleFilterValue()"
+            (ngModelChange)="updateRoleFilter($event)"
+            placeholder="Role: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+          ></p-select>
+        </label>
+
+        <label class="filter-chip filter-chip-select">
+          <span class="visually-hidden">Filter by active status</span>
+          <p-select
+            [options]="activeFilterOptions"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="updateActiveFilter($event)"
+            placeholder="Status: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+          ></p-select>
+        </label>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Users list">
+      <p-table [value]="pagedRows()" tableStyleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="firstName" style="width: 20%">
+              First Name <p-sortIcon field="firstName"></p-sortIcon>
+            </th>
+            <th pSortableColumn="lastName" style="width: 20%">
+              Last Name <p-sortIcon field="lastName"></p-sortIcon>
+            </th>
+            <th pSortableColumn="role" style="width: 20%">
+              Role <p-sortIcon field="role"></p-sortIcon>
+            </th>
+            <th pSortableColumn="active" style="width: 20%">
+              Active <p-sortIcon field="active"></p-sortIcon>
+            </th>
+            <th style="width: 20%">Action</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>{{ row.firstName }}</td>
+            <td>{{ row.lastName }}</td>
+            <td>{{ row.role }}</td>
+            <td>{{ activeLabel(row.active) }}</td>
+            <td class="action-cell">
+              <a
+                class="edit-btn"
+                [routerLink]="['/users', row.userId, 'edit']"
+                [attr.aria-label]="'Edit ' + row.firstName + ' ' + row.lastName"
+              >
+                Edit
+              </a>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5">No users found.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  </main>
+</div>
+
+
+
+

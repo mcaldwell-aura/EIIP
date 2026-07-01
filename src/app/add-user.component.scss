@@ -1,0 +1,391 @@
+:host {
+  --text: #192030;
+  --text-soft: #5e677d;
+  --line: #d5dcec;
+  --panel-bg: rgba(255, 255, 255, 0.88);
+  --card-shadow: 0 12px 32px rgba(22, 38, 80, 0.08);
+  --field-bg: #f8fafc;
+  --field-border: #ccd4e0;
+  --accent: #1f56d8;
+  --accent-soft: #eaf0ff;
+
+  display: block;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: var(--text);
+  font-family: var(--app-font-family);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.edit-user-page {
+  min-height: 100dvh;
+}
+
+.top-nav {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: #1848b8;
+  border-bottom: 1px solid #123992;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nav-left,
+.nav-right,
+.brand {
+  align-items: center;
+  display: flex;
+}
+
+.nav-left,
+.nav-right {
+  gap: 0.7rem;
+}
+
+.brand {
+  color: inherit;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
+.brand-mark {
+  font-size: 1.1rem;
+}
+
+.brand-text {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.icon-btn,
+.profile-btn,
+.tab-link,
+.back-btn,
+.primary-btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  transition: all 180ms ease;
+}
+
+.icon-btn,
+.profile-btn {
+  align-items: center;
+  background: #fff;
+  border-color: var(--line);
+  box-shadow: 0 2px 8px rgba(17, 29, 56, 0.06);
+  color: var(--text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.25rem;
+  justify-content: center;
+  width: 2.25rem;
+}
+
+.profile-btn {
+  border-radius: 50%;
+}
+
+.tab-link {
+  background: var(--accent-soft);
+  border-color: #d3dcf8;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+}
+
+.nav-text-link {
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-text-link:hover {
+  text-decoration: underline;
+}
+
+.nav-text-link.active-nav-link {
+  font-weight: 800;
+}
+
+.details-main {
+  margin: 0 auto;
+  max-width: 1100px;
+  padding: 1.6rem 1.25rem 2.8rem;
+}
+
+.page-header {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.title-wrap {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+h1,
+h2 {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.95rem, 2.4vw, 2.7rem);
+}
+
+h2 {
+  font-size: 1.28rem;
+}
+
+.content-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.details-card {
+  backdrop-filter: blur(6px);
+  background: var(--panel-bg);
+  border: 1px solid #d6deef;
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  padding: 1.25rem;
+}
+
+.card-header {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.solo-header {
+  margin-bottom: 1.15rem;
+}
+
+.summary-field-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.add-user-grid {
+  align-items: start;
+}
+
+.summary-field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.summary-field-wide {
+  grid-column: 1 / -1;
+}
+
+.summary-field span {
+  color: #232f48;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.summary-field input,
+.summary-field select {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  color: #2a3652;
+  font: inherit;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.summary-field input:focus,
+.summary-field select:focus {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
+  outline: none;
+}
+
+.summary-field input[readonly] {
+  background: #f3f6fb;
+  color: #5d6b87;
+}
+
+.search-form-row {
+  display: grid;
+  gap: 1rem;
+}
+
+.search-field-wide {
+  max-width: 36rem;
+}
+
+.search-action-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-start;
+}
+
+.checkbox-field {
+  align-content: start;
+}
+
+.checkbox-row {
+  align-items: center;
+  color: #2a3652;
+  display: inline-flex;
+  gap: 0.55rem;
+  min-height: 2.6rem;
+}
+
+.checkbox-row input {
+  accent-color: var(--accent);
+  height: 1rem;
+  min-height: auto;
+  width: 1rem;
+}
+
+.validation-message {
+  color: #b42318;
+  font-size: 0.83rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.summary-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.1rem;
+  width: 100%;
+}
+
+.add-user-actions {
+  gap: 0.75rem;
+}
+
+.back-btn {
+  align-items: center;
+  background: #fff;
+  border-color: #d5def2;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  justify-content: center;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+}
+
+.primary-btn {
+  align-items: center;
+  background: linear-gradient(90deg, var(--accent), #1660f4);
+  border-color: transparent;
+  box-shadow: 0 10px 18px rgba(25, 84, 219, 0.24);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.83rem;
+  font-weight: 700;
+  justify-content: center;
+  padding: 0.68rem 1rem;
+}
+
+.save-toast,
+.error-toast {
+  border-radius: 10px;
+  bottom: 1.25rem;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  position: fixed;
+  right: 1.25rem;
+  z-index: 70;
+}
+
+.save-toast {
+  background: #22a04d;
+  box-shadow: 0 12px 28px rgba(20, 84, 44, 0.25);
+}
+
+.error-toast {
+  background: #c83549;
+  box-shadow: 0 12px 28px rgba(140, 28, 47, 0.25);
+}
+
+.icon-btn:hover,
+.profile-btn:hover,
+.back-btn:hover,
+.primary-btn:hover {
+  box-shadow: 0 10px 20px rgba(23, 42, 84, 0.14);
+  transform: translateY(-1px);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #2f61d2;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .top-nav,
+  .details-main {
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+  }
+
+  .title-wrap,
+  .search-action-row,
+  .add-user-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .summary-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .back-btn,
+  .primary-btn {
+    width: 100%;
+  }
+
+  .brand-text {
+    font-size: 1.28rem;
+  }
+}

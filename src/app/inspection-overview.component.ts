@@ -1,6 +1,22 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { LOCATIONS } from './locations.data';
+import { NavMenuService } from './nav-menu.service';
+import { type InspectionRecord, type InspectionStatus } from './inspection-data';
+import { InspectionStoreService } from './inspection-store.service';
+import { USERS } from './users.data';
+
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
+import { RippleModule } from 'primeng/ripple';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TableModule } from 'primeng/table';
+import { TextareaModule } from 'primeng/textarea';
 
 type DueDateFilter = 'all' | 'next-7-days' | 'next-30-days' | 'after-30-days';
 type PriorityFilter = 'all' | 'high' | 'medium' | 'low';
@@ -8,12 +24,18 @@ type SortField =
   | 'subjectName'
   | 'nextDue'
   | 'priority'
-  | 'inspectionReason'
   | 'inspectionStatus'
+  | 'inspectionReason'
   | 'inspectionType'
-  | 'appointmentDate';
+  | 'appointment';
 type SortDirection = 'asc' | 'desc';
 type ToolbarSortSelection = 'default' | 'asc' | 'desc' | 'attention-first';
+type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
+type InspectionTypeOption = 'Overt' | 'Covert';
+type SelectOption<T extends string> = {
+  label: string;
+  value: T;
+};
 
 type PriorityContext = {
   why: string;
@@ -22,6 +44,73 @@ type PriorityContext = {
   lastInspected: string;
   entityType: string;
 };
+
+type InspectionPlanRow = {
+  inspectionId: string;
+  subjectId: string;
+  subjectName: string;
+  nextDue: string;
+  priority: number;
+  inspectionStatus: InspectionStatus;
+  inspectionReason: string;
+  inspectionType: InspectionRecord['inspectionType'];
+  appointmentDate: string;
+  appointmentText: string;
+  appointmentTooltip: string | null;
+  appointmentTimestamp: number | null;
+  canCreateInspection: boolean;
+};
+
+type NewInspectionAppointmentDraft = {
+  dateTime: string;
+  location: string;
+};
+
+type AppointmentSlot = {
+  time: string;
+  examType: string;
+  inspectionType: InspectionTypeOption;
+  location: string;
+  auditorName: string;
+};
+
+const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
+  {
+    time: '9:00 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Austin Assessment Center',
+    auditorName: 'Campos',
+  },
+  {
+    time: '10:30 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Harris Central Campus',
+    auditorName: 'Lin',
+  },
+  {
+    time: '11:45 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Dallas Metro Hub',
+    auditorName: 'Reeves',
+  },
+  {
+    time: '1:00 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Fort Worth North Site',
+    auditorName: 'Patel',
+  },
+  {
+    time: '2:30 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Collin Regional Site',
+    auditorName: 'Turner',
+  },
+];
 
 const PRIORITY_CONTEXT: Record<string, PriorityContext> = {
   '892749': {
@@ -35,19 +124,116 @@ const PRIORITY_CONTEXT: Record<string, PriorityContext> = {
 
 @Component({
   selector: 'app-inspection-overview',
-  imports: [RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ButtonModule,
+    CheckboxModule,
+    DatePickerModule,
+    DialogModule,
+    RippleModule,
+    InputTextModule,
+    SelectModule,
+    TableModule,
+    TextareaModule,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inspection-overview.component.html',
   styleUrl: './inspection-overview.component.scss',
 })
 export class InspectionOverviewComponent {
-  protected readonly rows = signal(INSPECTIONS);
+  protected readonly menuService = inject(NavMenuService);
+  private readonly router = inject(Router);
+  private readonly inspectionStore = inject(InspectionStoreService);
+
+  protected readonly rows = this.inspectionStore.inspections;
+  protected readonly canCreateInspection = signal(true);
   protected readonly dueDateFilter = signal<DueDateFilter>('all');
   protected readonly priorityFilter = signal<PriorityFilter>('all');
   protected readonly statusFilter = signal<InspectionStatus | 'all'>('all');
   protected readonly activeSortField = signal<SortField>('priority');
   protected readonly activeSortDirection = signal<SortDirection>('desc');
-  protected readonly selectedPriorityRow = signal<InspectionRecord | null>(null);
+  protected readonly planRows = computed(() => this.buildPlanRows(this.rows()));
+  protected readonly selectedPriorityRow = signal<InspectionPlanRow | null>(null);
+  protected readonly isNewInspectionModalOpen = signal(false);
+  protected readonly newInspectionCandidate = signal<InspectionPlanRow | null>(null);
+  protected readonly inspectionReasonInput = signal<InspectionReasonOption | ''>('');
+  protected readonly inspectionTypeInput = signal<InspectionTypeOption | ''>('');
+  protected readonly inspectorSearchTerm = signal('');
+  protected readonly selectedInspectors = signal<string[]>([]);
+  protected readonly appointmentDateTimeInput = signal('');
+  protected readonly appointmentLocationInput = signal('');
+  protected readonly stagedAppointments = signal<NewInspectionAppointmentDraft[]>([]);
+  protected readonly selectedAppointmentSlot = signal<AppointmentSlot | null>(null);
+  protected readonly availableAppointmentSlots: readonly AppointmentSlot[] = AVAILABLE_APPOINTMENT_SLOTS;
+  protected readonly newInspectionValidationMessage = signal('');
+  protected readonly inspectionReasonOptions: readonly InspectionReasonOption[] = [
+    'Change',
+    'Original',
+    'ReExam',
+    'Reinstatement',
+    'Periodic',
+  ];
+  protected readonly inspectionTypeOptions: readonly InspectionTypeOption[] = ['Overt', 'Covert'];
+  protected readonly dueDateFilterOptions: SelectOption<DueDateFilter>[] = [
+    { label: 'Due Date: All', value: 'all' },
+    { label: 'Due Date: Next 7 Days', value: 'next-7-days' },
+    { label: 'Due Date: 8 to 30 Days', value: 'next-30-days' },
+    { label: 'Due Date: After 30 Days', value: 'after-30-days' },
+  ];
+  protected readonly priorityFilterOptions: SelectOption<PriorityFilter>[] = [
+    { label: 'Priority Score: All', value: 'all' },
+    { label: 'Priority Score: High', value: 'high' },
+    { label: 'Priority Score: Medium', value: 'medium' },
+    { label: 'Priority Score: Low', value: 'low' },
+  ];
+  protected readonly statusFilterOptions: SelectOption<InspectionStatus | 'all'>[] = [
+    { label: 'Status: All', value: 'all' },
+    { label: 'Status: Pending', value: 'Pending' },
+    { label: 'Status: Scheduled', value: 'Scheduled' },
+    { label: 'Status: Planned', value: 'Planned' },
+    { label: 'Status: Good', value: 'Good' },
+    { label: 'Status: Satisfactory', value: 'Satisfactory' },
+    { label: 'Status: Unsatisfactory', value: 'Unsatisfactory' },
+  ];
+  protected readonly prioritySortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Priority Score: Highest First', value: 'default' },
+    { label: 'Priority Score: Highest First', value: 'desc' },
+    { label: 'Priority Score: Lowest First', value: 'asc' },
+  ];
+  protected readonly statusSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Status: Default', value: 'default' },
+    { label: 'Status: A to Z', value: 'asc' },
+    { label: 'Status: Z to A', value: 'desc' },
+  ];
+  protected readonly appointmentSortOptions: SelectOption<ToolbarSortSelection>[] = [
+    { label: 'Appointment: Default', value: 'default' },
+    { label: 'Appointment: Soonest First', value: 'asc' },
+    { label: 'Appointment: Latest First', value: 'desc' },
+  ];
+  protected readonly inspectionReasonDropdownOptions: SelectOption<InspectionReasonOption>[] =
+    this.inspectionReasonOptions.map((reason) => ({ label: reason, value: reason }));
+  protected readonly inspectionTypeDropdownOptions: SelectOption<InspectionTypeOption>[] =
+    this.inspectionTypeOptions.map((inspectionType) => ({
+      label: inspectionType,
+      value: inspectionType,
+    }));
+  protected readonly activeInspectorNames = computed(() => {
+    const searchTerm = this.inspectorSearchTerm().trim().toLowerCase();
+
+    return USERS.filter((user) => user.active)
+      .map((user) => `${user.firstName} ${user.lastName}`)
+      .filter((name) => searchTerm.length === 0 || name.toLowerCase().includes(searchTerm))
+      .sort((leftName, rightName) =>
+        leftName.localeCompare(rightName, undefined, { sensitivity: 'base' }),
+      );
+  });
+  protected readonly activeLocationNames = LOCATIONS.filter((location) => location.active)
+    .map((location) => location.locationName)
+    .sort((leftName, rightName) =>
+      leftName.localeCompare(rightName, undefined, { sensitivity: 'base' }),
+    );
   protected readonly visibleRows = computed(() => {
     const dueDateFilter = this.dueDateFilter();
     const priorityFilter = this.priorityFilter();
@@ -55,7 +241,7 @@ export class InspectionOverviewComponent {
     const activeSortField = this.activeSortField();
     const activeSortDirection = this.activeSortDirection();
 
-    const filteredRows = this.rows().filter((row) => {
+    const filteredRows = this.planRows().filter((row) => {
       const dueDate = this.parseDate(row.nextDue);
       const daysUntilDue = this.dayDifferenceFromToday(dueDate);
       const matchesDueDate =
@@ -85,12 +271,23 @@ export class InspectionOverviewComponent {
               this.parseDate(rightRow.nextDue).getTime()) *
             directionMultiplier
           );
-        case 'appointmentDate':
+        case 'appointment': {
+          if (leftRow.appointmentTimestamp === null && rightRow.appointmentTimestamp === null) {
+            return 0;
+          }
+
+          if (leftRow.appointmentTimestamp === null) {
+            return 1;
+          }
+
+          if (rightRow.appointmentTimestamp === null) {
+            return -1;
+          }
+
           return (
-            (this.parseDate(leftRow.appointmentDate).getTime() -
-              this.parseDate(rightRow.appointmentDate).getTime()) *
-            directionMultiplier
+            (leftRow.appointmentTimestamp - rightRow.appointmentTimestamp) * directionMultiplier
           );
+        }
         case 'inspectionStatus':
           return (
             leftRow.inspectionStatus.localeCompare(rightRow.inspectionStatus) * directionMultiplier
@@ -124,7 +321,7 @@ export class InspectionOverviewComponent {
     return this.activeSortDirection();
   });
   protected readonly selectedAppointmentSort = computed<ToolbarSortSelection>(() => {
-    if (this.activeSortField() !== 'appointmentDate') {
+    if (this.activeSortField() !== 'appointment') {
       return 'default';
     }
 
@@ -140,7 +337,7 @@ export class InspectionOverviewComponent {
       why: `This subject is prioritized because ${row.inspectionReason.toLowerCase()} activity and a score of ${row.priority} indicate elevated review attention ahead of the next due date of ${row.nextDue}.`,
       lastInspectionScore: row.inspectionStatus === 'Unsatisfactory' ? 'Fail' : 'Pass',
       planningCycle: 'Annual 2024-2025',
-      lastInspected: row.appointmentDate,
+      lastInspected: row.appointmentDate || 'N/A',
       entityType: 'Subject',
     };
 
@@ -151,9 +348,52 @@ export class InspectionOverviewComponent {
       level: this.priorityLevel(row.priority),
     };
   });
+  protected readonly canSaveNewInspection = computed(
+    () =>
+      this.newInspectionCandidate() !== null &&
+      this.inspectionReasonInput().length > 0 &&
+      this.inspectionTypeInput().length > 0,
+  );
+  protected get priorityDialogVisible(): boolean {
+    return this.selectedPriorityRow() !== null;
+  }
+
+  protected set priorityDialogVisible(visible: boolean) {
+    if (!visible) {
+      this.closePriorityModal();
+    }
+  }
+
+  protected get newInspectionDialogVisible(): boolean {
+    return this.isNewInspectionModalOpen();
+  }
+
+  protected set newInspectionDialogVisible(visible: boolean) {
+    if (!visible) {
+      this.closeNewInspectionModal();
+      return;
+    }
+
+    this.isNewInspectionModalOpen.set(true);
+  }
+
+  protected get appointmentDateTimeValue(): Date | null {
+    const dateTime = this.appointmentDateTimeInput().trim();
+
+    if (dateTime.length === 0) {
+      return null;
+    }
+
+    const parsedDate = new Date(dateTime);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+  }
+
+  protected set appointmentDateTimeValue(value: Date | null) {
+    this.appointmentDateTimeInput.set(value ? this.formatDateTimeInputValue(value) : '');
+  }
 
   protected requiresAttention(status: InspectionStatus): boolean {
-    return status === 'Planned' || status === 'Unsatisfactory';
+    return status === 'Pending' || status === 'Planned' || status === 'Unsatisfactory';
   }
 
   protected updateDueDateFilter(event: Event): void {
@@ -184,7 +424,7 @@ export class InspectionOverviewComponent {
 
   protected updateAppointmentSort(event: Event): void {
     this.applyToolbarSort(
-      'appointmentDate',
+      'appointment',
       (event.target as HTMLSelectElement).value as ToolbarSortSelection,
     );
   }
@@ -207,12 +447,165 @@ export class InspectionOverviewComponent {
     return this.activeSortDirection() === 'asc' ? '↑' : '↓';
   }
 
-  protected openPriorityModal(row: InspectionRecord): void {
+  protected openPriorityModal(row: InspectionPlanRow): void {
     this.selectedPriorityRow.set(row);
   }
 
   protected closePriorityModal(): void {
     this.selectedPriorityRow.set(null);
+  }
+
+  protected openNewInspectionModal(row: InspectionPlanRow): void {
+    this.closePriorityModal();
+    this.newInspectionCandidate.set(row);
+    this.inspectionReasonInput.set('');
+    this.inspectionTypeInput.set('');
+    this.inspectorSearchTerm.set('');
+    this.selectedInspectors.set([]);
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+    this.stagedAppointments.set([]);
+    this.selectedAppointmentSlot.set(null);
+    this.newInspectionValidationMessage.set('');
+    this.isNewInspectionModalOpen.set(true);
+  }
+
+  protected closeNewInspectionModal(): void {
+    this.isNewInspectionModalOpen.set(false);
+    this.newInspectionCandidate.set(null);
+    this.inspectionReasonInput.set('');
+    this.inspectionTypeInput.set('');
+    this.inspectorSearchTerm.set('');
+    this.selectedInspectors.set([]);
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+    this.stagedAppointments.set([]);
+    this.selectedAppointmentSlot.set(null);
+    this.newInspectionValidationMessage.set('');
+  }
+
+  protected updateInspectionReason(event: Event): void {
+    this.inspectionReasonInput.set(
+      (event.target as HTMLSelectElement).value as InspectionReasonOption | '',
+    );
+  }
+
+  protected updateInspectionType(event: Event): void {
+    this.inspectionTypeInput.set(
+      (event.target as HTMLSelectElement).value as InspectionTypeOption | '',
+    );
+  }
+
+  protected updateInspectorSearchTerm(event: Event): void {
+    this.inspectorSearchTerm.set((event.target as HTMLInputElement).value);
+  }
+
+  protected toggleInspectorSelection(inspectorName: string): void {
+    this.selectedInspectors.update((selectedInspectors) =>
+      selectedInspectors.includes(inspectorName)
+        ? selectedInspectors.filter((selectedInspector) => selectedInspector !== inspectorName)
+        : [...selectedInspectors, inspectorName],
+    );
+  }
+
+  protected isInspectorSelected(inspectorName: string): boolean {
+    return this.selectedInspectors().includes(inspectorName);
+  }
+
+  protected updateAppointmentDateTime(event: Event): void {
+    this.appointmentDateTimeInput.set((event.target as HTMLInputElement).value);
+  }
+
+  protected updateAppointmentLocation(event: Event): void {
+    this.appointmentLocationInput.set((event.target as HTMLInputElement).value);
+  }
+
+  protected selectAppointment(slot: AppointmentSlot): void {
+    this.selectedAppointmentSlot.update((selectedSlot) => (selectedSlot === slot ? null : slot));
+
+    const nextSelectedSlot = this.selectedAppointmentSlot();
+
+    if (!nextSelectedSlot) {
+      this.newInspectionValidationMessage.set('');
+      return;
+    }
+
+    this.inspectionTypeInput.set(nextSelectedSlot.inspectionType);
+    this.appointmentLocationInput.set(nextSelectedSlot.location);
+    this.selectedInspectors.set(this.resolveInspectorSelection(nextSelectedSlot.auditorName));
+    this.appointmentDateTimeValue = this.buildSelectedAppointmentDateTime(nextSelectedSlot.time);
+    this.stagedAppointments.set([]);
+    this.newInspectionValidationMessage.set('');
+  }
+
+  protected addAppointment(): void {
+    const nextAppointment = this.buildDraftAppointment();
+
+    if (!nextAppointment) {
+      return;
+    }
+
+    this.stagedAppointments.update((appointments) => [...appointments, nextAppointment]);
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+  }
+
+  protected removeAppointment(index: number): void {
+    this.stagedAppointments.update((appointments) =>
+      appointments.filter((_, appointmentIndex) => appointmentIndex !== index),
+    );
+  }
+
+  protected async saveNewInspection(): Promise<void> {
+    const candidate = this.newInspectionCandidate();
+    const inspectionType = this.inspectionTypeInput();
+
+    if (!candidate || !this.canSaveNewInspection() || !inspectionType) {
+      this.newInspectionValidationMessage.set(
+        'Inspection Reason and Inspection Type are required.',
+      );
+      return;
+    }
+
+    const hasDraftAppointmentInput =
+      this.appointmentDateTimeInput().trim().length > 0 ||
+      this.appointmentLocationInput().trim().length > 0;
+
+    let draftAppointment: NewInspectionAppointmentDraft | null = null;
+
+    if (hasDraftAppointmentInput) {
+      draftAppointment = this.buildDraftAppointment(false);
+      if (draftAppointment === null) {
+        return;
+      }
+    } else {
+      this.newInspectionValidationMessage.set('');
+    }
+
+    const appointments = draftAppointment
+      ? [...this.stagedAppointments(), draftAppointment]
+      : [...this.stagedAppointments()];
+    const inspectionId = this.inspectionStore.createInspection({
+      subjectId: candidate.subjectId,
+      subjectName: candidate.subjectName,
+      nextDue: candidate.nextDue,
+      priority: candidate.priority,
+      inspectionReason: this.inspectionReasonInput(),
+      inspectionType,
+      assignedInspectors: this.selectedInspectors(),
+      appointments,
+    });
+
+    this.closeNewInspectionModal();
+
+    const didNavigate = await this.router.navigate([
+      '/inspection-overview/inspection',
+      inspectionId,
+    ]);
+
+    if (!didNavigate) {
+      await this.router.navigateByUrl(`/inspection-overview/inspection/${inspectionId}`);
+    }
   }
 
   protected priorityLevel(priority: number): 'High' | 'Medium' | 'Low' {
@@ -225,6 +618,17 @@ export class InspectionOverviewComponent {
     }
 
     return 'Low';
+  }
+
+  protected handleEscape(): void {
+    if (this.isNewInspectionModalOpen()) {
+      this.closeNewInspectionModal();
+      return;
+    }
+
+    if (this.selectedPriorityRow()) {
+      this.closePriorityModal();
+    }
   }
 
   private applyToolbarSort(field: SortField, selection: ToolbarSortSelection): void {
@@ -245,6 +649,246 @@ export class InspectionOverviewComponent {
     const year = yearText.length === 2 ? 2000 + Number(yearText) : Number(yearText);
 
     return new Date(year, month, day);
+  }
+
+  private parseAppointmentDateTime(inspection: InspectionRecord): Date {
+    if (!inspection.appointmentDate) {
+      return new Date(Number.NaN);
+    }
+
+    const baseDate = this.parseDate(inspection.appointmentDate);
+    const timeMatch = inspection.appointmentTime.match(/^(\d{1,2}):(\d{2})(am|pm)/i);
+
+    if (!timeMatch) {
+      return baseDate;
+    }
+
+    const [, rawHours, rawMinutes, meridiem] = timeMatch;
+    let hours = Number(rawHours) % 12;
+
+    if (meridiem.toLowerCase() === 'pm') {
+      hours += 12;
+    }
+
+    return new Date(
+      baseDate.getFullYear(),
+      baseDate.getMonth(),
+      baseDate.getDate(),
+      hours,
+      Number(rawMinutes),
+    );
+  }
+
+  private buildPlanRows(inspections: InspectionRecord[]): InspectionPlanRow[] {
+    const groupedInspections = new Map<string, InspectionRecord[]>();
+
+    for (const inspection of inspections) {
+      const subjectInspections = groupedInspections.get(inspection.subjectId) ?? [];
+      subjectInspections.push(inspection);
+      groupedInspections.set(inspection.subjectId, subjectInspections);
+    }
+
+    return Array.from(groupedInspections.values()).map((subjectInspections) => {
+      const activeInspection = this.selectActiveInspection(subjectInspections);
+      const displayInspection =
+        activeInspection ??
+        this.selectLatestCompletedInspection(subjectInspections) ??
+        this.selectLatestInspection(subjectInspections);
+      const isScheduledInspection = displayInspection.inspectionStatus === 'Scheduled';
+      const appointmentDateTime = isScheduledInspection
+        ? this.parseAppointmentDateTime(displayInspection)
+        : null;
+      const appointmentText = isScheduledInspection
+        ? this.formatAppointmentText(displayInspection)
+        : '—';
+
+      return {
+        inspectionId: displayInspection.inspectionId,
+        subjectId: displayInspection.subjectId,
+        subjectName: displayInspection.subjectName,
+        nextDue: displayInspection.nextDue,
+        priority: displayInspection.priority,
+        inspectionStatus: displayInspection.inspectionStatus,
+        inspectionReason: displayInspection.inspectionReason,
+        inspectionType: displayInspection.inspectionType,
+        appointmentDate: displayInspection.appointmentDate,
+        appointmentText,
+        appointmentTooltip: isScheduledInspection
+          ? this.buildAppointmentTooltip(displayInspection, appointmentText)
+          : null,
+        appointmentTimestamp:
+          appointmentDateTime && !Number.isNaN(appointmentDateTime.getTime())
+            ? appointmentDateTime.getTime()
+            : null,
+        canCreateInspection: !activeInspection && this.canCreateInspection(),
+      };
+    });
+  }
+
+  private selectActiveInspection(inspections: InspectionRecord[]): InspectionRecord | null {
+    const activeInspections = inspections
+      .filter((inspection) => this.isOpenInspection(inspection.inspectionStatus))
+      .sort((leftInspection, rightInspection) => {
+        const leftStatusWeight = leftInspection.inspectionStatus === 'Scheduled' ? 0 : 1;
+        const rightStatusWeight = rightInspection.inspectionStatus === 'Scheduled' ? 0 : 1;
+
+        if (leftStatusWeight !== rightStatusWeight) {
+          return leftStatusWeight - rightStatusWeight;
+        }
+
+        return this.sortInspectionAppointments(leftInspection, rightInspection);
+      });
+
+    return activeInspections[0] ?? null;
+  }
+
+  private selectLatestCompletedInspection(
+    inspections: InspectionRecord[],
+  ): InspectionRecord | null {
+    const completedInspections = inspections
+      .filter(
+        (inspection) =>
+          !this.isOpenInspection(inspection.inspectionStatus) &&
+          inspection.inspectionStatus !== 'Canceled',
+      )
+      .sort((leftInspection, rightInspection) =>
+        this.sortInspectionAppointments(rightInspection, leftInspection),
+      );
+
+    return completedInspections[0] ?? null;
+  }
+
+  private selectLatestInspection(inspections: InspectionRecord[]): InspectionRecord {
+    return [...inspections].sort((leftInspection, rightInspection) =>
+      this.sortInspectionAppointments(rightInspection, leftInspection),
+    )[0];
+  }
+
+  private isOpenInspection(status: InspectionStatus): boolean {
+    return status === 'Pending' || status === 'Planned' || status === 'Scheduled';
+  }
+
+  private sortInspectionAppointments(
+    leftInspection: InspectionRecord,
+    rightInspection: InspectionRecord,
+  ): number {
+    const leftAppointment = this.parseAppointmentDateTime(leftInspection);
+    const rightAppointment = this.parseAppointmentDateTime(rightInspection);
+    const leftValue = Number.isNaN(leftAppointment.getTime())
+      ? Number.NEGATIVE_INFINITY
+      : leftAppointment.getTime();
+    const rightValue = Number.isNaN(rightAppointment.getTime())
+      ? Number.NEGATIVE_INFINITY
+      : rightAppointment.getTime();
+
+    return leftValue - rightValue;
+  }
+
+  private buildAppointmentTooltip(inspection: InspectionRecord, appointmentText: string): string {
+    const tooltipParts = [`Date/Time: ${appointmentText}`];
+
+    if (inspection.appointmentLocation) {
+      tooltipParts.push(`Location: ${inspection.appointmentLocation}`);
+    }
+
+    return tooltipParts.join(' | ');
+  }
+
+  private formatAppointmentText(inspection: InspectionRecord): string {
+    const appointmentDateTime = this.parseAppointmentDateTime(inspection);
+
+    if (!Number.isNaN(appointmentDateTime.getTime())) {
+      return new Intl.DateTimeFormat('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(appointmentDateTime);
+    }
+
+    return inspection.appointmentLocation || 'TBD';
+  }
+
+  private buildDraftAppointment(showEmptyMessage = true): NewInspectionAppointmentDraft | null {
+    const dateTime = this.appointmentDateTimeInput().trim();
+    const location = this.appointmentLocationInput().trim();
+
+    if (dateTime.length === 0 && location.length === 0) {
+      if (showEmptyMessage) {
+        this.newInspectionValidationMessage.set(
+          'Enter an appointment date or location before adding an appointment.',
+        );
+      }
+      return null;
+    }
+
+    if (dateTime.length > 0) {
+      const parsedDateTime = Date.parse(dateTime);
+      if (Number.isNaN(parsedDateTime) || parsedDateTime < Date.now()) {
+        this.newInspectionValidationMessage.set('Inspection Date must be a future date and time.');
+        return null;
+      }
+    }
+
+    this.newInspectionValidationMessage.set('');
+    return {
+      dateTime,
+      location,
+    };
+  }
+
+  private resolveInspectorSelection(auditorName: string): string[] {
+    const matchingInspector = USERS.find(
+      (user) => user.active && user.lastName.localeCompare(auditorName, undefined, { sensitivity: 'base' }) === 0,
+    );
+
+    return matchingInspector
+      ? [`${matchingInspector.firstName} ${matchingInspector.lastName}`]
+      : [];
+  }
+
+  private buildSelectedAppointmentDateTime(time: string): Date {
+    const currentValue = this.appointmentDateTimeValue;
+    const baseDate = currentValue ?? new Date();
+    const nextDateTime = new Date(baseDate);
+    const timeMatch = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+
+    if (!timeMatch) {
+      return currentValue ?? new Date(Date.now() + 60 * 60 * 1000);
+    }
+
+    let hour = Number(timeMatch[1]);
+    const minute = Number(timeMatch[2]);
+    const meridiem = timeMatch[3].toUpperCase();
+
+    if (meridiem === 'PM' && hour !== 12) {
+      hour += 12;
+    }
+
+    if (meridiem === 'AM' && hour === 12) {
+      hour = 0;
+    }
+
+    nextDateTime.setSeconds(0, 0);
+    nextDateTime.setHours(hour, minute, 0, 0);
+
+    if (!currentValue && nextDateTime.getTime() <= Date.now()) {
+      nextDateTime.setDate(nextDateTime.getDate() + 1);
+    }
+
+    return nextDateTime;
+  }
+
+  private formatDateTimeInputValue(value: Date): string {
+    const year = value.getFullYear();
+    const month = `${value.getMonth() + 1}`.padStart(2, '0');
+    const day = `${value.getDate()}`.padStart(2, '0');
+    const hours = `${value.getHours()}`.padStart(2, '0');
+    const minutes = `${value.getMinutes()}`.padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   private dayDifferenceFromToday(date: Date): number {

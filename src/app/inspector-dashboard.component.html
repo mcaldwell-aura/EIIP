@@ -1,0 +1,362 @@
+<div class="inspector-dashboard">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-main">
+    <!-- Title row -->
+    <section class="title-section">
+      <div class="title-left">
+        <div class="title-row">
+          <h1>Inspector Dashboard <span class="caret">▾</span></h1>
+          <span class="operational-badge">
+            <span class="op-dot" aria-hidden="true"></span>
+            Operational
+          </span>
+        </div>
+        <div class="collaborators" aria-label="Collaborators">
+          <span *ngFor="let collab of collaborators()" class="avatar">{{ collab }}</span>
+          <span class="collaborator-line" aria-hidden="true">────────</span>
+        </div>
+      </div>
+      <div class="title-actions">
+        <button pButton pRipple type="button" class="view-all-btn">View All Assignments</button>
+        <button pButton pRipple type="button" class="icon-btn" aria-label="Notifications">
+          🔔
+        </button>
+      </div>
+    </section>
+
+    <!-- Summary cards -->
+    <section class="summary-cards" aria-label="Summary statistics">
+      <article *ngFor="let card of summaryCards()" class="stat-card">
+        <div class="card-top">
+          <p>{{ card.label }}</p>
+          <button pButton pRipple type="button" class="icon-btn muted" aria-label="More options">
+            •••
+          </button>
+        </div>
+        <strong>{{ card.value }}</strong>
+      </article>
+    </section>
+
+    <!-- Tabs -->
+    <div class="tabs-row" role="tablist" aria-label="Inspection views">
+      <button
+        pButton
+        pRipple
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab() === 'upcoming'"
+        [attr.aria-selected]="activeTab() === 'upcoming'"
+        (click)="activeTab.set('upcoming')"
+      >
+        Upcoming Inspections
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        role="tab"
+        class="tab-btn"
+        [class.active]="activeTab() === 'recently-completed'"
+        [attr.aria-selected]="activeTab() === 'recently-completed'"
+        (click)="activeTab.set('recently-completed')"
+      >
+        Recently Completed
+      </button>
+    </div>
+
+    <!-- Upcoming Inspections Table -->
+    <section
+      *ngIf="activeTab() === 'upcoming'"
+      class="table-card"
+      aria-label="Upcoming Inspections table"
+    >
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('candidateName')"
+                  class="sort-btn"
+                >
+                  Candidate Name
+                  {{
+                    getSortIndicator('candidateName', upcomingSortKey(), upcomingSortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('inspectionDate')"
+                  class="sort-btn"
+                >
+                  Inspection Date
+                  {{
+                    getSortIndicator('inspectionDate', upcomingSortKey(), upcomingSortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('nextDue')"
+                  class="sort-btn"
+                >
+                  Next Due
+                  {{ getSortIndicator('nextDue', upcomingSortKey(), upcomingSortDirection()) }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('priority')"
+                  class="sort-btn"
+                >
+                  Priority
+                  {{ getSortIndicator('priority', upcomingSortKey(), upcomingSortDirection()) }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('inspectionReason')"
+                  class="sort-btn"
+                >
+                  Inspection Reason
+                  {{
+                    getSortIndicator('inspectionReason', upcomingSortKey(), upcomingSortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('inspectionType')"
+                  class="sort-btn"
+                >
+                  Inspection Type
+                  {{
+                    getSortIndicator('inspectionType', upcomingSortKey(), upcomingSortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setUpcomingSort('inspectionStatus')"
+                  class="sort-btn"
+                >
+                  Inspection Status
+                  {{
+                    getSortIndicator('inspectionStatus', upcomingSortKey(), upcomingSortDirection())
+                  }}
+                </button>
+              </th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="upcomingInspections().length === 0; else upcomingRows">
+              <td class="empty-cell" colspan="8">No upcoming inspections found.</td>
+            </tr>
+            <ng-template #upcomingRows>
+              <tr *ngFor="let row of upcomingInspections()">
+                <td>{{ row.candidateName }}</td>
+                <td>{{ row.inspectionDate }}</td>
+                <td>{{ row.nextDue }}</td>
+                <td>{{ row.priority }}</td>
+                <td>{{ row.inspectionReason }}</td>
+                <td>{{ row.inspectionType }}</td>
+                <td>{{ row.inspectionStatus }}</td>
+                <td class="action-cell">
+                  <button pButton pRipple type="button" class="action-btn">Start</button>
+                </td>
+              </tr>
+            </ng-template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recently Completed Table -->
+    <section
+      *ngIf="activeTab() === 'recently-completed'"
+      class="table-card"
+      aria-label="Recently Completed Inspections table"
+    >
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('candidateName')"
+                  class="sort-btn"
+                >
+                  Candidate Name
+                  {{
+                    getSortIndicator('candidateName', recentlySortKey(), recentlySortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('inspectionDate')"
+                  class="sort-btn"
+                >
+                  Inspection Date
+                  {{
+                    getSortIndicator('inspectionDate', recentlySortKey(), recentlySortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('nextDue')"
+                  class="sort-btn"
+                >
+                  Next Due
+                  {{ getSortIndicator('nextDue', recentlySortKey(), recentlySortDirection()) }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('priority')"
+                  class="sort-btn"
+                >
+                  Priority
+                  {{ getSortIndicator('priority', recentlySortKey(), recentlySortDirection()) }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('inspectionReason')"
+                  class="sort-btn"
+                >
+                  Inspection Reason
+                  {{
+                    getSortIndicator('inspectionReason', recentlySortKey(), recentlySortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('inspectionType')"
+                  class="sort-btn"
+                >
+                  Inspection Type
+                  {{
+                    getSortIndicator('inspectionType', recentlySortKey(), recentlySortDirection())
+                  }}
+                </button>
+              </th>
+              <th>
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  (click)="setRecentlySort('inspectionStatus')"
+                  class="sort-btn"
+                >
+                  Inspection Status
+                  {{
+                    getSortIndicator('inspectionStatus', recentlySortKey(), recentlySortDirection())
+                  }}
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="recentlyCompletedInspections().length === 0; else completedRows">
+              <td class="empty-cell" colspan="7">No recently completed inspections found.</td>
+            </tr>
+            <ng-template #completedRows>
+              <tr *ngFor="let row of recentlyCompletedInspections()">
+                <td>{{ row.candidateName }}</td>
+                <td>{{ row.inspectionDate }}</td>
+                <td>{{ row.nextDue }}</td>
+                <td>{{ row.priority }}</td>
+                <td>{{ row.inspectionReason }}</td>
+                <td>{{ row.inspectionType }}</td>
+                <td>{{ row.inspectionStatus }}</td>
+              </tr>
+            </ng-template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+
+
+
