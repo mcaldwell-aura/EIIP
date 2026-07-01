@@ -13,6 +13,8 @@ import { LocationsComponent } from './locations.component';
 import { LocationDetailComponent } from './location-detail.component';
 import { InspectorDashboardComponent } from './inspector-dashboard.component';
 import { InspectionSearchComponent } from './inspection-search.component';
+import { FormsMockupAccordionComponent } from './forms-mockup-accordion.component';
+import { FormsMockupModalComponent } from './forms-mockup-modal.component';
 
 export const routes: Routes = [
   {
@@ -70,5 +72,13 @@ export const routes: Routes = [
   {
     path: 'inspection-overview/subject/:subjectId',
     component: SubjectDetailsComponent,
+  },
+  {
+    path: 'forms-mockups/accordion',
+    component: FormsMockupAccordionComponent,
+  },
+  {
+    path: 'forms-mockups/modal',
+    component: FormsMockupModalComponent,
   },
 ];

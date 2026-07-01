@@ -1,0 +1,209 @@
+<div class="details-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="details-main">
+    <section class="page-header">
+      <div class="title-wrap">
+        <div>
+          <p class="eyebrow">Forms Mockups</p>
+          <div class="title-row">
+            <h1>Inspection #{{ inspection()?.inspectionId || 'N/A' }}</h1>
+          </div>
+          <p class="subtitle">Accordion Layout Concept</p>
+        </div>
+        <a
+          class="back-btn"
+          [routerLink]="['/inspection-overview/inspection', inspectionId()]"
+          [queryParams]="{ tab: 'forms' }"
+        >
+          Back to Main Forms
+        </a>
+      </div>
+    </section>
+
+    <section class="tabs" aria-label="Inspection details tabs">
+      <button pButton pRipple type="button" class="tab-btn">Summary</button>
+      <button pButton pRipple type="button" class="tab-btn active">Forms</button>
+      <button pButton pRipple type="button" class="tab-btn">Appointments</button>
+      <button pButton pRipple type="button" class="tab-btn">Notes</button>
+      <button pButton pRipple type="button" class="tab-btn">Documents</button>
+    </section>
+
+    <section class="details-card forms-card" aria-label="Inspection forms accordion mockup">
+      <div class="card-header">
+        <h2>Inspection Forms</h2>
+        <button pButton pRipple type="button" class="primary-btn" (click)="openAddFormModal()">
+          <i class="pi pi-plus" aria-hidden="true"></i>
+          Add Inspection Form
+        </button>
+      </div>
+
+      @if (forms().length === 0) {
+        <p class="empty-state">No forms available for this inspection.</p>
+      }
+
+      <div class="accordion-list">
+        @for (form of forms(); track form.formId) {
+          <article class="accordion-item" [class.expanded]="isExpanded(form.formId)">
+            <button
+              pButton
+              pRipple
+              type="button"
+              class="accordion-header"
+              (click)="toggleForm(form.formId)"
+              [attr.aria-expanded]="isExpanded(form.formId)"
+            >
+              <div>
+                <h3>Form {{ form.formId }} · {{ form.formType }}</h3>
+                <p>
+                  <strong>Inspector:</strong>
+                  {{ form.inspector || 'Unassigned' }}
+                  <span class="dot" aria-hidden="true">•</span>
+                  <strong>Appointment:</strong>
+                  {{ formatAppointmentDate(form.appointmentDateTime) }}
+                </p>
+              </div>
+              <span class="chevron" aria-hidden="true">{{ isExpanded(form.formId) ? '▾' : '▸' }}</span>
+            </button>
+
+            @if (isExpanded(form.formId)) {
+              <div class="accordion-content">
+                <div class="form-grid">
+                  <label class="form-field">
+                    <span>Appointment Date</span>
+                    <input
+                      pInputText
+                      type="datetime-local"
+                      [value]="getDraft(form).appointmentDateTime"
+                      (input)="updateDraftField(form, 'appointmentDateTime', $any($event.target).value)"
+                    />
+                  </label>
+
+                  <label class="form-field">
+                    <span>Inspector</span>
+                    <input
+                      pInputText
+                      type="text"
+                      [value]="getDraft(form).inspector"
+                      (input)="updateDraftField(form, 'inspector', $any($event.target).value)"
+                    />
+                  </label>
+
+                  <label class="form-field">
+                    <span>Status</span>
+                    <p-select
+                      [options]="statusOptions"
+                      [ngModel]="getDraft(form).status"
+                      optionLabel="label"
+                      optionValue="value"
+                      appendTo="body"
+                      (ngModelChange)="updateDraftField(form, 'status', $event)"
+                    ></p-select>
+                  </label>
+
+                  <label class="form-field">
+                    <span>Form Type</span>
+                    <input pInputText type="text" [value]="form.formType" readonly />
+                  </label>
+                </div>
+
+                <label class="form-field form-field-wide">
+                  <span>Comments</span>
+                  <textarea
+                    pInputTextarea
+                    rows="4"
+                    [value]="getDraft(form).comments"
+                    (input)="updateDraftField(form, 'comments', $any($event.target).value)"
+                  ></textarea>
+                </label>
+
+                <div class="form-actions">
+                  <button pButton pRipple type="button" class="secondary-btn" (click)="cancelForm(form.formId)">
+                    Cancel
+                  </button>
+                  <button pButton pRipple type="button" class="primary-btn" (click)="saveForm(form)">
+                    Save
+                  </button>
+                </div>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  </main>
+
+  <p-dialog
+    [visible]="isAddFormModalOpen()"
+    header="Add Inspection Form"
+    [modal]="true"
+    [style]="{ width: 'min(560px, 92vw)' }"
+    (onHide)="closeAddFormModal()"
+  >
+    <label class="form-field form-field-wide">
+      <span>Form Type</span>
+      <p-select
+        [options]="formTypeSelectOptions"
+        [ngModel]="selectedFormTypeInput() || null"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select a form type"
+        appendTo="body"
+        (ngModelChange)="updateSelectedFormType($event)"
+      ></p-select>
+    </label>
+
+    <ng-template pTemplate="footer">
+      <button pButton pRipple type="button" class="secondary-btn" (click)="closeAddFormModal()">
+        Cancel
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="primary-btn"
+        [disabled]="!canAddForm()"
+        (click)="addInspectionForm()"
+      >
+        Add Form
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  @if (showSavedToast()) {
+    <div class="save-toast" role="status" aria-live="polite">Form saved</div>
+  }
+</div>

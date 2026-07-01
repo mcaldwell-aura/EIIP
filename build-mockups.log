@@ -1,0 +1,33 @@
+[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+[35mBrowser bundles[39m     
+[1mInitial chunk files[22m [2m | [22m[1mNames[22m           [2m | [22m [1mRaw size[22m
+[32mmain.js[39m             [2m | [22m[2mmain[22m            [2m | [22m  [36m3.91 MB[39m[2m | [22m
+[32mchunk-4BBT2O77.js[39m   [2m | [22m[2m-[22m               [2m | [22m[36m926.90 kB[39m[2m | [22m
+[32mstyles.css[39m          [2m | [22m[2mstyles[22m          [2m | [22m [36m24.54 kB[39m[2m | [22m
+
+[1m [22m                   [2m | [22m[1mInitial total[22m   [2m | [22m  [1m4.86 MB[22m
+
+[1mLazy chunk files[22m    [2m | [22m[1mNames[22m           [2m | [22m [1mRaw size[22m
+[32mchunk-NKZUJVRO.js[39m   [2m | [22m[2mbrowser[22m         [2m | [22m[36m153.74 kB[39m[2m | [22m
+
+
+[35mServer bundles[39m      
+[1mInitial chunk files[22m [2m | [22m[1mNames[22m           [2m | [22m [1mRaw size[22m
+[32mmain.server.mjs[39m     [2m | [22m[2mmain.server[22m     [2m | [22m  [36m4.80 MB[39m[2m | [22m
+[32mserver.mjs[39m          [2m | [22m[2mserver[22m          [2m | [22m  [36m1.95 MB[39m[2m | [22m
+[32mchunk-A7XIXJGV.mjs[39m  [2m | [22m[2m-[22m               [2m | [22m[36m916.89 kB[39m[2m | [22m
+[32mpolyfills.server.mjs[39m[2m | [22m[2mpolyfills.server[22m[2m | [22m[36m427.81 kB[39m[2m | [22m
+[32mchunk-3II4UTYF.mjs[39m  [2m | [22m[2m-[22m               [2m | [22m  [36m2.81 kB[39m[2m | [22m
+[32mchunk-T2KOBY73.mjs[39m  [2m | [22m[2m-[22m               [2m | [22m  [36m2.01 kB[39m[2m | [22m
+
+[1mLazy chunk files[22m    [2m | [22m[1mNames[22m           [2m | [22m [1mRaw size[22m
+[32mchunk-PJRDNBIW.mjs[39m  [2m | [22m[2mbrowser[22m         [2m | [22m[36m153.81 kB[39m[2m | [22m
+[32mchunk-F5FD6IK3.mjs[39m  [2m | [22m[2mxhr2[22m            [2m | [22m [36m40.11 kB[39m[2m | [22m
+[32mchunk-5QAFQH3E.mjs[39m  [2m | [22m[2mxhr2[22m            [2m | [22m [36m40.04 kB[39m[2m | [22m
+
+[35mPrerendered 0 static routes.[39m
+Application bundle generation complete. [16.594 seconds] - 2026-07-01T20:45:34.139Z
+
+Output location: C:\Users\MyaCaldwell\Documents\Code\GitHub\EIIP\dist\EIIP
+
