@@ -77,7 +77,13 @@
 
       <div class="forms-card-list">
         @for (form of forms(); track form.formId) {
-          <button pButton pRipple type="button" class="forms-list-card" (click)="openFormModal(form)">
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="forms-list-card"
+            (click)="openFormModal(form)"
+          >
             <h3>Form {{ form.formId }}</h3>
             <p><strong>Type:</strong> {{ form.formType }}</p>
             <p>
@@ -153,8 +159,12 @@
     }
 
     <ng-template pTemplate="footer">
-      <button pButton pRipple type="button" class="secondary-btn" (click)="closeModal()">Cancel</button>
-      <button pButton pRipple type="button" class="primary-btn" (click)="saveActiveForm()">Save</button>
+      <button pButton pRipple type="button" class="secondary-btn" (click)="closeModal()">
+        Cancel
+      </button>
+      <button pButton pRipple type="button" class="primary-btn" (click)="saveActiveForm()">
+        Save
+      </button>
     </ng-template>
   </p-dialog>
 

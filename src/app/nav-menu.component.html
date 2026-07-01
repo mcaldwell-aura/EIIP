@@ -10,7 +10,6 @@
   <nav class="menu-drawer" role="navigation" aria-label="Main navigation menu">
     <div class="menu-header">
       <div class="menu-brand">
-        
         <span class="brand-text">EIIP</span>
       </div>
       <button type="button" class="menu-close-btn" (click)="close()" aria-label="Close menu">
@@ -60,12 +59,20 @@
 
           <ul class="menu-submenu-list" aria-label="Forms mockup layouts">
             <li>
-              <a class="menu-item menu-submenu-item" routerLink="/forms-mockups/accordion" (click)="close()">
+              <a
+                class="menu-item menu-submenu-item"
+                routerLink="/forms-mockups/accordion"
+                (click)="close()"
+              >
                 Accordion Layout
               </a>
             </li>
             <li>
-              <a class="menu-item menu-submenu-item" routerLink="/forms-mockups/modal" (click)="close()">
+              <a
+                class="menu-item menu-submenu-item"
+                routerLink="/forms-mockups/modal"
+                (click)="close()"
+              >
                 Modal Layout
               </a>
             </li>
@@ -75,6 +82,3 @@
     </div>
   </nav>
 }
-
-
-

@@ -110,7 +110,9 @@
   gap: 0.7rem;
   padding: 0.65rem 0.75rem;
   text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
 }
 
 .menu-item:hover {

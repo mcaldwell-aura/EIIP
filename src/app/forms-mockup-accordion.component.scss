@@ -282,7 +282,9 @@ h3 {
   justify-content: space-between;
   padding: 0.9rem 1rem;
   text-align: left;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
   width: 100%;
 }
 

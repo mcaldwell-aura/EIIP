@@ -96,7 +96,9 @@
                   {{ formatAppointmentDate(form.appointmentDateTime) }}
                 </p>
               </div>
-              <span class="chevron" aria-hidden="true">{{ isExpanded(form.formId) ? '▾' : '▸' }}</span>
+              <span class="chevron" aria-hidden="true">{{
+                isExpanded(form.formId) ? '▾' : '▸'
+              }}</span>
             </button>
 
             @if (isExpanded(form.formId)) {
@@ -108,7 +110,9 @@
                       pInputText
                       type="datetime-local"
                       [value]="getDraft(form).appointmentDateTime"
-                      (input)="updateDraftField(form, 'appointmentDateTime', $any($event.target).value)"
+                      (input)="
+                        updateDraftField(form, 'appointmentDateTime', $any($event.target).value)
+                      "
                     />
                   </label>
 
@@ -151,10 +155,22 @@
                 </label>
 
                 <div class="form-actions">
-                  <button pButton pRipple type="button" class="secondary-btn" (click)="cancelForm(form.formId)">
+                  <button
+                    pButton
+                    pRipple
+                    type="button"
+                    class="secondary-btn"
+                    (click)="cancelForm(form.formId)"
+                  >
                     Cancel
                   </button>
-                  <button pButton pRipple type="button" class="primary-btn" (click)="saveForm(form)">
+                  <button
+                    pButton
+                    pRipple
+                    type="button"
+                    class="primary-btn"
+                    (click)="saveForm(form)"
+                  >
                     Save
                   </button>
                 </div>
