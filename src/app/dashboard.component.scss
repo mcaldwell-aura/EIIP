@@ -20,7 +20,7 @@
   min-height: 100dvh;
   background: #ffffff;
   color: var(--text);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
 }
 
 * {
@@ -82,7 +82,7 @@
 }
 
 .brand-text {
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -175,7 +175,7 @@
 h2,
 h3,
 strong {
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-weight: 700;
 }
 
@@ -201,7 +201,7 @@ strong {
   border: 1px solid #cbd5ef;
   border-radius: 50%;
   display: inline-flex;
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 0.8rem;
   font-weight: 700;
   height: 1.85rem;
@@ -272,7 +272,7 @@ h2 {
 
 .card-top p {
   color: var(--text-soft);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -349,7 +349,7 @@ h2 {
 
 .counter-value {
   color: #2d3541;
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: clamp(2.1rem, 3.8vw, 2.7rem);
   font-weight: 700;
   line-height: 1;
@@ -393,7 +393,7 @@ h2 {
   border-radius: 9px;
   color: #2d3541;
   display: inline-flex;
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 1.15rem;
   font-weight: 700;
   height: 1.95rem;
@@ -600,7 +600,7 @@ td {
 
 th {
   color: var(--text-soft);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.01em;

@@ -4,6 +4,8 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
+  --app-font-family: Roboto;
+  --p-font-family: var(--app-font-family);
   --p-primary-color: #1f56d8;
   --p-surface-ground: #ffffff;
   --p-surface-card: #ffffff;
@@ -42,7 +44,7 @@
 
 html,
 body {
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   background: #ffffff;
 }
 
@@ -55,6 +57,10 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+.p-component {
+  font-family: var(--app-font-family);
 }
 
 /* Prime-inspired defaults for legacy native controls to preserve existing layouts. */

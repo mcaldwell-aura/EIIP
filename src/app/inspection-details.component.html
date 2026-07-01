@@ -12,11 +12,11 @@
         <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        
         <span class="brand-text">EIIP</span>
       </a>
       <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
       <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
       <a class="nav-text-link" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
@@ -74,6 +74,16 @@
         (click)="selectTab('summary')"
       >
         Summary
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'forms'"
+        (click)="selectTab('forms')"
+      >
+        Forms
       </button>
       <button
         pButton
@@ -196,6 +206,45 @@
               (click)="saveSummary()"
             >
               Save
+            </button>
+          </div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'forms'">
+        <section class="details-card auxiliary-card forms-card" aria-label="Inspection forms">
+          <div class="card-header">
+            <div>
+              <h2>Inspection Forms</h2>
+            </div>
+            <button pButton pRipple type="button" class="primary-btn" (click)="openAddFormModal()">
+              <i class="pi pi-plus" aria-hidden="true"></i>
+              Add Inspection Form
+            </button>
+          </div>
+
+          <div *ngIf="inspectionFormCards().length === 0" class="forms-empty-state">
+            No Inspection Forms
+          </div>
+
+          <div *ngIf="inspectionFormCards().length > 0" class="forms-card-list">
+            <button
+              pButton
+              pRipple
+              *ngFor="let formCard of inspectionFormCards()"
+              type="button"
+              class="forms-list-card"
+              (click)="openFormCard(formCard.formId)"
+            >
+              <h3>Form {{ formCard.formId }}</h3>
+              <p>
+                <strong>Appointment Date:</strong>
+                {{ formatFormAppointmentDate(formCard.appointmentDateTime) }}
+              </p>
+              <p>
+                <strong>Inspector:</strong>
+                {{ formCard.inspector || 'Unassigned' }}
+              </p>
             </button>
           </div>
         </section>
@@ -402,10 +451,47 @@
   </div>
 
   <p-dialog
+    [visible]="isAddFormModalOpen()"
+    header="Add Inspection Form"
+    [modal]="true"
+    [style]="{ width: 'min(560px, 92vw)' }"
+    (onHide)="closeAddFormModal()"
+  >
+    <label class="form-type-field">
+      <span>Form Type</span>
+      <p-select
+        [options]="formTypeSelectOptions"
+        [ngModel]="selectedFormTypeInput() || null"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select a form type"
+        appendTo="body"
+        (ngModelChange)="updateSelectedFormType($event)"
+      ></p-select>
+    </label>
+
+    <ng-template pTemplate="footer">
+      <button pButton pRipple type="button" class="secondary-btn" (click)="closeAddFormModal()">
+        Cancel
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="primary-btn"
+        [disabled]="!canAddForm()"
+        (click)="addInspectionForm()"
+      >
+        Add Form
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
     [visible]="isAppointmentModalOpen()"
     [header]="appointmentModalMode() === 'create' ? 'New Appointment' : 'Edit Appointment'"
     [modal]="true"
-    [style]="{ width: 'min(760px, 95vw)' }"
+    [style]="{ width: 'min(900px, 95vw)' }"
     (onHide)="closeAppointmentModal()"
   >
     <div class="appointment-form-grid">
@@ -445,6 +531,66 @@
           (ngModelChange)="updateAppointmentStatus($event)"
         ></p-select>
       </label>
+
+      <div class="appointment-get-slots-button">
+        <button
+          pButton
+          pRipple
+          type="button"
+          class="primary-btn"
+          (click)="toggleShowAppointmentSlots()"
+        >
+          {{ isShowingAppointmentSlots() ? 'Hide' : 'Get' }} new appointments
+        </button>
+      </div>
+
+      <div *ngIf="isShowingAppointmentSlots()" class="appointment-slots-container">
+        <div class="appointment-slots-scroll">
+          <table class="appointment-slots-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Auditor</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let slot of availableAppointmentSlots"
+                [class.appointment-slot-selected]="selectedAppointmentSlotForDetails() === slot"
+              >
+                <td>
+                  <strong>{{ slot.time }}</strong>
+                </td>
+                <td>{{ slot.examType || 'CDL Exam' }}</td>
+                <td>{{ slot.location }}</td>
+                <td>{{ slot.auditorName }}</td>
+                <td class="appointment-slot-action">
+                  <button
+                    pButton
+                    pRipple
+                    type="button"
+                    [class]="
+                      selectedAppointmentSlotForDetails() === slot
+                        ? 'primary-btn appointment-select-btn-selected'
+                        : 'primary-btn'
+                    "
+                    (click)="selectAppointmentSlotForDetails(slot)"
+                  >
+                    {{
+                      selectedAppointmentSlotForDetails() === slot
+                        ? 'Selected'
+                        : 'Select Appointment'
+                    }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <label class="appointment-field appointment-field-wide">
         <span>Comments</span>
@@ -783,6 +929,3 @@
     </ng-template>
   </p-dialog>
 </div>
-
-
-

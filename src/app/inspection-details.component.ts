@@ -8,11 +8,15 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
-import { InspectionStoreService, type StoredAppointmentRow } from './inspection-store.service';
+import {
+  InspectionStoreService,
+  type InspectionFormRecord,
+  type StoredAppointmentRow,
+} from './inspection-store.service';
 import { LocationStoreService } from './location-store.service';
 import { NavMenuService } from './nav-menu.service';
 
@@ -23,7 +27,55 @@ import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 
-type DetailsTab = 'summary' | 'appointments' | 'notes' | 'documents';
+type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
+type InspectionTypeOption = 'Overt' | 'Covert';
+type InspectionFormStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
+
+type AppointmentSlot = {
+  time: string;
+  examType: string;
+  inspectionType: InspectionTypeOption;
+  location: string;
+  auditorName: string;
+};
+
+const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
+  {
+    time: '9:00 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Austin Assessment Center',
+    auditorName: 'Campos',
+  },
+  {
+    time: '10:30 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Harris Central Campus',
+    auditorName: 'Lin',
+  },
+  {
+    time: '11:45 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Dallas Metro Hub',
+    auditorName: 'Reeves',
+  },
+  {
+    time: '1:00 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Fort Worth North Site',
+    auditorName: 'Patel',
+  },
+  {
+    time: '2:30 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Collin Regional Site',
+    auditorName: 'Turner',
+  },
+];
 
 type NoteRow = {
   name: string;
@@ -61,7 +113,6 @@ type SelectableInspectionStatus = InspectionStatus | 'Excellent' | 'Marginal' | 
 type AppointmentStatus = 'Scheduled' | 'Cancelled';
 
 type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
-type InspectionTypeOption = 'Overt' | 'Covert';
 
 type SummaryFormValue = {
   candidate: string;
@@ -92,6 +143,7 @@ type SummaryFormValue = {
 })
 export class InspectionDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly inspectionStore = inject(InspectionStoreService);
   private readonly locationStore = inject(LocationStoreService);
   protected readonly menuService = inject(NavMenuService);
@@ -99,6 +151,9 @@ export class InspectionDetailsComponent implements OnInit {
   private appointmentToastTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly paramMap = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
+  });
+  private readonly queryParamMap = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
   });
 
   protected readonly activeTab = signal<DetailsTab>('summary');
@@ -108,6 +163,7 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly isDeleteNoteModalOpen = signal(false);
   protected readonly isDocumentModalOpen = signal(false);
   protected readonly isDeleteDocumentModalOpen = signal(false);
+  protected readonly isAddFormModalOpen = signal(false);
   protected readonly noteModalMode = signal<NoteModalMode>('add');
   protected readonly documentModalMode = signal<DocumentModalMode>('add');
   protected readonly appointmentModalMode = signal<AppointmentModalMode>('edit');
@@ -316,6 +372,23 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly appointmentCommentsInput = signal('');
   protected readonly appointmentStatusInput = signal<AppointmentStatus>('Scheduled');
   protected readonly appointmentValidationMessage = signal('');
+  protected readonly selectedFormTypeInput = signal('');
+  protected readonly isCreatingInspectionForm = signal(false);
+  protected readonly isShowingAppointmentSlots = signal(false);
+  protected readonly selectedAppointmentSlotForDetails = signal<AppointmentSlot | null>(null);
+  protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
+    AVAILABLE_APPOINTMENT_SLOTS;
+  protected readonly inspectionFormStatusOptions: readonly InspectionFormStatus[] = [
+    'Scheduled',
+    'In Progress',
+    'Completed',
+    'Overdue',
+  ];
+  protected readonly availableFormTypes: readonly string[] = [
+    'Evidence Checklist',
+    'Overt Observation Form',
+    'Covert Observation Form',
+  ];
   protected readonly noteNameInput = signal('');
   protected readonly noteDescriptionInput = signal('');
   protected readonly documentNameInput = signal('');
@@ -422,6 +495,27 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly canSaveAppointment = computed(
     () => this.appointmentDateTimeInput().trim().length > 0,
   );
+  protected readonly inspectionFormCards = computed<InspectionFormRecord[]>(() => {
+    const inspectionId = this.inspection().inspectionId;
+
+    return [...this.inspectionStore.getInspectionForms(inspectionId)].sort(
+      (leftRow, rightRow) =>
+        this.parseSortableTimestamp(rightRow.appointmentDateTime) -
+        this.parseSortableTimestamp(leftRow.appointmentDateTime),
+    );
+  });
+  protected readonly formTypeSelectOptions = this.availableFormTypes.map((formType) => ({
+    label: formType,
+    value: formType,
+  }));
+  protected readonly canAddForm = computed(
+    () => this.selectedFormTypeInput().trim().length > 0 && !this.isCreatingInspectionForm(),
+  );
+  private readonly activeTabFromQueryEffect = effect(() => {
+    if (this.queryParamMap().get('tab') === 'forms') {
+      this.activeTab.set('forms');
+    }
+  });
 
   ngOnInit(): void {
     // Defensive reset in case stale UI state survives a hot-reload/navigation edge case.
@@ -431,10 +525,77 @@ export class InspectionDetailsComponent implements OnInit {
     this.isDeleteNoteModalOpen.set(false);
     this.isDocumentModalOpen.set(false);
     this.isDeleteDocumentModalOpen.set(false);
+    this.isAddFormModalOpen.set(false);
   }
 
   protected selectTab(tab: DetailsTab): void {
     this.activeTab.set(tab);
+  }
+
+  protected openFormCard(formId: string): void {
+    this.router.navigate(
+      ['/inspection-overview/inspection', this.inspection().inspectionId, 'forms', formId],
+      {
+        queryParams: { mode: 'view' },
+      },
+    );
+  }
+
+  protected openAddFormModal(): void {
+    this.selectedFormTypeInput.set('');
+    this.isAddFormModalOpen.set(true);
+  }
+
+  protected closeAddFormModal(): void {
+    this.isAddFormModalOpen.set(false);
+    this.selectedFormTypeInput.set('');
+  }
+
+  protected updateSelectedFormType(value: string | null): void {
+    this.selectedFormTypeInput.set(value ?? '');
+  }
+
+  protected addInspectionForm(): void {
+    if (!this.canAddForm()) {
+      return;
+    }
+
+    this.isCreatingInspectionForm.set(true);
+
+    const selectedFormType = this.selectedFormTypeInput();
+    const draftFormId = this.inspectionStore.previewNextInspectionFormId();
+
+    this.closeAddFormModal();
+
+    this.router.navigate(
+      ['/inspection-overview/inspection', this.inspection().inspectionId, 'forms', draftFormId],
+      {
+        queryParams: { mode: 'edit', formType: selectedFormType, isNew: 'true', draftFormId },
+      },
+    );
+
+    this.isCreatingInspectionForm.set(false);
+  }
+
+  protected formatFormAppointmentDate(dateTime: string): string {
+    const parsedDate = new Date(dateTime);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return dateTime || 'N/A';
+    }
+
+    const date = new Intl.DateTimeFormat('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(parsedDate);
+    const time = new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(parsedDate);
+
+    return `${date} ${time}`;
   }
 
   protected requiresAttention(status: SelectableInspectionStatus): boolean {
@@ -482,6 +643,8 @@ export class InspectionDetailsComponent implements OnInit {
     this.appointmentCommentsInput.set('');
     this.appointmentStatusInput.set('Scheduled');
     this.appointmentValidationMessage.set('');
+    this.isShowingAppointmentSlots.set(false);
+    this.selectedAppointmentSlotForDetails.set(null);
     this.isAppointmentModalOpen.set(true);
   }
 
@@ -498,6 +661,8 @@ export class InspectionDetailsComponent implements OnInit {
     this.appointmentCommentsInput.set(appointment.comments);
     this.appointmentStatusInput.set(appointment.status);
     this.appointmentValidationMessage.set('');
+    this.isShowingAppointmentSlots.set(false);
+    this.selectedAppointmentSlotForDetails.set(null);
     this.isAppointmentModalOpen.set(true);
   }
 
@@ -505,6 +670,19 @@ export class InspectionDetailsComponent implements OnInit {
     this.isAppointmentModalOpen.set(false);
     this.appointmentValidationMessage.set('');
     this.activeAppointmentIndex.set(null);
+    this.isShowingAppointmentSlots.set(false);
+    this.selectedAppointmentSlotForDetails.set(null);
+  }
+
+  protected toggleShowAppointmentSlots(): void {
+    this.isShowingAppointmentSlots.update((value) => !value);
+  }
+
+  protected selectAppointmentSlotForDetails(slot: AppointmentSlot): void {
+    this.selectedAppointmentSlotForDetails.set(slot);
+    this.appointmentDateTimeInput.set(slot.time);
+    this.appointmentLocationInput.set(slot.location);
+    this.isShowingAppointmentSlots.set(false);
   }
 
   protected openAssignInspectorModal(): void {
@@ -1112,5 +1290,10 @@ export class InspectionDetailsComponent implements OnInit {
         ...update,
       },
     }));
+  }
+
+  private parseSortableTimestamp(dateTime: string): number {
+    const parsedDate = Date.parse(dateTime);
+    return Number.isNaN(parsedDate) ? 0 : parsedDate;
   }
 }

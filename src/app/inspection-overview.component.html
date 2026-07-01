@@ -17,6 +17,7 @@
       </a>
       <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
       <a class="nav-text-link active-nav-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
       <a class="nav-text-link" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
@@ -40,7 +41,12 @@
         <p class="eyebrow">Inspection Operations</p>
         <h1>Inspection Plan Overview</h1>
       </div>
-      <a class="back-link" routerLink="/">Back To Dashboard</a>
+      <div class="header-actions">
+        <button pButton pRipple type="button" class="search-btn" routerLink="/inspection-search">
+          Inspection Search
+        </button>
+        <a class="back-link" routerLink="/">Back To Dashboard</a>
+      </div>
     </section>
 
     <section class="toolbar" aria-label="Filters and sorting">
@@ -492,37 +498,40 @@
               ></option>
             </datalist>
 
-            <div class="appointment-inline-actions">
-              <button
-                pButton
-                pRipple
-                type="button"
-                class="secondary-modal-btn add-appointment-btn"
-                (click)="addAppointment()"
-              >
-                Add Appointment
-              </button>
-            </div>
-
-            <div *ngIf="stagedAppointments().length > 0" class="staged-appointments-list">
-              <div
-                *ngFor="let appointment of stagedAppointments(); let appointmentIndex = index"
-                class="staged-appointment-row"
-              >
-                <div>
-                  <strong>{{ appointment.dateTime || 'TBD' }}</strong>
-                  <p>{{ appointment.location || 'No location selected' }}</p>
-                </div>
-                <button
-                  pButton
-                  pRipple
-                  type="button"
-                  class="text-action-btn"
-                  (click)="removeAppointment(appointmentIndex)"
+            <div class="appointment-slots-scroll">
+            <table class="appointment-slots-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                  <th>Auditor</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let slot of availableAppointmentSlots"
+                  [class.appointment-slot-selected]="selectedAppointmentSlot() === slot"
                 >
-                  Remove
-                </button>
-              </div>
+                  <td><strong>{{ slot.time }}</strong></td>
+                  <td>{{ slot.examType || 'CDL Exam' }}</td>
+                  <td>{{ slot.location }}</td>
+                  <td>{{ slot.auditorName }}</td>
+                  <td class="appointment-slot-action">
+                    <button
+                      pButton
+                      pRipple
+                      type="button"
+                      [class]="selectedAppointmentSlot() === slot ? 'action-btn appointment-select-btn appointment-select-btn-selected' : 'action-btn appointment-select-btn'"
+                      (click)="selectAppointment(slot)"
+                    >
+                      {{ selectedAppointmentSlot() === slot ? 'Selected' : 'Select Appointment' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             </div>
           </section>
 
@@ -558,6 +567,7 @@
     </ng-template>
   </p-dialog>
 </div>
+
 
 
 

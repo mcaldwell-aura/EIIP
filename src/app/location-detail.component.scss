@@ -10,7 +10,7 @@
   min-height: 100dvh;
   background: #ffffff;
   color: var(--text);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
 }
 
 * {

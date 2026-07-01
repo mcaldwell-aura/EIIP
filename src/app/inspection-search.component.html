@@ -1,0 +1,343 @@
+<div class="inspection-search-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link mobile-hidden">View CSTIMS</button>
+      <a class="nav-text-link mobile-hidden" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link active-nav-link mobile-hidden" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link mobile-hidden" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link mobile-hidden" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
+        <i class="pi pi-user"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="search-main">
+    <section class="search-header">
+      <div>
+        <p class="eyebrow">Inspection Operations</p>
+        <h1>Inspection Search</h1>
+      </div>
+    </section>
+
+    <section class="search-pane" aria-label="Inspection search parameters">
+      <h2>Search Inspections</h2>
+
+      <div class="search-grid">
+        <label class="search-field">
+          <span>Inspection Number</span>
+          <input
+            pInputText
+            type="text"
+            [value]="searchParams().inspectionNumber"
+            (input)="updateInspectionNumber($event)"
+            placeholder="Enter inspection number"
+          />
+        </label>
+
+        <label class="search-field">
+          <span>Candidate Name</span>
+          <input
+            pInputText
+            type="text"
+            [value]="searchParams().subjectName"
+            (input)="updateSubjectName($event)"
+            placeholder="Enter subject name"
+          />
+        </label>
+
+        <label class="search-field">
+          <span>Assigned Inspector</span>
+          <input
+            pInputText
+            type="text"
+            [value]="searchParams().inspector"
+            (input)="updateInspector($event)"
+            placeholder="Enter inspector name"
+          />
+        </label>
+
+        <label class="search-field desktop-only-field">
+          <span>Status</span>
+          <p-select
+            [options]="statusOptions"
+            [ngModel]="searchParams().status"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Status: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateStatus($event)"
+          ></p-select>
+        </label>
+
+        <div class="search-field-row desktop-only-row">
+          <label class="search-field">
+            <span>Inspection Type</span>
+            <p-select
+              [options]="inspectionTypeOptions"
+              [ngModel]="searchParams().inspectionType"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Type: All"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (ngModelChange)="updateInspectionType($event)"
+            ></p-select>
+          </label>
+
+          <label class="search-field">
+            <span>Completion Date From</span>
+            <input
+              pInputText
+              type="date"
+              [value]="searchParams().nextDueFrom"
+              (input)="updateNextDueFrom($event)"
+            />
+          </label>
+
+          <label class="search-field">
+            <span>Completion Date To</span>
+            <input
+              pInputText
+              type="date"
+              [value]="searchParams().nextDueTo"
+              (input)="updateNextDueTo($event)"
+            />
+          </label>
+        </div>
+
+        <div class="search-field-row search-field-row-two mobile-only-row">
+          <label class="search-field">
+            <span>Status</span>
+            <p-select
+              [options]="statusOptions"
+              [ngModel]="searchParams().status"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Status: All"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (ngModelChange)="updateStatus($event)"
+            ></p-select>
+          </label>
+
+          <label class="search-field">
+            <span>Inspection Type</span>
+            <p-select
+              [options]="inspectionTypeOptions"
+              [ngModel]="searchParams().inspectionType"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Type: All"
+              appendTo="body"
+              panelStyleClass="toolbar-select-panel"
+              (ngModelChange)="updateInspectionType($event)"
+            ></p-select>
+          </label>
+        </div>
+
+        <div class="search-field-row search-field-row-two mobile-only-row">
+          <label class="search-field">
+            <span>Completion Date From</span>
+            <input
+              pInputText
+              type="date"
+              [value]="searchParams().nextDueFrom"
+              (input)="updateNextDueFrom($event)"
+            />
+          </label>
+
+          <label class="search-field">
+            <span>Completion Date To</span>
+            <input
+              pInputText
+              type="date"
+              [value]="searchParams().nextDueTo"
+              (input)="updateNextDueTo($event)"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="search-actions">
+        <button pButton pRipple type="button" class="reset-btn" (click)="reset()">Reset</button>
+        <button pButton pRipple type="button" class="search-btn" (click)="search()">Search</button>
+      </div>
+    </section>
+
+    @if (hasSearched()) {
+      <section class="results-card" aria-label="Search results table">
+        <div class="results-header">
+          <h2>Search Results</h2>
+          <p>{{ resultCountSummary() }}</p>
+        </div>
+
+        @if (searchResults().length === 0) {
+          <div class="empty-results">No results found.</div>
+        } @else {
+          <div class="desktop-results">
+            <p-table
+              [value]="searchResults()"
+              [customSort]="true"
+              (sortFunction)="customSort($event)"
+              [paginator]="true"
+              [rows]="pageSize"
+              [scrollable]="true"
+              scrollHeight="26rem"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="inspectionNumberNumeric">
+                    Inspection # <p-sortIcon field="inspectionNumberNumeric"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="subjectName">
+                    Candidate Name <p-sortIcon field="subjectName"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="inspectionStatus">
+                    Status <p-sortIcon field="inspectionStatus"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="inspectionType">
+                    Inspection Type <p-sortIcon field="inspectionType"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="inspectionReason">
+                    Inspection Reason <p-sortIcon field="inspectionReason"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="nextDueTimestamp">
+                    Next Due <p-sortIcon field="nextDueTimestamp"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="assignedInspector">
+                    Assigned Inspector <p-sortIcon field="assignedInspector"></p-sortIcon>
+                  </th>
+                  <th pSortableColumn="appointmentDateTimestamp">
+                    Appointment Date <p-sortIcon field="appointmentDateTimestamp"></p-sortIcon>
+                  </th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.inspectionNumber }}</td>
+                  <td>{{ row.subjectName }}</td>
+                  <td>{{ row.inspectionStatus }}</td>
+                  <td>{{ row.inspectionType }}</td>
+                  <td>{{ row.inspectionReason }}</td>
+                  <td>{{ row.nextDue }}</td>
+                  <td>{{ row.assignedInspector }}</td>
+                  <td>{{ row.appointmentDate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <div class="mobile-results" aria-label="Mobile search results">
+            <div class="mobile-result-cards">
+              @for (row of mobilePagedResults(); track row.inspectionNumber + '-' + $index) {
+                <article class="result-card">
+                  <header class="result-card-header">
+                    <h3>Inspection #{{ row.inspectionNumber }}</h3>
+                    <span
+                      class="status-chip"
+                      [class.status-pending]="row.inspectionStatus === 'Pending'"
+                      [class.status-scheduled]="row.inspectionStatus === 'Scheduled'"
+                      [class.status-planned]="row.inspectionStatus === 'Planned'"
+                      [class.status-good]="row.inspectionStatus === 'Good'"
+                      [class.status-satisfactory]="row.inspectionStatus === 'Satisfactory'"
+                      [class.status-unsatisfactory]="row.inspectionStatus === 'Unsatisfactory'"
+                      [class.status-canceled]="row.inspectionStatus === 'Canceled'"
+                    >
+                      {{ row.inspectionStatus }}
+                    </span>
+                  </header>
+
+                  <div class="result-card-columns">
+                    <div class="result-card-item">
+                      <dt>Candidate</dt>
+                      <dd>{{ row.subjectName }}</dd>
+                    </div>
+                    <div class="result-card-item">
+                      <dt>Type</dt>
+                      <dd>{{ row.inspectionType }}</dd>
+                    </div>
+                    <div class="result-card-item">
+                      <dt>Reason</dt>
+                      <dd>{{ row.inspectionReason }}</dd>
+                    </div>
+                    <div class="result-card-item">
+                      <dt>Inspector</dt>
+                      <dd>{{ row.assignedInspector }}</dd>
+                    </div>
+                    <div class="result-card-item">
+                      <dt>Appointment</dt>
+                      <dd>{{ row.appointmentDate }}</dd>
+                    </div>
+                    <div class="result-card-item">
+                      <dt>Next Due</dt>
+                      <dd>{{ row.nextDue }}</dd>
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
+
+            <div class="mobile-pagination" aria-label="Mobile results pagination">
+              <button
+                pButton
+                pRipple
+                type="button"
+                class="mobile-pagination-btn"
+                [disabled]="!canGoToPreviousMobilePage()"
+                (click)="goToPreviousMobilePage()"
+              >
+                Previous
+              </button>
+
+              <label class="mobile-page-picker">
+                Page
+                <select [value]="mobileCurrentPage()" (change)="updateMobileCurrentPage($event)">
+                  @for (pageNumber of mobilePageOptions(); track pageNumber) {
+                    <option [value]="pageNumber">{{ pageNumber }}</option>
+                  }
+                </select>
+                of {{ mobileTotalPages() }}
+              </label>
+
+              <button
+                pButton
+                pRipple
+                type="button"
+                class="mobile-pagination-btn mobile-pagination-btn-next"
+                [disabled]="!canGoToNextMobilePage()"
+                (click)="goToNextMobilePage()"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  </main>
+</div>

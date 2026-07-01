@@ -13,6 +13,36 @@ export type StoredAppointmentRow = {
   status: 'Scheduled' | 'Cancelled' | 'Completed' | 'Canceled';
 };
 
+export type InspectionFormStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
+
+export type InspectionFormRecord = {
+  formId: string;
+  inspectionId: string;
+  formType: string;
+  appointmentDateTime: string;
+  inspector: string;
+  status: InspectionFormStatus;
+  comments: string;
+};
+
+export type CreateInspectionFormInput = {
+  inspectionId: string;
+  formType: string;
+  formId?: string;
+  appointmentDateTime?: string;
+  inspector?: string;
+  status?: InspectionFormStatus;
+  comments?: string;
+};
+
+export type UpdateInspectionFormInput = {
+  inspectionId: string;
+  formId: string;
+  changes: Partial<
+    Pick<InspectionFormRecord, 'appointmentDateTime' | 'inspector' | 'status' | 'comments'>
+  >;
+};
+
 type AppointmentAuditAction = 'create' | 'edit';
 
 export type AppointmentAuditEntry = {
@@ -41,6 +71,70 @@ export type CreateInspectionInput = {
 export class InspectionStoreService {
   private readonly inspectionsState = signal<InspectionRecord[]>([...INSPECTIONS]);
   private readonly appointmentRowsState = signal<Record<string, StoredAppointmentRow[]>>({});
+  private readonly inspectionFormsState = signal<Record<string, InspectionFormRecord[]>>({
+    '892749': [
+      {
+        formId: '5202',
+        inspectionId: '892749',
+        formType: 'Evidence Checklist',
+        appointmentDateTime: '2026-05-03T09:30',
+        inspector: 'Monique Hale',
+        status: 'In Progress',
+        comments: 'Initial review in progress.',
+      },
+      {
+        formId: '5198',
+        inspectionId: '892749',
+        formType: 'Overt Observation Form',
+        appointmentDateTime: '2026-04-27T11:00',
+        inspector: 'Monique Hale',
+        status: 'Completed',
+        comments: 'Completed and submitted.',
+      },
+    ],
+    '892751': [
+      {
+        formId: '5206',
+        inspectionId: '892751',
+        formType: 'Evidence Checklist',
+        appointmentDateTime: '2026-04-19T09:00',
+        inspector: 'Unassigned',
+        status: 'Scheduled',
+        comments: 'Awaiting final inspector assignment.',
+      },
+    ],
+    '892772': [
+      {
+        formId: '5210',
+        inspectionId: '892772',
+        formType: 'Overt Observation Form',
+        appointmentDateTime: '2026-03-30T10:30',
+        inspector: 'Monique Hale',
+        status: 'Completed',
+        comments: 'Observation completed and added to closeout packet.',
+      },
+      {
+        formId: '5211',
+        inspectionId: '892772',
+        formType: 'Covert Observation Form',
+        appointmentDateTime: '2026-03-29T15:15',
+        inspector: 'Monique Hale',
+        status: 'Completed',
+        comments: 'Supporting covert observation completed prior to review.',
+      },
+    ],
+    '892802': [
+      {
+        formId: '5214',
+        inspectionId: '892802',
+        formType: 'Covert Observation Form',
+        appointmentDateTime: '2026-04-07T14:00',
+        inspector: 'Monique Hale',
+        status: 'In Progress',
+        comments: 'Field notes captured; pending final comments.',
+      },
+    ],
+  });
   // Backend/system-side audit trail; intentionally not exposed to UI.
   private readonly appointmentAuditTrailState = signal<Record<string, AppointmentAuditEntry[]>>({});
   private readonly pendingSuccessToastInspectionIdState = signal<string | null>(null);
@@ -49,6 +143,64 @@ export class InspectionStoreService {
 
   getAppointmentRows(inspectionId: string): StoredAppointmentRow[] | undefined {
     return this.appointmentRowsState()[inspectionId];
+  }
+
+  getInspectionForms(inspectionId: string): InspectionFormRecord[] {
+    return this.inspectionFormsState()[inspectionId] ?? [];
+  }
+
+  getInspectionFormById(inspectionId: string, formId: string): InspectionFormRecord | null {
+    return this.getInspectionForms(inspectionId).find((form) => form.formId === formId) ?? null;
+  }
+
+  previewNextInspectionFormId(): string {
+    return `${this.getNextInspectionFormId()}`;
+  }
+
+  createInspectionForm(input: CreateInspectionFormInput): InspectionFormRecord {
+    const inspection = this.inspectionsState().find(
+      (candidate) => candidate.inspectionId === input.inspectionId,
+    );
+    const now = new Date();
+    const normalizedFormId = input.formId?.trim();
+
+    const created: InspectionFormRecord = {
+      formId:
+        normalizedFormId && normalizedFormId.length > 0
+          ? normalizedFormId
+          : `${this.getNextInspectionFormId()}`,
+      inspectionId: input.inspectionId,
+      formType: input.formType,
+      appointmentDateTime: input.appointmentDateTime ?? this.toDateTimeInputValue(now),
+      inspector: input.inspector ?? inspection?.assignedInspector ?? 'Unassigned',
+      status: input.status ?? 'Scheduled',
+      comments: input.comments ?? '',
+    };
+
+    this.inspectionFormsState.update((existing) => ({
+      ...existing,
+      [input.inspectionId]: [created, ...(existing[input.inspectionId] ?? [])],
+    }));
+
+    return created;
+  }
+
+  updateInspectionForm(input: UpdateInspectionFormInput): void {
+    this.inspectionFormsState.update((existing) => {
+      const currentRows = existing[input.inspectionId] ?? [];
+
+      return {
+        ...existing,
+        [input.inspectionId]: currentRows.map((form) =>
+          form.formId === input.formId
+            ? {
+                ...form,
+                ...input.changes,
+              }
+            : form,
+        ),
+      };
+    });
   }
 
   saveAppointmentRows(inspectionId: string, rows: StoredAppointmentRow[]): void {
@@ -189,5 +341,26 @@ export class InspectionStoreService {
     }).format(parsedDate);
 
     return `${date} ${time}`;
+  }
+
+  private toDateTimeInputValue(dateValue: Date): string {
+    const year = dateValue.getFullYear();
+    const month = `${dateValue.getMonth() + 1}`.padStart(2, '0');
+    const day = `${dateValue.getDate()}`.padStart(2, '0');
+    const hour = `${dateValue.getHours()}`.padStart(2, '0');
+    const minute = `${dateValue.getMinutes()}`.padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hour}:${minute}`;
+  }
+
+  private getNextInspectionFormId(): number {
+    const maxExistingId = Object.values(this.inspectionFormsState())
+      .flat()
+      .reduce((maxValue, form) => {
+        const numericId = Number.parseInt(form.formId, 10);
+        return Number.isNaN(numericId) ? maxValue : Math.max(maxValue, numericId);
+      }, 5199);
+
+    return maxExistingId + 1;
   }
 }

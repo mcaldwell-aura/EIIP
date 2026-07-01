@@ -17,7 +17,7 @@
   min-height: 100dvh;
   background: #ffffff;
   color: var(--text);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
 }
 
 * {
@@ -154,7 +154,15 @@
 .overview-header {
   align-items: end;
   display: flex;
+  gap: 0.75rem;
   justify-content: space-between;
+}
+
+.header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
 }
 
 .eyebrow {
@@ -180,6 +188,20 @@ h1 {
   font-weight: 700;
   padding: 0.55rem 0.75rem;
   text-decoration: none;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #1d4fa9, #2f7ddf);
+  border-color: #1d4fa9;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 0.55rem 0.85rem;
+}
+
+.search-btn:hover {
+  background: linear-gradient(135deg, #17428d, #266fc9);
 }
 
 .toolbar {
@@ -748,6 +770,83 @@ td a.subject-link:hover {
   color: var(--text-soft);
   font-size: 0.82rem;
   margin: 0.2rem 0 0;
+}
+
+.appointment-slots-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.appointment-slots-table {
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 0;
+  table-layout: fixed;
+  width: 100%;
+
+  thead tr {
+    border-bottom: 2px solid #d7e0f2;
+  }
+
+  th {
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    width: 20%;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #edf1f9;
+    transition: background 140ms ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #f5f8ff;
+    }
+  }
+
+  td {
+    color: #23324f;
+    overflow: hidden;
+    padding: 0.65rem 0.75rem;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    white-space: normal;
+    width: 20%;
+  }
+
+  td strong {
+    font-weight: 700;
+  }
+}
+
+.appointment-slot-action {
+  text-align: left;
+}
+
+.appointment-select-btn {
+  font-size: 0.82rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.8rem;
+  width: 100%;
+}
+
+.appointment-select-btn-selected {
+  filter: brightness(0.94);
+}
+
+.appointment-slot-selected td {
+  background: #edf3ff;
 }
 
 .text-action-btn {

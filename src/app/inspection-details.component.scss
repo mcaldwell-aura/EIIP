@@ -22,7 +22,7 @@
   min-height: 100dvh;
   background: #ffffff;
   color: var(--text);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
 }
 
 * {
@@ -84,7 +84,7 @@
 }
 
 .brand-text {
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  font-family: var(--app-font-family);
   font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -402,14 +402,18 @@ h2 {
 }
 
 .tab-btn:nth-of-type(2)::before {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>');
 }
 
 .tab-btn:nth-of-type(3)::before {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
 }
 
 .tab-btn:nth-of-type(4)::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/></svg>');
+}
+
+.tab-btn:nth-of-type(5)::before {
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%235e677d" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>');
 }
 
@@ -418,14 +422,18 @@ h2 {
 }
 
 .tab-btn.active:nth-of-type(2)::before {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>');
 }
 
 .tab-btn.active:nth-of-type(3)::before {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/></svg>');
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>');
 }
 
 .tab-btn.active:nth-of-type(4)::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/></svg>');
+}
+
+.tab-btn.active:nth-of-type(5)::before {
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="%231f56d8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>');
 }
 
@@ -602,6 +610,77 @@ h2 {
 
 .appointments-card {
   overflow: visible;
+}
+
+.forms-card {
+  overflow: visible;
+}
+
+.forms-card-list {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.forms-empty-state {
+  border: 1px dashed #c9d5ef;
+  border-radius: 12px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+.forms-list-card {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 1px solid #d7e2f7;
+  border-radius: 14px;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 0.65rem;
+  justify-items: start;
+  padding: 0.95rem;
+  text-align: left;
+}
+
+.forms-list-card:hover {
+  background: #eef5ff;
+  border-color: #bfd4ff;
+  box-shadow: 0 8px 16px rgba(86, 138, 230, 0.16);
+}
+
+.forms-list-card h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.forms-list-card p {
+  color: #2a3652;
+  font-size: 0.86rem;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+}
+
+:host ::ng-deep .forms-list-card.p-button {
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.form-type-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.form-type-field span {
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  font-weight: 700;
 }
 
 .appointments-table-wrap {
@@ -1659,6 +1738,97 @@ h2 {
   grid-column: 1 / -1;
 }
 
+.appointment-get-slots-button {
+  grid-column: 1 / -1;
+}
+
+.appointment-slots-container {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #d5dcec;
+  border-radius: 8px;
+}
+
+.appointment-slots-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.appointment-slots-table {
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 0;
+  table-layout: fixed;
+  width: 100%;
+
+  thead tr {
+    border-bottom: 2px solid #d7e0f2;
+  }
+
+  th {
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    overflow: hidden;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    width: 20%;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #edf1f9;
+    transition: background 140ms ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #f5f8ff;
+    }
+  }
+
+  td {
+    color: #23324f;
+    overflow: hidden;
+    padding: 0.65rem 0.75rem;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    white-space: normal;
+    width: 20%;
+  }
+
+  td strong {
+    font-weight: 700;
+  }
+}
+
+.appointment-slot-action {
+  text-align: left;
+}
+
+.appointment-slot-action .primary-btn {
+  font-size: 0.82rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.8rem;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.appointment-select-btn-selected {
+  filter: brightness(0.94);
+}
+
+.appointment-slot-selected td {
+  background: #edf3ff;
+}
+
 .appointment-validation-message {
   color: #b42318;
   font-size: 0.83rem;
@@ -1769,6 +1939,10 @@ a:focus-visible {
 
   .field-grid,
   .compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forms-card-list {
     grid-template-columns: 1fr;
   }
 

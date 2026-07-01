@@ -2,3 +2,270 @@
   display: block;
   min-height: 100dvh;
 }
+
+.app-shell {
+  align-items: flex-start;
+  display: flex;
+  min-height: 100dvh;
+  position: relative;
+}
+
+.page-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ai-drawer {
+  background: #f7f9ff;
+  border-left: 1px solid #d4deef;
+  box-shadow: -10px 0 24px rgba(19, 37, 76, 0.14);
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 560px;
+  min-width: 240px;
+  position: sticky;
+  top: 0;
+  width: clamp(300px, 32vw, 420px);
+}
+
+.ai-resize-handle {
+  bottom: 0;
+  cursor: col-resize;
+  left: -4px;
+  position: absolute;
+  top: 0;
+  width: 8px;
+  z-index: 2;
+}
+
+.ai-header {
+  align-items: center;
+  background: #0f376f;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+}
+
+.ai-header h2 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.ai-close {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.ai-messages {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  padding: 0.9rem;
+}
+
+.ai-empty-state {
+  color: #506188;
+  font-size: 0.86rem;
+  margin: 0.25rem 0;
+}
+
+.ai-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.ai-row-user {
+  justify-content: flex-end;
+}
+
+.ai-bubble {
+  background: #e8eefb;
+  border-radius: 14px 14px 14px 4px;
+  color: #12264b;
+  max-width: 90%;
+  padding: 0.6rem 0.72rem;
+}
+
+.ai-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ai-bubble-user {
+  background: #1f5fd1;
+  border-radius: 14px 14px 4px 14px;
+  color: #fff;
+}
+
+.ai-inline-table-wrap {
+  margin-top: 0.45rem;
+  overflow-x: auto;
+}
+
+.ai-inline-table {
+  border-collapse: collapse;
+  font-size: 0.77rem;
+  min-width: 220px;
+}
+
+.ai-inline-table th,
+.ai-inline-table td {
+  border-bottom: 1px solid rgba(16, 42, 90, 0.16);
+  padding: 0.25rem 0.35rem;
+  text-align: left;
+}
+
+.ai-inline-table th {
+  font-weight: 700;
+}
+
+.ai-typing {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.ai-typing span {
+  animation: typingBounce 850ms infinite ease-in-out;
+  background: #2f4f8e;
+  border-radius: 50%;
+  display: block;
+  height: 0.4rem;
+  opacity: 0.55;
+  width: 0.4rem;
+}
+
+.ai-typing span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.ai-typing span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.ai-input-area {
+  border-top: 1px solid #dbe3f4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.8rem;
+}
+
+.ai-input-area textarea {
+  border: 1px solid #b5c4e0;
+  border-radius: 10px;
+  font: inherit;
+  min-height: 88px;
+  padding: 0.55rem 0.65rem;
+  resize: vertical;
+}
+
+.ai-input-meta {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ai-input-meta p {
+  color: #4f6085;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.ai-input-meta button {
+  align-items: center;
+  background: #1548a8;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+}
+
+.ai-input-meta button:disabled {
+  background: #879cc6;
+  cursor: not-allowed;
+}
+
+.ai-note {
+  color: #57678b;
+  font-size: 0.76rem;
+  margin: 0;
+}
+
+.ai-fab {
+  align-items: center;
+  background: linear-gradient(135deg, #1d4fa9, #2f7ddf);
+  border: 0;
+  border-radius: 999px;
+  bottom: 16px;
+  box-shadow: 0 10px 22px rgba(17, 41, 86, 0.28);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 700;
+  gap: 0.45rem;
+  padding: 0.62rem 0.9rem;
+  position: fixed;
+  transition: right 200ms ease, padding 160ms ease;
+  z-index: 52;
+}
+
+.ai-fab.ai-fab-collapsed {
+  padding: 0.62rem 0.72rem;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+.ai-resize-handle:focus-visible {
+  outline: 2px solid #2d67cf;
+  outline-offset: 2px;
+}
+
+@keyframes typingBounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@media (max-width: 820px) {
+  .ai-drawer {
+    width: min(86vw, 520px);
+  }
+}
