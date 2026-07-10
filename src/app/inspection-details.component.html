@@ -228,24 +228,53 @@
           </div>
 
           <div *ngIf="inspectionFormCards().length > 0" class="forms-card-list">
-            <button
-              pButton
-              pRipple
-              *ngFor="let formCard of inspectionFormCards()"
-              type="button"
-              class="forms-list-card"
-              (click)="openFormCard(formCard.formId)"
-            >
-              <h3>Form {{ formCard.formId }}</h3>
-              <p>
-                <strong>Appointment Date:</strong>
-                {{ formatFormAppointmentDate(formCard.appointmentDateTime) }}
-              </p>
-              <p>
-                <strong>Inspector:</strong>
-                {{ formCard.inspector || 'Unassigned' }}
-              </p>
-            </button>
+            <div *ngFor="let formCard of inspectionFormCards()" class="forms-list-card-wrapper">
+              <button
+                pButton
+                pRipple
+                type="button"
+                class="forms-list-card"
+                (click)="openFormModal(formCard)"
+              >
+                <h3>Form {{ formCard.formId }}</h3>
+                <p>
+                  <strong>Appointment Date:</strong>
+                  {{ formatFormAppointmentDate(formCard.appointmentDateTime) }}
+                </p>
+                <p>
+                  <strong>Inspector:</strong>
+                  {{ formCard.inspector || 'Unassigned' }}
+                </p>
+              </button>
+              <button
+                pButton
+                pRipple
+                type="button"
+                class="forms-card-menu-btn"
+                (click)="menu.toggle($event)"
+                [attr.aria-label]="'Menu for Form ' + formCard.formId"
+              >
+                <i class="pi pi-ellipsis-v"></i>
+              </button>
+              <p-menu
+                #menu
+                [model]="[
+                  {
+                    label: 'Download',
+                    icon: 'pi pi-download',
+                    command: () => downloadForm(formCard),
+                  },
+                  {
+                    label: 'Delete',
+                    icon: 'pi pi-trash',
+                    command: () => openDeleteFormModal(formCard),
+                    styleClass: 'form-delete-menu-item',
+                  },
+                ]"
+                [popup]="true"
+                appendTo="body"
+              ></p-menu>
+            </div>
           </div>
         </section>
       </ng-container>
@@ -449,6 +478,74 @@
   >
     Appointment saved successfully.
   </div>
+
+  <p-dialog
+    [visible]="isFormModalOpen()"
+    [header]="activeForm() ? 'Form ' + activeForm()!.formId + ' Details' : 'Form Details'"
+    [modal]="true"
+    [style]="{ width: 'min(880px, 94vw)' }"
+    (onHide)="closeFormModal()"
+  >
+    <ng-container *ngIf="activeForm() && formDraft() as currentDraft">
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Appointment Date</span>
+          <input
+            pInputText
+            type="datetime-local"
+            [value]="currentDraft.appointmentDateTime"
+            (input)="updateFormDraftField('appointmentDateTime', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="form-field">
+          <span>Inspector</span>
+          <input
+            pInputText
+            type="text"
+            [value]="currentDraft.inspector"
+            (input)="updateFormDraftField('inspector', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="form-field">
+          <span>Status</span>
+          <p-select
+            [options]="formStatusSelectOptions"
+            [ngModel]="currentDraft.status"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            (ngModelChange)="updateFormDraftField('status', $event)"
+          ></p-select>
+        </label>
+
+        <label class="form-field">
+          <span>Form Type</span>
+          <input pInputText type="text" [value]="activeForm()?.formType || ''" readonly />
+        </label>
+      </div>
+
+      <label class="form-field form-field-wide">
+        <span>Comments</span>
+        <textarea
+          pInputTextarea
+          rows="4"
+          [value]="currentDraft.comments"
+          (input)="updateFormDraftField('comments', $any($event.target).value)"
+        ></textarea>
+      </label>
+    </ng-container>
+
+    <ng-template pTemplate="footer">
+      <button pButton pRipple type="button" class="secondary-btn" (click)="closeFormModal()">
+        Cancel
+      </button>
+      <button pButton pRipple type="button" class="primary-btn" (click)="saveActiveForm()">
+        Save
+      </button>
+    </ng-template>
+  </p-dialog>
 
   <p-dialog
     [visible]="isAddFormModalOpen()"
@@ -890,6 +987,42 @@
         (click)="saveDocument()"
       >
         {{ documentSubmitLabel() }}
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog
+    [visible]="isDeleteFormModalOpen()"
+    header="Delete Inspection Form"
+    [modal]="true"
+    [style]="{ width: 'min(540px, 94vw)' }"
+    (onHide)="closeDeleteFormModal()"
+  >
+    <p>
+      Delete
+      <strong>Form {{ pendingDeleteForm()?.formId ?? '' }}</strong>
+      from this inspection?
+    </p>
+    <p>This action cannot be undone.</p>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="document-delete-cancel-btn"
+        (click)="closeDeleteFormModal()"
+      >
+        Cancel
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="document-delete-confirm-btn"
+        (click)="confirmDeleteForm()"
+      >
+        Delete
       </button>
     </ng-template>
   </p-dialog>

@@ -26,6 +26,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
+import { MenuModule } from 'primeng/menu';
 
 type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
 type InspectionTypeOption = 'Overt' | 'Covert';
@@ -133,6 +134,7 @@ type SummaryFormValue = {
     TextareaModule,
     DialogModule,
     SelectModule,
+    MenuModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -163,6 +165,7 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly isDeleteNoteModalOpen = signal(false);
   protected readonly isDocumentModalOpen = signal(false);
   protected readonly isDeleteDocumentModalOpen = signal(false);
+  protected readonly isDeleteFormModalOpen = signal(false);
   protected readonly isAddFormModalOpen = signal(false);
   protected readonly noteModalMode = signal<NoteModalMode>('add');
   protected readonly documentModalMode = signal<DocumentModalMode>('add');
@@ -374,6 +377,15 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly appointmentValidationMessage = signal('');
   protected readonly selectedFormTypeInput = signal('');
   protected readonly isCreatingInspectionForm = signal(false);
+  protected readonly isFormModalOpen = signal(false);
+  protected readonly activeFormId = signal<string | null>(null);
+  protected readonly pendingDeleteFormId = signal<string | null>(null);
+  protected readonly formDraft = signal<{
+    appointmentDateTime: string;
+    inspector: string;
+    status: InspectionFormStatus;
+    comments: string;
+  } | null>(null);
   protected readonly isShowingAppointmentSlots = signal(false);
   protected readonly selectedAppointmentSlotForDetails = signal<AppointmentSlot | null>(null);
   protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
@@ -384,6 +396,10 @@ export class InspectionDetailsComponent implements OnInit {
     'Completed',
     'Overdue',
   ];
+  protected readonly formStatusSelectOptions = this.inspectionFormStatusOptions.map((status) => ({
+    label: status,
+    value: status,
+  }));
   protected readonly availableFormTypes: readonly string[] = [
     'Evidence Checklist',
     'Overt Observation Form',
@@ -504,6 +520,24 @@ export class InspectionDetailsComponent implements OnInit {
         this.parseSortableTimestamp(leftRow.appointmentDateTime),
     );
   });
+  protected readonly activeForm = computed(() => {
+    const formId = this.activeFormId();
+
+    if (!formId) {
+      return null;
+    }
+
+    return this.inspectionFormCards().find((form) => form.formId === formId) ?? null;
+  });
+  protected readonly pendingDeleteForm = computed(() => {
+    const formId = this.pendingDeleteFormId();
+
+    if (!formId) {
+      return null;
+    }
+
+    return this.inspectionFormCards().find((form) => form.formId === formId) ?? null;
+  });
   protected readonly formTypeSelectOptions = this.availableFormTypes.map((formType) => ({
     label: formType,
     value: formType,
@@ -525,6 +559,7 @@ export class InspectionDetailsComponent implements OnInit {
     this.isDeleteNoteModalOpen.set(false);
     this.isDocumentModalOpen.set(false);
     this.isDeleteDocumentModalOpen.set(false);
+    this.isDeleteFormModalOpen.set(false);
     this.isAddFormModalOpen.set(false);
   }
 
@@ -532,16 +567,121 @@ export class InspectionDetailsComponent implements OnInit {
     this.activeTab.set(tab);
   }
 
-  protected openFormCard(formId: string): void {
-    this.router.navigate(
-      ['/inspection-overview/inspection', this.inspection().inspectionId, 'forms', formId],
-      {
-        queryParams: { mode: 'view' },
+  protected openFormModal(form: InspectionFormRecord): void {
+    this.closeDeleteFormModal();
+    this.activeFormId.set(form.formId);
+    this.formDraft.set({
+      appointmentDateTime: this.toDateTimeInputValue(form.appointmentDateTime),
+      inspector: form.inspector,
+      status: form.status,
+      comments: form.comments,
+    });
+    this.isFormModalOpen.set(true);
+  }
+
+  protected closeFormModal(): void {
+    this.isFormModalOpen.set(false);
+    this.activeFormId.set(null);
+    this.formDraft.set(null);
+  }
+
+  protected updateFormDraftField(
+    field: 'appointmentDateTime' | 'inspector' | 'status' | 'comments',
+    value: string | InspectionFormStatus,
+  ): void {
+    this.formDraft.update((currentDraft) => {
+      if (!currentDraft) {
+        return currentDraft;
+      }
+
+      return {
+        ...currentDraft,
+        [field]: value,
+      };
+    });
+  }
+
+  protected saveActiveForm(): void {
+    const inspectionId = this.inspection().inspectionId;
+    const form = this.activeForm();
+    const draft = this.formDraft();
+
+    if (!inspectionId || !form || !draft) {
+      return;
+    }
+
+    this.inspectionStore.updateInspectionForm({
+      inspectionId,
+      formId: form.formId,
+      changes: {
+        appointmentDateTime: draft.appointmentDateTime,
+        inspector: draft.inspector.trim() || 'Unassigned',
+        status: draft.status,
+        comments: draft.comments.trim(),
       },
-    );
+    });
+
+    this.closeFormModal();
+    this.triggerSaveToast();
+  }
+
+  protected downloadForm(form: InspectionFormRecord): void {
+    // Create a simple text content from the form
+    const content = `
+Inspection Form Report
+=======================
+
+Form ID: ${form.formId}
+Form Type: ${form.formType || 'N/A'}
+Status: ${form.status}
+Appointment Date: ${this.formatFormAppointmentDate(form.appointmentDateTime)}
+Inspector: ${form.inspector || 'Unassigned'}
+Comments: ${form.comments || 'N/A'}
+
+Generated on: ${new Date().toLocaleString()}
+    `.trim();
+
+    // Create blob and download
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `form-${form.formId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  protected openDeleteFormModal(form: InspectionFormRecord): void {
+    this.closeFormModal();
+    this.pendingDeleteFormId.set(form.formId);
+    this.isDeleteFormModalOpen.set(true);
+  }
+
+  protected closeDeleteFormModal(): void {
+    this.isDeleteFormModalOpen.set(false);
+    this.pendingDeleteFormId.set(null);
+  }
+
+  protected confirmDeleteForm(): void {
+    const form = this.pendingDeleteForm();
+
+    if (!form) {
+      return;
+    }
+
+    const inspectionId = this.inspection().inspectionId;
+    this.inspectionStore.deleteInspectionForm({
+      inspectionId,
+      formId: form.formId,
+    });
+    this.closeDeleteFormModal();
+    this.triggerSaveToast();
   }
 
   protected openAddFormModal(): void {
+    this.closeDeleteFormModal();
     this.selectedFormTypeInput.set('');
     this.isAddFormModalOpen.set(true);
   }
@@ -560,21 +700,16 @@ export class InspectionDetailsComponent implements OnInit {
       return;
     }
 
-    this.isCreatingInspectionForm.set(true);
-
     const selectedFormType = this.selectedFormTypeInput();
-    const draftFormId = this.inspectionStore.previewNextInspectionFormId();
+    const inspectionId = this.inspection().inspectionId;
+
+    this.inspectionStore.createInspectionForm({
+      inspectionId,
+      formType: selectedFormType,
+    });
 
     this.closeAddFormModal();
-
-    this.router.navigate(
-      ['/inspection-overview/inspection', this.inspection().inspectionId, 'forms', draftFormId],
-      {
-        queryParams: { mode: 'edit', formType: selectedFormType, isNew: 'true', draftFormId },
-      },
-    );
-
-    this.isCreatingInspectionForm.set(false);
+    this.triggerSaveToast();
   }
 
   protected formatFormAppointmentDate(dateTime: string): string {
@@ -1116,6 +1251,11 @@ export class InspectionDetailsComponent implements OnInit {
       return;
     }
 
+    if (this.isDeleteFormModalOpen()) {
+      this.closeDeleteFormModal();
+      return;
+    }
+
     if (this.isDocumentModalOpen()) {
       this.closeDocumentModal();
       return;
@@ -1220,7 +1360,7 @@ export class InspectionDetailsComponent implements OnInit {
     };
   }
 
-  private toDateTimeInputValue(rawValue: string): string {
+  protected toDateTimeInputValue(rawValue: string): string {
     const trimmed = rawValue.trim();
 
     if (!trimmed) {

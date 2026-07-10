@@ -43,6 +43,11 @@ export type UpdateInspectionFormInput = {
   >;
 };
 
+export type DeleteInspectionFormInput = {
+  inspectionId: string;
+  formId: string;
+};
+
 type AppointmentAuditAction = 'create' | 'edit';
 
 export type AppointmentAuditEntry = {
@@ -199,6 +204,17 @@ export class InspectionStoreService {
               }
             : form,
         ),
+      };
+    });
+  }
+
+  deleteInspectionForm(input: DeleteInspectionFormInput): void {
+    this.inspectionFormsState.update((existing) => {
+      const currentRows = existing[input.inspectionId] ?? [];
+
+      return {
+        ...existing,
+        [input.inspectionId]: currentRows.filter((form) => form.formId !== input.formId),
       };
     });
   }

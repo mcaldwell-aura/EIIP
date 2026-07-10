@@ -672,6 +672,49 @@ h2 {
   justify-content: flex-start;
 }
 
+.forms-list-card-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.forms-card-menu-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #172746;
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-radius: 999px;
+  border: none !important;
+  cursor: pointer;
+  opacity: 1;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover,
+  &:focus {
+    background: #ffffff !important;
+    color: #10203e;
+    box-shadow: 0 3px 10px rgba(16, 32, 62, 0.15);
+  }
+
+  .pi {
+    font-size: 1.1rem;
+  }
+}
+
+.forms-list-card-wrapper:hover .forms-card-menu-btn {
+  opacity: 1;
+}
+
 .form-type-field {
   display: grid;
   gap: 0.45rem;
@@ -1889,6 +1932,51 @@ h2 {
   transform: none;
 }
 
+// PrimeNG Menu styling for form card actions
+:host ::ng-deep {
+  .p-menu {
+    background: white;
+    border: 1px solid #d5dcec;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(22, 38, 80, 0.12);
+  }
+
+  .form-delete-menu-item {
+    > .p-menuitem-link,
+    > a {
+      .p-menuitem-text {
+        color: #b42318 !important;
+      }
+
+      &:hover {
+        .p-menuitem-text {
+          color: #b42318 !important;
+        }
+      }
+    }
+  }
+
+  .p-menuitem {
+    > a {
+      padding: 0.65rem 1rem !important;
+      font-size: 0.9rem;
+      border-radius: 0 !important;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
+
+      &:hover {
+        background: #eef5ff !important;
+        color: #1f56d8 !important;
+      }
+
+      .p-menuitem-text {
+        margin-left: 0.5rem;
+      }
+    }
+  }
+}
+
 button:focus-visible,
 a:focus-visible {
   outline: 2px solid #2f61d2;
@@ -2058,4 +2146,44 @@ a:focus-visible {
   .brand-text {
     font-size: 1.28rem;
   }
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.form-field span {
+  color: #232f48;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  color: #2a3652;
+  font: inherit;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.form-field textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.form-field-wide {
+  grid-column: 1 / -1;
 }
