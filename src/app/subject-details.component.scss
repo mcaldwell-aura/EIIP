@@ -142,7 +142,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -212,7 +213,9 @@ h1 {
   display: flex;
   gap: 2rem;
   margin-top: 1.35rem;
+  overflow-x: auto;
   padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -224,6 +227,7 @@ h1 {
   color: var(--text-soft);
   cursor: pointer;
   display: inline-flex;
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.6rem;
@@ -233,6 +237,7 @@ h1 {
   position: relative;
   text-transform: none;
   transition: all 180ms ease;
+  white-space: nowrap;
 }
 
 .tab-btn::before {
@@ -402,14 +407,15 @@ a:focus-visible {
   }
 
   .subject-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.8rem;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.6rem;
+    justify-content: space-between;
   }
 
   .title-group {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
     gap: 0.5rem;
   }
 

@@ -137,7 +137,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -347,8 +348,9 @@ select:focus-visible {
   }
 
   .title-wrap {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   .user-header-info,
@@ -356,9 +358,12 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .back-btn,
   .primary-btn {
     width: 100%;
+  }
+
+  .back-btn {
+    width: auto;
   }
 
   .brand-text {

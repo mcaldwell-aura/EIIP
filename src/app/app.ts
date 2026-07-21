@@ -27,6 +27,8 @@ type ChatMessage = {
   table?: ChatTable;
 };
 
+type MobileSheetState = 'peek' | 'half' | 'full';
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, NavMenuComponent],
@@ -39,12 +41,24 @@ export class App {
   protected readonly isBotTyping = signal(false);
   protected readonly prompt = signal('');
   protected readonly messages = signal<ChatMessage[]>([]);
+  protected readonly isMobileViewport = signal(false);
+  protected readonly mobileSheetState = signal<MobileSheetState>('peek');
+  protected readonly mobileDrawerDragHeight = signal<number | null>(null);
   protected readonly currentDrawerWidth = signal(0);
   protected readonly drawerWidth = signal<number | null>(null);
 
   protected readonly fabRightOffset = computed(() =>
-    this.isDrawerOpen() ? this.currentDrawerWidth() + 16 : 16,
+    !this.isDrawerOpen() || this.isMobileViewport() ? 16 : this.currentDrawerWidth() + 16,
   );
+
+  protected readonly mobileDrawerHeightPx = computed<number | null>(() => {
+    if (!this.isDrawerOpen() || !this.isMobileViewport()) {
+      return null;
+    }
+
+    return this.mobileDrawerDragHeight() ?? this.getMobileHeightForState(this.mobileSheetState());
+  });
+
   protected readonly canSend = computed(() => this.prompt().trim().length > 0);
 
   protected readonly messageArea = viewChild<ElementRef<HTMLElement>>('messageArea');
@@ -57,8 +71,14 @@ export class App {
   private messageId = 0;
   private responseIndex = 0;
   private isResizing = false;
+  private isDraggingMobileSheet = false;
+  private isTrackingMobileHandle = false;
   private resizeStartX = 0;
   private resizeStartWidth = 0;
+  private mobileDragStartY = 0;
+  private mobileDragStartHeight = 0;
+  private hasDraggedMobileSheet = false;
+  private skipHandleTapCycle = false;
 
   constructor() {
     this.router.events
@@ -71,7 +91,37 @@ export class App {
       });
 
     if (isPlatformBrowser(this.platformId)) {
+      const mediaQuery = window.matchMedia('(max-width: 820px)');
+      const syncViewport = (): void => {
+        this.isMobileViewport.set(mediaQuery.matches);
+      };
+
+      syncViewport();
+      mediaQuery.addEventListener('change', syncViewport);
+
       const handlePointerMove = (event: PointerEvent): void => {
+        if (this.isDraggingMobileSheet) {
+          const delta = this.mobileDragStartY - event.clientY;
+          this.hasDraggedMobileSheet ||= Math.abs(delta) > 8;
+          const nextHeight = this.clampMobileSheetHeight(this.mobileDragStartHeight + delta);
+          this.mobileDrawerDragHeight.set(nextHeight);
+          return;
+        }
+
+        if (this.isTrackingMobileHandle) {
+          const delta = this.mobileDragStartY - event.clientY;
+          if (Math.abs(delta) <= 8) {
+            return;
+          }
+
+          this.isDraggingMobileSheet = true;
+          this.hasDraggedMobileSheet = true;
+          this.mobileDrawerDragHeight.set(this.mobileDragStartHeight);
+          const nextHeight = this.clampMobileSheetHeight(this.mobileDragStartHeight + delta);
+          this.mobileDrawerDragHeight.set(nextHeight);
+          return;
+        }
+
         if (!this.isResizing) {
           return;
         }
@@ -83,6 +133,12 @@ export class App {
       };
 
       const handlePointerUp = (): void => {
+        this.isTrackingMobileHandle = false;
+
+        if (this.isDraggingMobileSheet) {
+          this.finishMobileSheetDrag();
+        }
+
         this.isResizing = false;
       };
 
@@ -90,6 +146,7 @@ export class App {
       window.addEventListener('pointerup', handlePointerUp);
 
       this.destroyRef.onDestroy(() => {
+        mediaQuery.removeEventListener('change', syncViewport);
         window.removeEventListener('pointermove', handlePointerMove);
         window.removeEventListener('pointerup', handlePointerUp);
       });
@@ -103,17 +160,50 @@ export class App {
     }
 
     this.isDrawerOpen.set(true);
+    this.mobileSheetState.set('peek');
+    this.mobileDrawerDragHeight.set(null);
+
     requestAnimationFrame(() => {
-      this.captureDrawerWidth();
+      if (!this.isMobileViewport()) {
+        this.captureDrawerWidth();
+      }
+
       this.scrollMessagesToBottom();
     });
   }
 
   protected closeDrawer(): void {
     this.isDrawerOpen.set(false);
+    this.mobileDrawerDragHeight.set(null);
+    this.isDraggingMobileSheet = false;
+    this.isTrackingMobileHandle = false;
+    this.isResizing = false;
+  }
+
+  protected onPageContentTap(): void {
+    if (!this.isDrawerOpen() || !this.isMobileViewport()) {
+      return;
+    }
+
+    if (this.mobileSheetState() !== 'peek') {
+      this.mobileSheetState.set('peek');
+      this.mobileDrawerDragHeight.set(null);
+    }
   }
 
   protected startResize(event: PointerEvent): void {
+    if (this.isMobileViewport()) {
+      this.isTrackingMobileHandle = true;
+      this.isDraggingMobileSheet = false;
+      this.mobileDragStartY = event.clientY;
+      this.mobileDragStartHeight =
+        this.mobileDrawerHeightPx() ?? this.getMobileHeightForState('peek');
+      this.hasDraggedMobileSheet = false;
+      this.mobileDrawerDragHeight.set(null);
+      this.skipHandleTapCycle = false;
+      return;
+    }
+
     const panel = this.drawerPanel()?.nativeElement;
     if (!panel) {
       return;
@@ -124,6 +214,27 @@ export class App {
     this.resizeStartWidth = panel.offsetWidth;
     this.currentDrawerWidth.set(this.resizeStartWidth);
     event.preventDefault();
+  }
+
+  protected cycleMobileSheetState(): void {
+    if (!this.isMobileViewport() || !this.isDrawerOpen()) {
+      return;
+    }
+
+    if (this.skipHandleTapCycle) {
+      this.skipHandleTapCycle = false;
+      return;
+    }
+
+    const nextState: MobileSheetState =
+      this.mobileSheetState() === 'peek'
+        ? 'half'
+        : this.mobileSheetState() === 'half'
+          ? 'full'
+          : 'peek';
+
+    this.mobileSheetState.set(nextState);
+    this.mobileDrawerDragHeight.set(null);
   }
 
   protected onPromptInput(event: Event): void {
@@ -208,6 +319,8 @@ export class App {
     this.messages.set([]);
     this.isBotTyping.set(false);
     this.isDrawerOpen.set(false);
+    this.mobileSheetState.set('peek');
+    this.mobileDrawerDragHeight.set(null);
   }
 
   private captureDrawerWidth(): void {
@@ -232,5 +345,59 @@ export class App {
 
   private clampDrawerWidth(nextWidth: number): number {
     return Math.max(240, Math.min(560, nextWidth));
+  }
+
+  private finishMobileSheetDrag(): void {
+    this.isDraggingMobileSheet = false;
+
+    const draggedHeight = this.mobileDrawerDragHeight();
+    if (draggedHeight === null) {
+      return;
+    }
+
+    const peekHeight = this.getMobileHeightForState('peek');
+    const halfHeight = this.getMobileHeightForState('half');
+    const fullHeight = this.getMobileHeightForState('full');
+
+    const candidates: Array<{ state: MobileSheetState; distance: number }> = [
+      { state: 'peek', distance: Math.abs(draggedHeight - peekHeight) },
+      { state: 'half', distance: Math.abs(draggedHeight - halfHeight) },
+      { state: 'full', distance: Math.abs(draggedHeight - fullHeight) },
+    ];
+
+    const nearest = candidates.reduce((best, candidate) =>
+      candidate.distance < best.distance ? candidate : best,
+    );
+
+    this.skipHandleTapCycle = this.hasDraggedMobileSheet;
+    this.mobileSheetState.set(nearest.state);
+    this.mobileDrawerDragHeight.set(null);
+  }
+
+  private getMobileHeightForState(state: MobileSheetState): number {
+    if (!isPlatformBrowser(this.platformId)) {
+      return state === 'peek' ? 260 : state === 'half' ? 480 : 760;
+    }
+
+    const viewportHeight = window.innerHeight;
+    const peek = Math.round(Math.max(220, Math.min(300, viewportHeight * 0.32)));
+    const half = Math.round(Math.max(peek + 40, viewportHeight * 0.58));
+    const full = Math.round(Math.max(half + 40, viewportHeight * 0.92));
+
+    if (state === 'peek') {
+      return peek;
+    }
+
+    if (state === 'half') {
+      return half;
+    }
+
+    return full;
+  }
+
+  private clampMobileSheetHeight(height: number): number {
+    const peek = this.getMobileHeightForState('peek');
+    const full = this.getMobileHeightForState('full');
+    return Math.max(peek, Math.min(full, height));
   }
 }

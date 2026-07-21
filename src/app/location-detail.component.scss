@@ -132,7 +132,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -216,7 +217,9 @@ h2 {
   display: flex;
   gap: 2rem;
   margin-top: 1.45rem;
+  overflow-x: auto;
   padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -228,12 +231,14 @@ h2 {
   color: var(--text-soft);
   cursor: pointer;
   display: inline-flex;
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.6rem;
   letter-spacing: 0.01em;
   margin-bottom: -1px;
   padding: 0.75rem 0;
+  white-space: nowrap;
 }
 
 .tab-btn.active {
@@ -427,8 +432,9 @@ select:focus-visible {
 
 @media (max-width: 760px) {
   .title-wrap {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   .location-header-info,
@@ -436,9 +442,12 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  .back-btn,
   .primary-btn {
     width: 100%;
+  }
+
+  .back-btn {
+    width: auto;
   }
 
   .summary-save-row {

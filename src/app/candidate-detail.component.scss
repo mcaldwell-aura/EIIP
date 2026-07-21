@@ -147,7 +147,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -257,7 +258,9 @@ h1 {
   display: flex;
   gap: 2rem;
   margin-top: 1.45rem;
+  overflow-x: auto;
   padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -269,6 +272,7 @@ h1 {
   color: var(--text-soft);
   cursor: pointer;
   display: inline-flex;
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.6rem;
@@ -276,6 +280,7 @@ h1 {
   margin-bottom: -1px;
   padding: 0.75rem 0;
   position: relative;
+  white-space: nowrap;
 }
 
 .tab-btn.active {
@@ -321,25 +326,68 @@ h2 {
 .summary-field-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
-.summary-field-grid > .summary-field:first-child {
-  grid-column: 1 / -1;
+/* Row 1: Candidate Type and Organization Name */
+.candidate-type-field {
+  grid-column: span 12;
 }
 
-.summary-field-wide {
-  grid-column: 1 / -1;
+.summary-field-grid.has-organization .candidate-type-field {
+  grid-column: span 6;
+}
+
+.organization-name-field {
+  grid-column: span 6;
+}
+
+/* Row 2: First Name, Middle Name, Last Name, Suffix (4+3+3+2 = 12) */
+.first-name-field {
+  grid-column: span 4;
+}
+
+.middle-name-field {
+  grid-column: span 3;
+}
+
+.last-name-field {
+  grid-column: span 3;
+}
+
+.suffix-field {
+  grid-column: span 2;
+}
+
+/* Row 3: Contact Email, Contact Phone, External Identifier (4+4+4 = 12) */
+.contact-email-field,
+.contact-phone-field,
+.external-id-field {
+  grid-column: span 4;
+}
+
+/* Row 4: Start Date, End Date, Next Due Date (4+4+4 = 12) */
+.start-date-field,
+.end-date-field,
+.next-due-date-field {
+  grid-column: span 4;
+}
+
+/* Row 5: Pass Rate, Test Volume (6+6 = 12) */
+.pass-rate-field,
+.test-volume-field {
+  grid-column: span 6;
 }
 
 .summary-field {
-  display: grid;
-  gap: 0.42rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .summary-field span {
-  color: #232f48;
-  font-size: 0.95rem;
+  color: var(--text-soft);
+  font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
@@ -349,11 +397,11 @@ h2 {
 :host ::ng-deep .summary-field .p-select {
   background: var(--field-bg);
   border: 1px solid var(--field-border);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #2a3652;
   font: inherit;
-  min-height: 2.6rem;
-  padding: 0.55rem 0.75rem;
+  height: 2.7rem;
+  padding: 0.58rem 0.7rem;
 }
 
 .summary-field input:focus,
@@ -365,12 +413,17 @@ h2 {
 }
 
 :host ::ng-deep .summary-field .p-select {
-  min-height: 2.6rem;
+  height: 2.7rem !important;
+  padding: 0 !important;
+}
+
+:host ::ng-deep .summary-field .p-select .p-select-trigger {
+  height: 100% !important;
 }
 
 :host ::ng-deep .summary-field .p-select .p-select-label {
   color: #2a3652;
-  padding: 0.55rem 0.75rem;
+  padding: 0.58rem 0.7rem;
 }
 
 :host ::ng-deep .summary-field .p-select.p-focus {
@@ -525,14 +578,18 @@ a:focus-visible {
   }
 
   .title-wrap {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .primary-btn {
+    width: 100%;
   }
 
   .header-actions,
-  .primary-btn,
-  .back-btn {
-    width: 100%;
+  .header-actions .back-btn {
+    width: auto;
   }
 
   .candidate-header-info,

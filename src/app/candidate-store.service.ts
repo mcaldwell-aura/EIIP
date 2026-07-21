@@ -26,10 +26,14 @@ export type UpdateCandidateInput = {
   lastName: string | null;
   suffix: NameSuffix | null;
   organizationName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   nextDueDate: string | null;
   externalIdentifier: string | null;
   startDate: string;
   endDate: string | null;
+  passRate: string | null;
+  testVolume: string | null;
 };
 
 @Injectable({
@@ -101,7 +105,11 @@ export class CandidateStoreService {
           middleName: input.candidateType === 'Individual' ? middleName || null : null,
           lastName: input.candidateType === 'Individual' ? lastName : null,
           suffix: input.candidateType === 'Individual' ? input.suffix : null,
+          contactEmail: input.contactEmail,
+          contactPhone: input.contactPhone,
           externalIdentifier: input.externalIdentifier?.trim() || null,
+          passRate: input.passRate,
+          testVolume: input.testVolume,
           startDate: input.startDate,
           endDate: input.endDate,
           nextDueDate: input.nextDueDate,

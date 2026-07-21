@@ -128,12 +128,14 @@
             </div>
 
             <div class="summary-field-grid">
-              <label class="summary-field">
+              <!-- Row 1: Candidate (full width) -->
+              <label class="summary-field candidate-field">
                 <span>Candidate</span>
                 <input pInputText type="text" [value]="summaryForm().candidate" readonly />
               </label>
 
-              <div class="summary-field summary-field-with-action">
+              <!-- Row 2: Inspector, Inspection Status -->
+              <div class="summary-field inspector-field summary-field-with-action">
                 <span>Inspector (Optional)</span>
                 <div class="field-action-row">
                   <input
@@ -144,19 +146,24 @@
                     placeholder="Search active users"
                     list="active-inspector-options"
                   />
-                  <button
-                    pButton
-                    pRipple
-                    type="button"
-                    class="assign-btn"
-                    (click)="openAssignInspectorModal()"
-                  >
-                    Assign Inspector
-                  </button>
                 </div>
               </div>
 
-              <label class="summary-field">
+              <label class="summary-field inspection-status-field">
+                <span>Inspection Status</span>
+                <select
+                  [value]="summaryForm().inspectionStatus"
+                  (change)="updateSummaryInspectionStatus($event)"
+                >
+                  <option value="" disabled>Select status</option>
+                  <option *ngFor="let status of inspectionStatusOptions" [value]="status">
+                    {{ status }}
+                  </option>
+                </select>
+              </label>
+
+              <!-- Row 3: Inspection Reason, Inspection Type -->
+              <label class="summary-field inspection-reason-field">
                 <span>Inspection Reason</span>
                 <select
                   [value]="summaryForm().inspectionReason"
@@ -170,7 +177,7 @@
                 </select>
               </label>
 
-              <label class="summary-field">
+              <label class="summary-field inspection-type-field">
                 <span>Inspection Type</span>
                 <select
                   [value]="summaryForm().inspectionType"
@@ -185,6 +192,30 @@
                     {{ inspectionType }}
                   </option>
                 </select>
+              </label>
+
+              <!-- Row 4: Inspection Result, Completion Date -->
+              <label class="summary-field inspection-result-field">
+                <span>Inspection Result</span>
+                <select
+                  [value]="summaryForm().inspectionResult"
+                  (change)="updateSummaryInspectionResult($event)"
+                >
+                  <option value="" disabled>Select result</option>
+                  <option *ngFor="let reason of inspectionReasonOptions" [value]="reason">
+                    {{ reason }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="summary-field completion-date-field">
+                <span>Completion Date</span>
+                <input
+                  pInputText
+                  type="date"
+                  [value]="summaryForm().completionDate"
+                  (change)="updateSummaryCompletionDate($event)"
+                />
               </label>
             </div>
 
@@ -217,7 +248,13 @@
             <div>
               <h2>Inspection Forms</h2>
             </div>
-            <button pButton pRipple type="button" class="primary-btn" (click)="openAddFormModal()">
+            <button
+              pButton
+              pRipple
+              type="button"
+              class="primary-btn forms-add-btn-top"
+              (click)="openAddFormModal()"
+            >
               <i class="pi pi-plus" aria-hidden="true"></i>
               Add Inspection Form
             </button>
@@ -275,6 +312,19 @@
                 appendTo="body"
               ></p-menu>
             </div>
+          </div>
+
+          <div class="forms-add-btn-row">
+            <button
+              pButton
+              pRipple
+              type="button"
+              class="primary-btn forms-add-btn-bottom"
+              (click)="openAddFormModal()"
+            >
+              <i class="pi pi-plus" aria-hidden="true"></i>
+              Add Inspection Form
+            </button>
           </div>
         </section>
       </ng-container>
@@ -481,60 +531,101 @@
 
   <p-dialog
     [visible]="isFormModalOpen()"
-    [header]="activeForm() ? 'Form ' + activeForm()!.formId + ' Details' : 'Form Details'"
+    [header]="
+      activeForm()
+        ? 'Form ' + activeForm()!.formId + ' — ' + activeForm()!.formType
+        : 'Form Details'
+    "
     [modal]="true"
-    [style]="{ width: 'min(880px, 94vw)' }"
+    styleClass="form-detail-dialog"
+    [style]="{ width: 'min(760px, 96vw)' }"
+    [contentStyle]="{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }"
     (onHide)="closeFormModal()"
   >
     <ng-container *ngIf="activeForm() && formDraft() as currentDraft">
-      <div class="form-grid">
-        <label class="form-field">
-          <span>Appointment Date</span>
-          <input
-            pInputText
-            type="datetime-local"
-            [value]="currentDraft.appointmentDateTime"
-            (input)="updateFormDraftField('appointmentDateTime', $any($event.target).value)"
-          />
-        </label>
+      <!-- Scrollable form body -->
+      <div class="form-sections-body">
+        <!-- Form content sections -->
+        <ng-container *ngFor="let section of activeFormSections()">
+          <section class="form-content-section" [id]="'form-section-' + section.id">
+            <h3 class="form-section-heading">{{ section.title }}</h3>
+            <div class="form-section-field-grid">
+              <ng-container *ngFor="let field of section.fields">
+                <label
+                  class="form-content-field"
+                  [class.form-content-field-full]="field.colSpan === 'full'"
+                >
+                  <span>{{ field.label }}</span>
+                  <select
+                    *ngIf="field.type === 'select'"
+                    [value]="getFormFieldValue(field.id)"
+                    (change)="updateFormFieldValue(field.id, $any($event.target).value)"
+                  >
+                    <option value="" disabled>Select…</option>
+                    <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
+                  </select>
+                  <textarea
+                    *ngIf="field.type === 'textarea'"
+                    rows="3"
+                    [placeholder]="field.placeholder ?? ''"
+                    [value]="getFormFieldValue(field.id)"
+                    (input)="updateFormFieldValue(field.id, $any($event.target).value)"
+                  ></textarea>
+                  <input
+                    *ngIf="field.type !== 'select' && field.type !== 'textarea'"
+                    [type]="field.type"
+                    [placeholder]="field.placeholder ?? ''"
+                    [value]="getFormFieldValue(field.id)"
+                    (input)="updateFormFieldValue(field.id, $any($event.target).value)"
+                  />
+                </label>
+              </ng-container>
+            </div>
+          </section>
+        </ng-container>
 
-        <label class="form-field">
-          <span>Inspector</span>
-          <input
-            pInputText
-            type="text"
-            [value]="currentDraft.inspector"
-            (input)="updateFormDraftField('inspector', $any($event.target).value)"
-          />
-        </label>
-
-        <label class="form-field">
-          <span>Status</span>
-          <p-select
-            [options]="formStatusSelectOptions"
-            [ngModel]="currentDraft.status"
-            optionLabel="label"
-            optionValue="value"
-            appendTo="body"
-            (ngModelChange)="updateFormDraftField('status', $event)"
-          ></p-select>
-        </label>
-
-        <label class="form-field">
-          <span>Form Type</span>
-          <input pInputText type="text" [value]="activeForm()?.formType || ''" readonly />
-        </label>
+        <!-- Metadata section -->
+        <section class="form-content-section form-meta-section" id="form-section-details">
+          <h3 class="form-section-heading">Appointment details</h3>
+          <div class="form-section-field-grid">
+            <label class="form-content-field form-content-field-full">
+              <span>Appointment date</span>
+              <input
+                type="datetime-local"
+                [value]="currentDraft.appointmentDateTime"
+                (input)="updateFormDraftField('appointmentDateTime', $any($event.target).value)"
+              />
+            </label>
+            <label class="form-content-field">
+              <span>Inspector</span>
+              <input
+                type="text"
+                [value]="currentDraft.inspector"
+                (input)="updateFormDraftField('inspector', $any($event.target).value)"
+              />
+            </label>
+            <label class="form-content-field">
+              <span>Status</span>
+              <p-select
+                [options]="formStatusSelectOptions"
+                [ngModel]="currentDraft.status"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                (ngModelChange)="updateFormDraftField('status', $event)"
+              ></p-select>
+            </label>
+            <label class="form-content-field form-content-field-full">
+              <span>Comments</span>
+              <textarea
+                rows="3"
+                [value]="currentDraft.comments"
+                (input)="updateFormDraftField('comments', $any($event.target).value)"
+              ></textarea>
+            </label>
+          </div>
+        </section>
       </div>
-
-      <label class="form-field form-field-wide">
-        <span>Comments</span>
-        <textarea
-          pInputTextarea
-          rows="4"
-          [value]="currentDraft.comments"
-          (input)="updateFormDraftField('comments', $any($event.target).value)"
-        ></textarea>
-      </label>
     </ng-container>
 
     <ng-template pTemplate="footer">

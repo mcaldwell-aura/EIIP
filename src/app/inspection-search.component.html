@@ -16,7 +16,9 @@
       </a>
       <button pButton pRipple type="button" class="tab-link mobile-hidden">View CSTIMS</button>
       <a class="nav-text-link mobile-hidden" routerLink="/inspection-overview">Inspection Plan</a>
-      <a class="nav-text-link active-nav-link mobile-hidden" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link active-nav-link mobile-hidden" routerLink="/inspection-search"
+        >Inspection Search</a
+      >
       <a class="nav-text-link mobile-hidden" routerLink="/candidates">Candidates</a>
       <a class="nav-text-link mobile-hidden" routerLink="/locations">Locations</a>
     </div>
@@ -46,6 +48,7 @@
       <h2>Search Inspections</h2>
 
       <div class="search-grid">
+        <!-- Row 1: Inspection Number, Inspection Status -->
         <label class="search-field">
           <span>Inspection Number</span>
           <input
@@ -58,29 +61,7 @@
         </label>
 
         <label class="search-field">
-          <span>Candidate Name</span>
-          <input
-            pInputText
-            type="text"
-            [value]="searchParams().subjectName"
-            (input)="updateSubjectName($event)"
-            placeholder="Enter subject name"
-          />
-        </label>
-
-        <label class="search-field">
-          <span>Assigned Inspector</span>
-          <input
-            pInputText
-            type="text"
-            [value]="searchParams().inspector"
-            (input)="updateInspector($event)"
-            placeholder="Enter inspector name"
-          />
-        </label>
-
-        <label class="search-field desktop-only-field">
-          <span>Status</span>
+          <span>Inspection Status</span>
           <p-select
             [options]="statusOptions"
             [ngModel]="searchParams().status"
@@ -93,93 +74,92 @@
           ></p-select>
         </label>
 
-        <div class="search-field-row desktop-only-row">
-          <label class="search-field">
-            <span>Inspection Type</span>
-            <p-select
-              [options]="inspectionTypeOptions"
-              [ngModel]="searchParams().inspectionType"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Type: All"
-              appendTo="body"
-              panelStyleClass="toolbar-select-panel"
-              (ngModelChange)="updateInspectionType($event)"
-            ></p-select>
-          </label>
+        <!-- Row 2: Inspector, Candidate -->
+        <label class="search-field">
+          <span>Inspector</span>
+          <input
+            pInputText
+            type="text"
+            [value]="searchParams().inspector"
+            (input)="updateInspector($event)"
+            placeholder="Enter inspector name"
+          />
+        </label>
 
-          <label class="search-field">
-            <span>Completion Date From</span>
-            <input
-              pInputText
-              type="date"
-              [value]="searchParams().nextDueFrom"
-              (input)="updateNextDueFrom($event)"
-            />
-          </label>
+        <label class="search-field">
+          <span>Candidate</span>
+          <input
+            pInputText
+            type="text"
+            [value]="searchParams().subjectName"
+            (input)="updateSubjectName($event)"
+            placeholder="Enter candidate name"
+          />
+        </label>
 
-          <label class="search-field">
-            <span>Completion Date To</span>
-            <input
-              pInputText
-              type="date"
-              [value]="searchParams().nextDueTo"
-              (input)="updateNextDueTo($event)"
-            />
-          </label>
-        </div>
+        <!-- Row 3: Inspection Reason, Inspection Type -->
+        <label class="search-field">
+          <span>Inspection Reason</span>
+          <p-select
+            [options]="inspectionReasonOptions"
+            [ngModel]="searchParams().inspectionReason"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Reason: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateInspectionReason($event)"
+          ></p-select>
+        </label>
 
-        <div class="search-field-row search-field-row-two mobile-only-row">
-          <label class="search-field">
-            <span>Status</span>
-            <p-select
-              [options]="statusOptions"
-              [ngModel]="searchParams().status"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Status: All"
-              appendTo="body"
-              panelStyleClass="toolbar-select-panel"
-              (ngModelChange)="updateStatus($event)"
-            ></p-select>
-          </label>
+        <label class="search-field">
+          <span>Inspection Type</span>
+          <p-select
+            [options]="inspectionTypeOptions"
+            [ngModel]="searchParams().inspectionType"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Type: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateInspectionType($event)"
+          ></p-select>
+        </label>
 
-          <label class="search-field">
-            <span>Inspection Type</span>
-            <p-select
-              [options]="inspectionTypeOptions"
-              [ngModel]="searchParams().inspectionType"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Type: All"
-              appendTo="body"
-              panelStyleClass="toolbar-select-panel"
-              (ngModelChange)="updateInspectionType($event)"
-            ></p-select>
-          </label>
-        </div>
+        <!-- Row 4: Inspection Result, Completion Date From, Completion Date To -->
+        <label class="search-field">
+          <span>Inspection Result</span>
+          <p-select
+            [options]="inspectionResultOptions"
+            [ngModel]="searchParams().inspectionResult"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Result: All"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateInspectionResult($event)"
+          ></p-select>
+        </label>
 
-        <div class="search-field-row search-field-row-two mobile-only-row">
-          <label class="search-field">
-            <span>Completion Date From</span>
-            <input
-              pInputText
-              type="date"
-              [value]="searchParams().nextDueFrom"
-              (input)="updateNextDueFrom($event)"
-            />
-          </label>
+        <label class="search-field">
+          <span>Completion Date From</span>
+          <input
+            pInputText
+            type="date"
+            [value]="searchParams().completionDateFrom"
+            (input)="updateCompletionDateFrom($event)"
+          />
+        </label>
 
-          <label class="search-field">
-            <span>Completion Date To</span>
-            <input
-              pInputText
-              type="date"
-              [value]="searchParams().nextDueTo"
-              (input)="updateNextDueTo($event)"
-            />
-          </label>
-        </div>
+        <label class="search-field">
+          <span>Completion Date To</span>
+          <input
+            pInputText
+            type="date"
+            [value]="searchParams().completionDateTo"
+            (input)="updateCompletionDateTo($event)"
+          />
+        </label>
       </div>
 
       <div class="search-actions">

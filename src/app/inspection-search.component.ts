@@ -6,7 +6,11 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
-import { type InspectionRecord, type InspectionStatus, type InspectionType } from './inspection-data';
+import {
+  type InspectionRecord,
+  type InspectionStatus,
+  type InspectionType,
+} from './inspection-data';
 import { InspectionStoreService } from './inspection-store.service';
 import { NavMenuService } from './nav-menu.service';
 
@@ -21,8 +25,10 @@ type SearchParams = {
   status: InspectionStatus | 'all';
   inspectionType: InspectionType | 'all';
   inspector: string;
-  nextDueFrom: string;
-  nextDueTo: string;
+  inspectionReason: string;
+  inspectionResult: InspectionStatus | 'all';
+  completionDateFrom: string;
+  completionDateTo: string;
 };
 
 type InspectionSearchRow = {
@@ -51,8 +57,10 @@ const DEFAULT_SEARCH_PARAMS: SearchParams = {
   status: 'all',
   inspectionType: 'all',
   inspector: '',
-  nextDueFrom: '',
-  nextDueTo: '',
+  inspectionReason: '',
+  inspectionResult: 'all',
+  completionDateFrom: '',
+  completionDateTo: '',
 };
 
 const PAGE_SIZE = 30;
@@ -94,6 +102,25 @@ export class InspectionSearchComponent {
     { label: 'Type: All', value: 'all' },
     { label: 'Type: Overt', value: 'Overt' },
     { label: 'Type: Covert', value: 'Covert' },
+  ];
+
+  protected readonly inspectionReasonOptions: SelectOption<string>[] = [
+    { label: 'Reason: All', value: '' },
+    { label: 'Reason: ReExam Inspection', value: 'ReExam Inspection' },
+    { label: 'Reason: Complaint Review', value: 'Complaint Review' },
+    { label: 'Reason: Targeted Follow-up', value: 'Targeted Follow-up' },
+    { label: 'Reason: Routine Review', value: 'Routine Review' },
+    { label: 'Reason: Change', value: 'Change' },
+    { label: 'Reason: Original', value: 'Original' },
+    { label: 'Reason: Reinstatement', value: 'Reinstatement' },
+    { label: 'Reason: Periodic', value: 'Periodic' },
+  ];
+
+  protected readonly inspectionResultOptions: SelectOption<InspectionStatus | 'all'>[] = [
+    { label: 'Result: All', value: 'all' },
+    { label: 'Result: Good', value: 'Good' },
+    { label: 'Result: Satisfactory', value: 'Satisfactory' },
+    { label: 'Result: Unsatisfactory', value: 'Unsatisfactory' },
   ];
 
   protected readonly searchParams = signal<SearchParams>({ ...DEFAULT_SEARCH_PARAMS });
@@ -152,12 +179,20 @@ export class InspectionSearchComponent {
     this.patchSearchParams({ inspectionType: value });
   }
 
-  protected updateNextDueFrom(event: Event): void {
-    this.patchSearchParams({ nextDueFrom: (event.target as HTMLInputElement).value });
+  protected updateInspectionReason(value: string): void {
+    this.patchSearchParams({ inspectionReason: value });
   }
 
-  protected updateNextDueTo(event: Event): void {
-    this.patchSearchParams({ nextDueTo: (event.target as HTMLInputElement).value });
+  protected updateInspectionResult(value: InspectionStatus | 'all'): void {
+    this.patchSearchParams({ inspectionResult: value });
+  }
+
+  protected updateCompletionDateFrom(event: Event): void {
+    this.patchSearchParams({ completionDateFrom: (event.target as HTMLInputElement).value });
+  }
+
+  protected updateCompletionDateTo(event: Event): void {
+    this.patchSearchParams({ completionDateTo: (event.target as HTMLInputElement).value });
   }
 
   protected search(): void {
@@ -205,9 +240,11 @@ export class InspectionSearchComponent {
         return (leftValue - rightValue) * order;
       }
 
-      return String(leftValue).localeCompare(String(rightValue), undefined, {
-        sensitivity: 'base',
-      }) * order;
+      return (
+        String(leftValue).localeCompare(String(rightValue), undefined, {
+          sensitivity: 'base',
+        }) * order
+      );
     });
 
     this.searchResults.set([...event.data]);
@@ -264,7 +301,9 @@ export class InspectionSearchComponent {
       nextDueTimestamp: nextDueDate.getTime(),
       assignedInspector: inspection.assignedInspector,
       appointmentDate: inspection.appointmentDate || 'N/A',
-      appointmentDateTimestamp: Number.isNaN(appointmentDate.getTime()) ? 0 : appointmentDate.getTime(),
+      appointmentDateTimestamp: Number.isNaN(appointmentDate.getTime())
+        ? 0
+        : appointmentDate.getTime(),
     };
   }
 
@@ -272,24 +311,37 @@ export class InspectionSearchComponent {
     const inspectionNumber = searchParams.inspectionNumber.trim().toLowerCase();
     const subjectName = searchParams.subjectName.trim().toLowerCase();
     const inspector = searchParams.inspector.trim().toLowerCase();
+    const inspectionReason = searchParams.inspectionReason.trim().toLowerCase();
 
     const matchesInspectionNumber =
-      inspectionNumber.length === 0 || inspection.inspectionId.toLowerCase().includes(inspectionNumber);
+      inspectionNumber.length === 0 ||
+      inspection.inspectionId.toLowerCase().includes(inspectionNumber);
     const matchesSubjectName =
       subjectName.length === 0 || inspection.subjectName.toLowerCase().includes(subjectName);
     const matchesStatus =
       searchParams.status === 'all' || inspection.inspectionStatus === searchParams.status;
     const matchesType =
-      searchParams.inspectionType === 'all' || inspection.inspectionType === searchParams.inspectionType;
+      searchParams.inspectionType === 'all' ||
+      inspection.inspectionType === searchParams.inspectionType;
     const matchesInspector =
       inspector.length === 0 || inspection.assignedInspector.toLowerCase().includes(inspector);
+    const matchesReason =
+      inspectionReason.length === 0 ||
+      inspection.inspectionReason.toLowerCase().includes(inspectionReason);
+    const matchesResult =
+      searchParams.inspectionResult === 'all' ||
+      inspection.inspectionStatus === searchParams.inspectionResult;
 
-    const inspectionNextDue = this.parseDate(inspection.nextDue);
-    const fromDate = searchParams.nextDueFrom ? new Date(`${searchParams.nextDueFrom}T00:00:00`) : null;
-    const toDate = searchParams.nextDueTo ? new Date(`${searchParams.nextDueTo}T23:59:59`) : null;
+    const inspectionCompletionDate = this.parseDate(inspection.appointmentDate);
+    const fromDate = searchParams.completionDateFrom
+      ? new Date(`${searchParams.completionDateFrom}T00:00:00`)
+      : null;
+    const toDate = searchParams.completionDateTo
+      ? new Date(`${searchParams.completionDateTo}T23:59:59`)
+      : null;
 
-    const matchesFrom = !fromDate || inspectionNextDue >= fromDate;
-    const matchesTo = !toDate || inspectionNextDue <= toDate;
+    const matchesFrom = !fromDate || inspectionCompletionDate >= fromDate;
+    const matchesTo = !toDate || inspectionCompletionDate <= toDate;
 
     return (
       matchesInspectionNumber &&
@@ -297,6 +349,8 @@ export class InspectionSearchComponent {
       matchesStatus &&
       matchesType &&
       matchesInspector &&
+      matchesReason &&
+      matchesResult &&
       matchesFrom &&
       matchesTo
     );

@@ -135,7 +135,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }

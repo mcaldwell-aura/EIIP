@@ -12,7 +12,6 @@
         <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        
         <span class="brand-text">EIIP</span>
       </a>
       <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
@@ -93,14 +92,30 @@
             <h2>Summary</h2>
           </div>
 
-          <div class="summary-field-grid">
-            <div class="summary-field">
+          <div class="summary-field-grid" [class.has-organization]="isOrganization()">
+            <!-- Row 1: Candidate Type / Organization Name -->
+            <div class="summary-field candidate-type-field">
               <span>Candidate Type</span>
               <input pInputText type="text" [value]="candidateType()" readonly />
             </div>
 
+            @if (isOrganization()) {
+              <div class="summary-field organization-name-field">
+                <span>Organization Name *</span>
+                <input
+                  pInputText
+                  type="text"
+                  maxlength="256"
+                  [value]="organizationName()"
+                  (input)="onOrganizationNameChange($event)"
+                  [readonly]="!hasManageCandidatesPermission"
+                />
+              </div>
+            }
+
+            <!-- Row 2: First Name, Middle Name, Last Name, Suffix (Individual only) -->
             @if (isIndividual()) {
-              <div class="summary-field">
+              <div class="summary-field first-name-field">
                 <span>First Name *</span>
                 <input
                   pInputText
@@ -112,7 +127,7 @@
                 />
               </div>
 
-              <div class="summary-field">
+              <div class="summary-field middle-name-field">
                 <span>Middle Name</span>
                 <input
                   pInputText
@@ -124,7 +139,7 @@
                 />
               </div>
 
-              <div class="summary-field">
+              <div class="summary-field last-name-field">
                 <span>Last Name *</span>
                 <input
                   pInputText
@@ -136,7 +151,7 @@
                 />
               </div>
 
-              <div class="summary-field">
+              <div class="summary-field suffix-field">
                 <span>Suffix *</span>
                 @if (hasManageCandidatesPermission) {
                   <p-select
@@ -154,32 +169,32 @@
               </div>
             }
 
-            @if (isOrganization()) {
-              <div class="summary-field summary-field-wide">
-                <span>Organization Name *</span>
-                <input
-                  pInputText
-                  type="text"
-                  maxlength="256"
-                  [value]="organizationName()"
-                  (input)="onOrganizationNameChange($event)"
-                  [readonly]="!hasManageCandidatesPermission"
-                />
-              </div>
-            }
-
-            <div class="summary-field">
-              <span>Next Due Date</span>
+            <!-- Row 3: Contact Email, Contact Phone, External Identifier -->
+            <div class="summary-field contact-email-field">
+              <span>Contact Email</span>
               <input
                 pInputText
-                type="date"
-                [value]="nextDueDate()"
-                (change)="onNextDueDateChange($event)"
+                type="email"
+                maxlength="256"
+                [value]="contactEmail()"
+                (input)="onContactEmailChange($event)"
                 [readonly]="!hasManageCandidatesPermission"
               />
             </div>
 
-            <div class="summary-field">
+            <div class="summary-field contact-phone-field">
+              <span>Contact Phone</span>
+              <input
+                pInputText
+                type="tel"
+                maxlength="20"
+                [value]="contactPhone()"
+                (input)="onContactPhoneChange($event)"
+                [readonly]="!hasManageCandidatesPermission"
+              />
+            </div>
+
+            <div class="summary-field external-id-field">
               <span>External Identifier</span>
               <input
                 pInputText
@@ -191,7 +206,8 @@
               />
             </div>
 
-            <div class="summary-field">
+            <!-- Row 4: Start Date, End Date, Next Due Date -->
+            <div class="summary-field start-date-field">
               <span>Start Date *</span>
               <input
                 pInputText
@@ -202,13 +218,49 @@
               />
             </div>
 
-            <div class="summary-field">
+            <div class="summary-field end-date-field">
               <span>End Date</span>
               <input
                 pInputText
                 type="date"
                 [value]="endDate()"
                 (change)="onEndDateChange($event)"
+                [readonly]="!hasManageCandidatesPermission"
+              />
+            </div>
+
+            <div class="summary-field next-due-date-field">
+              <span>Next Due Date</span>
+              <input
+                pInputText
+                type="date"
+                [value]="nextDueDate()"
+                (change)="onNextDueDateChange($event)"
+                [readonly]="!hasManageCandidatesPermission"
+              />
+            </div>
+
+            <!-- Row 5: Pass Rate, Test Volume -->
+            <div class="summary-field pass-rate-field">
+              <span>Pass Rate</span>
+              <input
+                pInputText
+                type="text"
+                maxlength="256"
+                [value]="passRate()"
+                (input)="onPassRateChange($event)"
+                [readonly]="!hasManageCandidatesPermission"
+              />
+            </div>
+
+            <div class="summary-field test-volume-field">
+              <span>Test Volume</span>
+              <input
+                pInputText
+                type="text"
+                maxlength="256"
+                [value]="testVolume()"
+                (input)="onTestVolumeChange($event)"
                 [readonly]="!hasManageCandidatesPermission"
               />
             </div>
@@ -311,7 +363,3 @@
     }
   </main>
 </div>
-
-
-
-

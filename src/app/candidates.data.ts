@@ -10,10 +10,14 @@ export type CandidateRecord = {
   middleName?: string | null;
   lastName?: string | null;
   suffix?: NameSuffix | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
   externalIdentifier?: string | null;
   startDate: string;
   endDate: string | null;
   nextDueDate: string | null;
+  passRate?: string | null;
+  testVolume?: string | null;
 };
 
 const FIRST_NAMES = [

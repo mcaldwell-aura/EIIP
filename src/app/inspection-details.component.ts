@@ -32,6 +32,245 @@ type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
 type InspectionTypeOption = 'Overt' | 'Covert';
 type InspectionFormStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
 
+type FormFieldType = 'text' | 'select' | 'textarea' | 'date' | 'time' | 'number';
+
+type FormFieldDef = {
+  readonly id: string;
+  readonly label: string;
+  readonly type: FormFieldType;
+  readonly options?: readonly string[];
+  readonly placeholder?: string;
+  readonly colSpan?: 'full';
+};
+
+type FormSectionDef = {
+  readonly id: string;
+  readonly title: string;
+  readonly fields: readonly FormFieldDef[];
+};
+
+const FORM_CONTENT_DEFS: Readonly<Record<string, readonly FormSectionDef[]>> = {
+  'Evidence Checklist': [
+    {
+      id: 'vehicle-info',
+      title: 'Vehicle info',
+      fields: [
+        { id: 'vin', label: 'VIN', type: 'text', placeholder: 'Enter VIN number', colSpan: 'full' },
+        { id: 'make', label: 'Make', type: 'text', placeholder: 'e.g. Honda' },
+        { id: 'model', label: 'Model', type: 'text', placeholder: 'e.g. Accord' },
+        { id: 'year', label: 'Year', type: 'text', placeholder: 'e.g. 2003' },
+        { id: 'color', label: 'Color', type: 'text', placeholder: 'e.g. Silver' },
+        {
+          id: 'license-plate',
+          label: 'License plate',
+          type: 'text',
+          placeholder: 'Enter plate number',
+          colSpan: 'full',
+        },
+        { id: 'state', label: 'State', type: 'text', placeholder: 'e.g. AZ' },
+        { id: 'mileage', label: 'Mileage', type: 'number', placeholder: '0' },
+      ],
+    },
+    {
+      id: 'inspection-results',
+      title: 'Inspection results',
+      fields: [
+        {
+          id: 'result-status',
+          label: 'Status',
+          type: 'select',
+          options: ['Satisfactory', 'Unsatisfactory', 'Marginal', 'Pending Review'],
+          colSpan: 'full',
+        },
+        { id: 'result-date', label: 'Date', type: 'date' },
+        { id: 'result-time', label: 'Time', type: 'time' },
+        { id: 'odometer', label: 'Odometer reading', type: 'number', placeholder: '0' },
+        {
+          id: 'fuel-level',
+          label: 'Fuel level',
+          type: 'select',
+          options: ['Empty', '1/4', '1/2', '3/4', 'Full'],
+        },
+        {
+          id: 'deficiencies',
+          label: 'Deficiencies found',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Describe any deficiencies observed',
+        },
+        {
+          id: 'corrective-action',
+          label: 'Corrective action taken',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Describe corrective actions if applicable',
+        },
+      ],
+    },
+    {
+      id: 'documentation',
+      title: 'Documentation',
+      fields: [
+        {
+          id: 'reg-number',
+          label: 'Registration number',
+          type: 'text',
+          placeholder: 'e.g. AZ-2024-10938',
+        },
+        {
+          id: 'insurance-number',
+          label: 'Insurance policy #',
+          type: 'text',
+          placeholder: 'Policy number',
+        },
+        {
+          id: 'title-status',
+          label: 'Title status',
+          type: 'select',
+          options: ['Clear', 'Lien', 'Salvage', 'Unknown'],
+        },
+        {
+          id: 'lien-holder',
+          label: 'Lien holder (if any)',
+          type: 'text',
+          placeholder: 'Lender name',
+        },
+        { id: 'doc-date', label: 'Documentation date', type: 'date' },
+        {
+          id: 'examiner-ref',
+          label: 'Examiner reference #',
+          type: 'text',
+          placeholder: 'Reference number',
+        },
+        {
+          id: 'doc-notes',
+          label: 'Documentation notes',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Enter any relevant documentation notes',
+        },
+      ],
+    },
+    {
+      id: 'notes',
+      title: 'Notes',
+      fields: [
+        {
+          id: 'additional-notes',
+          label: 'Additional notes',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Additional observations or comments',
+        },
+        {
+          id: 'follow-up-action',
+          label: 'Follow-up action required',
+          type: 'text',
+          colSpan: 'full',
+          placeholder: 'Describe follow-up steps if needed',
+        },
+        { id: 'next-inspection-date', label: 'Next inspection date', type: 'date' },
+        {
+          id: 'assigned-inspector',
+          label: 'Assigned inspector',
+          type: 'text',
+          placeholder: 'Inspector name',
+        },
+      ],
+    },
+  ],
+  'Overt Observation Form': [
+    {
+      id: 'basic-info',
+      title: 'Basic info',
+      fields: [
+        {
+          id: 'obs-location',
+          label: 'Observation location',
+          type: 'text',
+          colSpan: 'full',
+          placeholder: 'Enter location',
+        },
+        { id: 'obs-date', label: 'Observation date', type: 'date' },
+        { id: 'obs-time', label: 'Start time', type: 'time' },
+        { id: 'obs-inspector', label: 'Inspector name', type: 'text', placeholder: 'Full name' },
+        { id: 'obs-id', label: 'Observer ID', type: 'text', placeholder: 'Badge or ID number' },
+      ],
+    },
+    {
+      id: 'observations',
+      title: 'Observations',
+      fields: [
+        {
+          id: 'subject-behavior',
+          label: 'Subject behavior',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Describe observed behavior',
+        },
+        {
+          id: 'compliance-notes',
+          label: 'Compliance notes',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Note any compliance concerns or confirmations',
+        },
+        {
+          id: 'obs-result',
+          label: 'Observation result',
+          type: 'select',
+          options: ['Compliant', 'Non-compliant', 'Inconclusive'],
+          colSpan: 'full',
+        },
+      ],
+    },
+  ],
+  'Covert Observation Form': [
+    {
+      id: 'basic-info',
+      title: 'Basic info',
+      fields: [
+        {
+          id: 'obs-location',
+          label: 'Observation location',
+          type: 'text',
+          colSpan: 'full',
+          placeholder: 'Enter location',
+        },
+        { id: 'obs-date', label: 'Observation date', type: 'date' },
+        { id: 'obs-time', label: 'Start time', type: 'time' },
+      ],
+    },
+    {
+      id: 'covert-details',
+      title: 'Covert details',
+      fields: [
+        {
+          id: 'cover-id',
+          label: 'Cover identity used',
+          type: 'text',
+          placeholder: 'Cover name or alias',
+        },
+        { id: 'duration', label: 'Duration (mins)', type: 'number', placeholder: '0' },
+        {
+          id: 'findings',
+          label: 'Findings',
+          type: 'textarea',
+          colSpan: 'full',
+          placeholder: 'Describe covert findings in detail',
+        },
+        {
+          id: 'covert-result',
+          label: 'Result',
+          type: 'select',
+          options: ['Compliant', 'Non-compliant', 'Inconclusive'],
+          colSpan: 'full',
+        },
+      ],
+    },
+  ],
+};
+
 type AppointmentSlot = {
   time: string;
   examType: string;
@@ -118,8 +357,11 @@ type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement'
 type SummaryFormValue = {
   candidate: string;
   inspector: string;
+  inspectionStatus: SelectableInspectionStatus | '';
   inspectionReason: InspectionReasonOption | '';
   inspectionType: InspectionTypeOption | '';
+  inspectionResult: InspectionReasonOption | '';
+  completionDate: string;
 };
 
 @Component({
@@ -274,8 +516,11 @@ export class InspectionDetailsComponent implements OnInit {
     return {
       candidate: inspection.subjectName,
       inspector: this.isAssigned(inspection.assignedInspector) ? inspection.assignedInspector : '',
+      inspectionStatus: '',
       inspectionReason: reason,
       inspectionType: type,
+      inspectionResult: '',
+      completionDate: '',
     };
   });
   protected readonly canSaveSummary = computed(() => {
@@ -545,6 +790,36 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly canAddForm = computed(
     () => this.selectedFormTypeInput().trim().length > 0 && !this.isCreatingInspectionForm(),
   );
+  protected readonly activeFormSectionId = signal<string>('');
+  private readonly formFieldValuesByFormId = signal<Record<string, Record<string, string>>>({
+    '5220': {
+      vin: '1HGCM82633A004352',
+      make: 'Honda',
+      model: 'Accord',
+      year: '2003',
+      color: 'Silver',
+      'license-plate': '',
+      state: 'AZ',
+      mileage: '0',
+      'result-status': 'Satisfactory',
+      'result-date': '2026-05-03',
+      'result-time': '09:30',
+    },
+  });
+  protected readonly activeFormSections = computed<readonly FormSectionDef[]>(() => {
+    const form = this.activeForm();
+    if (!form) return [];
+    return FORM_CONTENT_DEFS[form.formType] ?? [];
+  });
+  protected readonly activeFormFieldValues = computed<Record<string, string>>(() => {
+    const formId = this.activeFormId();
+    if (!formId) return {};
+    return this.formFieldValuesByFormId()[formId] ?? {};
+  });
+
+  protected getFormFieldValue(fieldId: string): string {
+    return this.activeFormFieldValues()[fieldId] ?? '';
+  }
   private readonly activeTabFromQueryEffect = effect(() => {
     if (this.queryParamMap().get('tab') === 'forms') {
       this.activeTab.set('forms');
@@ -576,6 +851,8 @@ export class InspectionDetailsComponent implements OnInit {
       status: form.status,
       comments: form.comments,
     });
+    const sections = FORM_CONTENT_DEFS[form.formType];
+    this.activeFormSectionId.set(sections?.[0]?.id ?? '');
     this.isFormModalOpen.set(true);
   }
 
@@ -583,6 +860,29 @@ export class InspectionDetailsComponent implements OnInit {
     this.isFormModalOpen.set(false);
     this.activeFormId.set(null);
     this.formDraft.set(null);
+    this.activeFormSectionId.set('');
+  }
+
+  protected scrollToFormSection(sectionId: string): void {
+    this.activeFormSectionId.set(sectionId);
+    requestAnimationFrame(() => {
+      const scrollBody = document.querySelector<HTMLElement>('.form-sections-body');
+      const target = document.getElementById(`form-section-${sectionId}`);
+      if (scrollBody && target) {
+        const bodyRect = scrollBody.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        scrollBody.scrollTop += targetRect.top - bodyRect.top - 16;
+      }
+    });
+  }
+
+  protected updateFormFieldValue(fieldId: string, value: string): void {
+    const formId = this.activeFormId();
+    if (!formId) return;
+    this.formFieldValuesByFormId.update((existing) => ({
+      ...existing,
+      [formId]: { ...(existing[formId] ?? {}), [fieldId]: value },
+    }));
   }
 
   protected updateFormDraftField(
@@ -852,6 +1152,26 @@ Generated on: ${new Date().toLocaleString()}
   protected updateSummaryInspectionType(event: Event): void {
     this.updateSummaryForm({
       inspectionType: (event.target as HTMLSelectElement).value as InspectionTypeOption | '',
+    });
+  }
+
+  protected updateSummaryInspectionStatus(event: Event): void {
+    this.updateSummaryForm({
+      inspectionStatus: (event.target as HTMLSelectElement).value as
+        | SelectableInspectionStatus
+        | '',
+    });
+  }
+
+  protected updateSummaryInspectionResult(event: Event): void {
+    this.updateSummaryForm({
+      inspectionResult: (event.target as HTMLSelectElement).value as InspectionReasonOption | '',
+    });
+  }
+
+  protected updateSummaryCompletionDate(event: Event): void {
+    this.updateSummaryForm({
+      completionDate: (event.target as HTMLInputElement).value,
     });
   }
 

@@ -22,10 +22,14 @@ type CandidateDetailData = {
   lastName: string | null;
   suffix: NameSuffix | null;
   organizationName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   nextDueDate: string | null;
   externalIdentifier: string | null;
   startDate: string;
   endDate: string | null;
+  passRate: string | null;
+  testVolume: string | null;
 };
 
 type CandidateDetailTab = 'summary' | 'inspection-history';
@@ -81,10 +85,14 @@ export class CandidateDetailComponent {
   protected readonly lastName = signal('');
   protected readonly suffix = signal<NameSuffix | ''>('');
   protected readonly organizationName = signal('');
+  protected readonly contactEmail = signal('');
+  protected readonly contactPhone = signal('');
   protected readonly nextDueDate = signal('');
   protected readonly externalIdentifier = signal('');
   protected readonly startDate = signal('');
   protected readonly endDate = signal('');
+  protected readonly passRate = signal('');
+  protected readonly testVolume = signal('');
 
   protected readonly saveToastVisible = signal(false);
   protected readonly validationErrorMessage = signal('');
@@ -173,10 +181,14 @@ export class CandidateDetailComponent {
     this.lastName.set(mappedCandidate.lastName ?? '');
     this.suffix.set(mappedCandidate.suffix ?? '');
     this.organizationName.set(mappedCandidate.organizationName ?? '');
+    this.contactEmail.set(mappedCandidate.contactEmail ?? '');
+    this.contactPhone.set(mappedCandidate.contactPhone ?? '');
     this.nextDueDate.set(mappedCandidate.nextDueDate ?? '');
     this.externalIdentifier.set(mappedCandidate.externalIdentifier ?? '');
     this.startDate.set(mappedCandidate.startDate);
     this.endDate.set(mappedCandidate.endDate ?? '');
+    this.passRate.set(mappedCandidate.passRate ?? '');
+    this.testVolume.set(mappedCandidate.testVolume ?? '');
     this.loadInspectionHistory(mappedCandidate.candidateId);
   }
 
@@ -278,10 +290,14 @@ export class CandidateDetailComponent {
       lastName,
       suffix: null,
       organizationName: null,
+      contactEmail: null,
+      contactPhone: null,
       nextDueDate: null,
       externalIdentifier: null,
       startDate: this.todayIsoDate(),
       endDate: null,
+      passRate: null,
+      testVolume: null,
     };
   }
 
@@ -304,11 +320,15 @@ export class CandidateDetailComponent {
       lastName,
       suffix: candidate.suffix ?? null,
       organizationName: candidate.organizationName,
+      contactEmail: candidate.contactEmail ?? null,
+      contactPhone: candidate.contactPhone ?? null,
       nextDueDate: candidate.nextDueDate,
       externalIdentifier:
         candidate.externalIdentifier ?? `EXT-${candidate.candidateId.toUpperCase()}`,
       startDate: candidate.startDate,
       endDate: candidate.endDate,
+      passRate: candidate.passRate ?? null,
+      testVolume: candidate.testVolume ?? null,
     };
   }
 
@@ -443,10 +463,14 @@ export class CandidateDetailComponent {
       lastName: this.isIndividual() ? this.lastName() : null,
       suffix: this.isIndividual() ? this.suffix() || null : null,
       organizationName: this.isOrganization() ? this.organizationName() : null,
+      contactEmail: this.contactEmail().trim() || null,
+      contactPhone: this.contactPhone().trim() || null,
       nextDueDate: this.nextDueDate().trim() || null,
       externalIdentifier: this.externalIdentifier().trim() || null,
       startDate: this.startDate(),
       endDate: this.endDate().trim() || null,
+      passRate: this.passRate().trim() || null,
+      testVolume: this.testVolume().trim() || null,
     });
 
     if (!updatedCandidate) {
@@ -508,6 +532,26 @@ export class CandidateDetailComponent {
   protected onEndDateChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.endDate.set(input.value);
+  }
+
+  protected onContactEmailChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.contactEmail.set(input.value);
+  }
+
+  protected onContactPhoneChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.contactPhone.set(input.value);
+  }
+
+  protected onPassRateChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.passRate.set(input.value);
+  }
+
+  protected onTestVolumeChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.testVolume.set(input.value);
   }
 
   private todayIsoDate(): string {

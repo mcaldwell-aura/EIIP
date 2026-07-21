@@ -156,7 +156,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -361,7 +362,9 @@ h2 {
   display: flex;
   gap: 2rem;
   margin-top: 1.45rem;
+  overflow-x: auto;
   padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -373,6 +376,7 @@ h2 {
   color: var(--text-soft);
   cursor: pointer;
   display: inline-flex;
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.6rem;
@@ -382,6 +386,7 @@ h2 {
   position: relative;
   text-transform: none;
   transition: all 180ms ease;
+  white-space: nowrap;
 }
 
 .tab-btn::before {
@@ -460,7 +465,39 @@ h2 {
 .summary-field-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+/* Row 1: Candidate (full width) */
+.candidate-field {
+  grid-column: span 6;
+}
+
+/* Row 2: Inspector, Inspection Status (3+3 = 6) */
+.inspector-field {
+  grid-column: span 3;
+}
+
+.inspection-status-field {
+  grid-column: span 3;
+}
+
+/* Row 3: Inspection Reason, Inspection Type (3+3 = 6) */
+.inspection-reason-field {
+  grid-column: span 3;
+}
+
+.inspection-type-field {
+  grid-column: span 3;
+}
+
+/* Row 4: Inspection Result, Completion Date (3+3 = 6) */
+.inspection-result-field {
+  grid-column: span 3;
+}
+
+.completion-date-field {
+  grid-column: span 3;
 }
 
 .summary-field {
@@ -483,7 +520,7 @@ h2 {
   border-radius: 12px;
   color: var(--text);
   font: inherit;
-  min-height: 2.7rem;
+  height: 2.7rem;
   padding: 0.58rem 0.7rem;
 }
 
@@ -620,6 +657,15 @@ h2 {
   display: grid;
   gap: 0.85rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.forms-add-btn-row {
+  display: none;
+  margin-top: 0.9rem;
+}
+
+.forms-add-btn-bottom {
+  width: 100%;
 }
 
 .forms-empty-state {
@@ -2009,20 +2055,46 @@ a:focus-visible {
     padding-right: 0.8rem;
   }
 
-  .title-wrap,
   .card-header,
   .document-item {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .header-actions,
+  .title-wrap {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
   .assign-btn,
   .secondary-btn,
   .primary-btn,
-  .tertiary-btn,
-  .back-btn {
+  .tertiary-btn {
     width: 100%;
+  }
+
+  .header-actions,
+  .header-actions .back-btn {
+    width: auto;
+  }
+
+  .forms-card .card-header {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .forms-card .card-header .primary-btn {
+    width: auto;
+  }
+
+  .forms-card .forms-add-btn-top {
+    display: none;
+  }
+
+  .forms-card .forms-add-btn-row {
+    display: block;
   }
 
   .field-grid,
@@ -2032,6 +2104,12 @@ a:focus-visible {
 
   .forms-card-list {
     grid-template-columns: 1fr;
+  }
+
+  .forms-list-card:hover {
+    background: #ffffff;
+    border-color: #d7e2f7;
+    box-shadow: none;
   }
 
   .appointments-table {
@@ -2152,6 +2230,187 @@ a:focus-visible {
   display: grid;
   gap: 1rem;
   margin-top: 0.9rem;
+}
+
+/* ─── Form detail dialog – mobile-first content layout ─── */
+
+:host ::ng-deep .form-detail-dialog .p-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: min(82dvh, 680px);
+}
+
+:host ::ng-deep .form-detail-dialog .p-dialog-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+}
+
+:host ::ng-deep .form-detail-dialog .p-dialog-footer {
+  padding-top: 1.25rem;
+}
+
+.form-section-nav {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.form-section-nav-inner {
+  display: flex;
+  gap: 0;
+  min-width: max-content;
+  padding: 0 1rem;
+}
+
+.form-section-nav-tab {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: -1px;
+  padding: 0.7rem 1rem;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  &.active {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.form-sections-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0 1rem;
+  scroll-behavior: smooth;
+}
+
+.form-content-section {
+  background: #fff;
+  padding: 1.75rem 1.5rem 2.25rem;
+
+  & + & {
+    border-top: 1px solid var(--line);
+  }
+}
+
+.form-section-heading {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  margin: 0 0 1rem;
+}
+
+.form-section-field-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-content-field {
+  display: grid;
+  gap: 0.4rem;
+
+  span {
+    color: var(--text-soft);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  input,
+  select,
+  textarea {
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+    border-radius: 8px;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.7rem;
+    transition: border-color 150ms ease;
+    width: 100%;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: 2px solid rgba(31, 86, 216, 0.18);
+      outline-offset: 0;
+    }
+  }
+
+  textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235e677d' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-position: right 0.7rem center;
+    background-repeat: no-repeat;
+    background-size: 0.75rem;
+    padding-right: 2rem;
+  }
+
+  input[type='time']::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+}
+
+.form-content-field-full {
+  grid-column: 1 / -1;
+}
+
+.form-meta-section {
+  background: #fff;
+}
+
+/* Mobile: full-screen dialog */
+@media (max-width: 640px) {
+  :host ::ng-deep .form-detail-dialog.p-dialog-mask {
+    align-items: flex-end;
+  }
+
+  :host ::ng-deep .form-detail-dialog .p-dialog {
+    border-radius: 16px 16px 0 0;
+    max-height: 92dvh;
+    width: 100vw !important;
+  }
+
+  .form-content-section {
+    padding: 1.4rem 1rem 1.2rem;
+  }
+
+  .form-section-field-grid {
+    gap: 0.75rem;
+  }
 }
 
 .form-field {

@@ -376,13 +376,22 @@ select:focus-visible {
     flex-direction: column;
   }
 
+  .title-wrap {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
   .summary-field-grid {
     grid-template-columns: 1fr;
   }
 
-  .back-btn,
   .primary-btn {
     width: 100%;
+  }
+
+  .back-btn {
+    width: auto;
   }
 
   .brand-text {

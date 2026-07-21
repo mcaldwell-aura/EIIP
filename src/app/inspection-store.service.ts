@@ -139,6 +139,26 @@ export class InspectionStoreService {
         comments: 'Field notes captured; pending final comments.',
       },
     ],
+    '892756': [
+      {
+        formId: '5220',
+        inspectionId: '892756',
+        formType: 'Evidence Checklist',
+        appointmentDateTime: '2026-04-22T14:15',
+        inspector: 'Jordan Alvarez',
+        status: 'In Progress',
+        comments: 'Initial review in progress. Follow-up findings from prior quarter require full documentation.',
+      },
+      {
+        formId: '5219',
+        inspectionId: '892756',
+        formType: 'Overt Observation Form',
+        appointmentDateTime: '2026-04-21T10:00',
+        inspector: 'Jordan Alvarez',
+        status: 'Completed',
+        comments: 'Overt observation completed. Subject compliant throughout the observation period.',
+      },
+    ],
   });
   // Backend/system-side audit trail; intentionally not exposed to UI.
   private readonly appointmentAuditTrailState = signal<Record<string, AppointmentAuditEntry[]>>({});

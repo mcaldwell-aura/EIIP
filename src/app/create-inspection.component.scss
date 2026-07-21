@@ -215,7 +215,9 @@ h2 {
   display: flex;
   gap: 2rem;
   margin-top: 1.45rem;
+  overflow-x: auto;
   padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn {
@@ -227,6 +229,7 @@ h2 {
   color: var(--text-soft);
   cursor: pointer;
   display: inline-flex;
+  flex: 0 0 auto;
   font-size: 0.9rem;
   font-weight: 700;
   gap: 0.6rem;
@@ -236,6 +239,7 @@ h2 {
   position: relative;
   text-transform: none;
   transition: all 180ms ease;
+  white-space: nowrap;
 }
 
 .tab-btn::before {
@@ -812,16 +816,26 @@ a:focus-visible {
 
   .title-wrap,
   .card-header {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .card-header {
     align-items: flex-start;
     flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .assign-btn,
+  .primary-btn,
+  .save-inspection-btn {
+    width: 100%;
   }
 
   .header-actions,
-  .assign-btn,
-  .primary-btn,
-  .back-btn,
-  .save-inspection-btn {
-    width: 100%;
+  .back-btn {
+    width: auto;
   }
 
   .page-save-row {

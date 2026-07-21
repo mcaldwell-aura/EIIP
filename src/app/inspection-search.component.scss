@@ -134,7 +134,8 @@
 }
 
 @media (max-width: 980px) {
-  .tab-link {
+  .tab-link,
+  .nav-text-link {
     display: none;
   }
 }
@@ -196,29 +197,26 @@ h1 {
 .search-grid {
   display: grid;
   gap: 1rem 1.1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin-top: 1rem;
-}
+  margin-bottom: 1.5rem;
 
-.search-field-row {
-  display: grid;
-  gap: 1rem 1.1rem;
-  grid-column: 1 / -1;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.search-field-row-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.mobile-only-row {
-  display: none;
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .search-field {
+  /* Default: used for last row (3 fields, each spanning 2 columns) */
+  grid-column: span 2;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.search-field:nth-child(-n + 6) {
+  /* First 6 fields (rows 1-3: 2 fields per row, each spanning 3 columns) */
+  grid-column: span 3;
 }
 
 .search-field span {
@@ -244,8 +242,8 @@ h1 {
 .search-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.65rem;
-  margin-top: 1.2rem;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .reset-btn,
@@ -472,9 +470,27 @@ h1 {
   color: #1f56d8;
 }
 
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th.p-datatable-column-sorted .p-sortable-column-icon,
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th.p-sortable-column.p-highlight .p-sortable-column-icon,
-:host ::ng-deep .p-datatable .p-datatable-thead > tr > th.p-sortable-column.p-focus .p-sortable-column-icon {
+:host
+  ::ng-deep
+  .p-datatable
+  .p-datatable-thead
+  > tr
+  > th.p-datatable-column-sorted
+  .p-sortable-column-icon,
+:host
+  ::ng-deep
+  .p-datatable
+  .p-datatable-thead
+  > tr
+  > th.p-sortable-column.p-highlight
+  .p-sortable-column-icon,
+:host
+  ::ng-deep
+  .p-datatable
+  .p-datatable-thead
+  > tr
+  > th.p-sortable-column.p-focus
+  .p-sortable-column-icon {
   color: #1f56d8;
 }
 
