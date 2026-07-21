@@ -1477,6 +1477,11 @@ h2 {
 .note-modal-field {
   display: grid;
   gap: 0.45rem;
+  margin-bottom: 1.5rem;
+}
+
+.note-modal-field:last-child {
+  margin-bottom: 0;
 }
 
 .document-modal-field {
