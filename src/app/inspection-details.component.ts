@@ -437,6 +437,7 @@ export class InspectionDetailsComponent implements OnInit {
   >({});
   private readonly appointmentRowsByInspection = signal<Record<string, AppointmentRow[]>>({});
   private readonly summaryFormByInspection = signal<Record<string, SummaryFormValue>>({});
+  private readonly lastEditedByInspection = signal<Record<string, string>>({});
   private readonly noteRowsByInspection = signal<Record<string, NoteRow[]>>({});
   private readonly documentRowsByInspection = signal<Record<string, DocumentRow[]>>({});
   protected readonly inspectorSearchTerm = signal('');
@@ -534,6 +535,18 @@ export class InspectionDetailsComponent implements OnInit {
       this.assignedInspectorByInspection()[this.inspection().inspectionId] ??
       this.inspection().assignedInspector,
   );
+  protected readonly lastEditedTimestamp = computed<string>(() => {
+    const timestamp = this.lastEditedByInspection()[this.inspection().inspectionId];
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${month}/${day}/${year} ${hours}:${minutes}`;
+  });
   protected readonly baseNoteRows = computed<NoteRow[]>(() => {
     const assignedInspector = this.isAssigned(this.assignedInspector())
       ? this.assignedInspector()
@@ -791,6 +804,7 @@ export class InspectionDetailsComponent implements OnInit {
     () => this.selectedFormTypeInput().trim().length > 0 && !this.isCreatingInspectionForm(),
   );
   protected readonly activeFormSectionId = signal<string>('');
+  private readonly lastEditedByFormId = signal<Record<string, string>>({});
   private readonly formFieldValuesByFormId = signal<Record<string, Record<string, string>>>({
     '5220': {
       vin: '1HGCM82633A004352',
@@ -921,6 +935,11 @@ export class InspectionDetailsComponent implements OnInit {
       },
     });
 
+    this.lastEditedByFormId.update((existing) => ({
+      ...existing,
+      [form.formId]: new Date().toISOString(),
+    }));
+
     this.closeFormModal();
     this.triggerSaveToast();
   }
@@ -1031,6 +1050,19 @@ Generated on: ${new Date().toLocaleString()}
     }).format(parsedDate);
 
     return `${date} ${time}`;
+  }
+
+  protected getFormLastEditedTimestamp(formId: string): string {
+    const timestamp = this.lastEditedByFormId()[formId];
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${month}/${day}/${year} ${hours}:${minutes}`;
   }
 
   protected requiresAttention(status: SelectableInspectionStatus): boolean {
@@ -1191,6 +1223,11 @@ Generated on: ${new Date().toLocaleString()}
     this.summaryFormByInspection.update((existing) => ({
       ...existing,
       [inspectionId]: nextValue,
+    }));
+
+    this.lastEditedByInspection.update((existing) => ({
+      ...existing,
+      [inspectionId]: new Date().toISOString(),
     }));
 
     this.triggerSaveToast();
@@ -1749,6 +1786,11 @@ Generated on: ${new Date().toLocaleString()}
         ...current,
         ...update,
       },
+    }));
+
+    this.lastEditedByInspection.update((existing) => ({
+      ...existing,
+      [inspectionId]: new Date().toISOString(),
     }));
   }
 

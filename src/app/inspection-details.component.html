@@ -124,6 +124,9 @@
             <div class="card-header solo-header">
               <div>
                 <h2>Summary</h2>
+                <div class="last-edited" *ngIf="lastEditedTimestamp()">
+                  Last Edited: {{ lastEditedTimestamp() }}
+                </div>
               </div>
             </div>
 
@@ -273,7 +276,12 @@
                 class="forms-list-card"
                 (click)="openFormModal(formCard)"
               >
-                <h3>Form {{ formCard.formId }}</h3>
+                <div class="form-card-header">
+                  <h3>Form {{ formCard.formId }}</h3>
+                  <div class="form-card-last-edited" *ngIf="getFormLastEditedTimestamp(formCard.formId)">
+                    {{ getFormLastEditedTimestamp(formCard.formId) }}
+                  </div>
+                </div>
                 <p>
                   <strong>Appointment Date:</strong>
                   {{ formatFormAppointmentDate(formCard.appointmentDateTime) }}

@@ -582,6 +582,14 @@ h2 {
   margin-bottom: 1.15rem;
 }
 
+.last-edited {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-top: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
 .field-grid {
   display: grid;
   gap: 1rem;
@@ -703,6 +711,20 @@ h2 {
   margin: 0;
   text-align: left;
   width: 100%;
+}
+
+.form-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+.form-card-last-edited {
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .forms-list-card p {
