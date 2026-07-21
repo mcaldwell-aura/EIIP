@@ -328,6 +328,18 @@ type DocumentRow = {
   name: string;
   fileName: string;
   updatedDate: string;
+  fileSize: number;
+  comment?: string;
+};
+
+type UploadedFile = {
+  id: string;
+  file: File;
+  fileName: string;
+  fileSize: string;
+  isValid: boolean;
+  errorMessage?: string;
+  comment: string;
 };
 
 type AppointmentRow = {
@@ -415,6 +427,9 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly activeNoteIndex = signal<number | null>(null);
   protected readonly activeDocumentIndex = signal<number | null>(null);
   protected readonly activeAppointmentIndex = signal<number | null>(null);
+  protected readonly notesWrapText = signal(false);
+  protected readonly noteSortColumn = signal<'name' | 'updatedDate' | 'updatedBy'>('updatedDate');
+  protected readonly noteSortDirection = signal<'asc' | 'desc'>('desc');
   protected readonly inspectionId = computed(
     () =>
       this.paramMap().get('inspectionId') ??
@@ -589,7 +604,31 @@ export class InspectionDetailsComponent implements OnInit {
     }));
   });
   protected readonly noteRows = computed<NoteRow[]>(() => {
-    return this.noteRowsByInspection()[this.inspection().inspectionId] ?? this.baseNoteRows();
+    const rows = this.noteRowsByInspection()[this.inspection().inspectionId] ?? this.baseNoteRows();
+    const sortColumn = this.noteSortColumn();
+    const sortDirection = this.noteSortDirection();
+
+    const sorted = [...rows].sort((a, b) => {
+      let aValue: string;
+      let bValue: string;
+
+      if (sortColumn === 'name') {
+        aValue = a.name;
+        bValue = b.name;
+      } else if (sortColumn === 'updatedBy') {
+        aValue = a.updatedBy;
+        bValue = b.updatedBy;
+      } else {
+        // updatedDate
+        aValue = a.updatedDate;
+        bValue = b.updatedDate;
+      }
+
+      const comparison = aValue.localeCompare(bValue);
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
   });
   protected readonly baseDocumentRows = computed<DocumentRow[]>(() => {
     if (this.inspection().inspectionId === '892749') {
@@ -598,21 +637,25 @@ export class InspectionDetailsComponent implements OnInit {
           name: 'Vehicle Inspection',
           fileName: 'Examiner Manual §3.2.1',
           updatedDate: '05-13-2026',
+          fileSize: 2500000,
         },
         {
           name: 'CDL Skills Test',
           fileName: 'Examiner Manual §3.2.1',
           updatedDate: '05-13-2026',
+          fileSize: 1800000,
         },
         {
           name: 'Road Test',
           fileName: 'Examiner Manual §3.2.1',
           updatedDate: '05-13-2026',
+          fileSize: 3200000,
         },
         {
           name: 'Vehicle Inspection',
           fileName: 'Examiner Manual §3.2.1',
           updatedDate: '05-13-2026',
+          fileSize: 2100000,
         },
       ];
     }
@@ -621,6 +664,7 @@ export class InspectionDetailsComponent implements OnInit {
       name: this.inspection().inspectionReason,
       fileName: document,
       updatedDate: this.inspection().appointmentDate,
+      fileSize: 0,
     }));
   });
   protected readonly documentRows = computed<DocumentRow[]>(() => {
@@ -668,6 +712,16 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly documentNameInput = signal('');
   protected readonly documentFileNameInput = signal('');
   protected readonly documentUploadName = signal('');
+  protected readonly documentCommentInput = signal('');
+
+  // File upload constants
+  protected readonly MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  protected readonly MAX_FILES = 5;
+  protected readonly ALLOWED_FILE_TYPES = ['jpg', 'jpeg', 'png', 'pdf', 'docx', 'xlsx', 'zip'];
+
+  // File upload signals
+  protected readonly selectedFiles = signal<UploadedFile[]>([]);
+
   protected readonly noteNameOptions = computed<string[]>(() => {
     const options = [this.inspection().subjectName];
 
@@ -683,9 +737,7 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly noteModalTitle = computed(() =>
     this.noteModalMode() === 'edit' ? 'Edit Note' : 'Add Note',
   );
-  protected readonly noteSubmitLabel = computed(() =>
-    this.noteModalMode() === 'edit' ? 'Save Changes' : 'Save',
-  );
+  protected readonly noteSubmitLabel = computed(() => 'Save');
   protected readonly pendingDeleteNote = computed(() => {
     const activeIndex = this.activeNoteIndex();
 
@@ -696,10 +748,7 @@ export class InspectionDetailsComponent implements OnInit {
     return this.noteRows()[activeIndex] ?? null;
   });
   protected readonly canSaveDocument = computed(
-    () =>
-      this.documentNameInput().trim().length > 0 &&
-      this.documentFileNameInput().trim().length > 0 &&
-      this.documentUploadName().trim().length > 0,
+    () => this.selectedFiles().length > 0 && this.selectedFiles().every((f) => f.isValid),
   );
   protected readonly documentModalTitle = computed(() =>
     this.documentModalMode() === 'edit' ? 'Edit Document' : 'Add Document',
@@ -850,6 +899,15 @@ export class InspectionDetailsComponent implements OnInit {
     this.isDeleteDocumentModalOpen.set(false);
     this.isDeleteFormModalOpen.set(false);
     this.isAddFormModalOpen.set(false);
+
+    // Initialize last edited timestamps for all existing forms
+    const inspectionId = this.inspection().inspectionId;
+    const forms = this.inspectionStore.getInspectionForms(inspectionId);
+    const lastEditedData: Record<string, string> = {};
+    forms.forEach((form) => {
+      lastEditedData[form.formId] = new Date().toISOString();
+    });
+    this.lastEditedByFormId.set(lastEditedData);
   }
 
   protected selectTab(tab: DetailsTab): void {
@@ -1022,10 +1080,16 @@ Generated on: ${new Date().toLocaleString()}
     const selectedFormType = this.selectedFormTypeInput();
     const inspectionId = this.inspection().inspectionId;
 
-    this.inspectionStore.createInspectionForm({
+    const newForm = this.inspectionStore.createInspectionForm({
       inspectionId,
       formType: selectedFormType,
     });
+
+    // Initialize timestamp for newly created form
+    this.lastEditedByFormId.update((existing) => ({
+      ...existing,
+      [newForm.formId]: new Date().toISOString(),
+    }));
 
     this.closeAddFormModal();
     this.triggerSaveToast();
@@ -1404,6 +1468,26 @@ Generated on: ${new Date().toLocaleString()}
     this.activeNoteIndex.set(null);
   }
 
+  protected toggleNotesWrapText(): void {
+    this.notesWrapText.set(!this.notesWrapText());
+  }
+
+  protected sortNotesByColumn(column: 'name' | 'updatedDate' | 'updatedBy'): void {
+    if (this.noteSortColumn() === column) {
+      // Toggle direction if same column clicked
+      this.noteSortDirection.set(this.noteSortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to descending for date, ascending for others
+      this.noteSortColumn.set(column);
+      this.noteSortDirection.set(column === 'updatedDate' ? 'desc' : 'asc');
+    }
+  }
+
+  protected getNoteSortIndicator(column: 'name' | 'updatedDate' | 'updatedBy'): string {
+    if (this.noteSortColumn() !== column) return '▼';
+    return this.noteSortDirection() === 'asc' ? '▲' : '▼';
+  }
+
   protected openEditNoteModal(note: NoteRow, index: number): void {
     this.closeAppointmentModal();
     this.closeAssignInspectorModal();
@@ -1433,7 +1517,7 @@ Generated on: ${new Date().toLocaleString()}
   }
 
   protected updateNoteName(event: Event): void {
-    this.noteNameInput.set((event.target as HTMLSelectElement).value);
+    this.noteNameInput.set((event.target as HTMLInputElement).value);
   }
 
   protected updateNoteDescription(event: Event): void {
@@ -1482,9 +1566,8 @@ Generated on: ${new Date().toLocaleString()}
     this.closeDeleteDocumentModal();
     this.documentModalMode.set('add');
     this.activeDocumentIndex.set(null);
-    this.documentNameInput.set(this.noteNameOptions()[0] ?? this.inspection().subjectName);
-    this.documentFileNameInput.set('');
-    this.documentUploadName.set('');
+    this.selectedFiles.set([]);
+    this.documentCommentInput.set('');
     this.isDocumentModalOpen.set(true);
   }
 
@@ -1492,6 +1575,8 @@ Generated on: ${new Date().toLocaleString()}
     this.isDocumentModalOpen.set(false);
     this.documentModalMode.set('add');
     this.activeDocumentIndex.set(null);
+    this.selectedFiles.set([]);
+    this.documentCommentInput.set('');
   }
 
   protected openEditDocumentModal(document: DocumentRow, index: number): void {
@@ -1502,9 +1587,17 @@ Generated on: ${new Date().toLocaleString()}
     this.closeDeleteDocumentModal();
     this.documentModalMode.set('edit');
     this.activeDocumentIndex.set(index);
-    this.documentNameInput.set(document.name);
-    this.documentFileNameInput.set(document.fileName);
-    this.documentUploadName.set(document.fileName);
+    this.selectedFiles.set([
+      {
+        id: `file-${index}`,
+        file: new File([], document.fileName),
+        fileName: document.fileName,
+        fileSize: this.formatFileSize(document.fileSize),
+        isValid: true,
+        comment: document.comment ?? '',
+      },
+    ]);
+    this.documentCommentInput.set(document.comment ?? '');
     this.isDocumentModalOpen.set(true);
   }
 
@@ -1531,19 +1624,110 @@ Generated on: ${new Date().toLocaleString()}
     this.documentFileNameInput.set((event.target as HTMLInputElement).value);
   }
 
+  private getFileExtension(fileName: string): string {
+    const lastDot = fileName.lastIndexOf('.');
+    if (lastDot === -1) {
+      return '';
+    }
+    return fileName.substring(lastDot + 1).toLowerCase();
+  }
+
+  private formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  private validateFile(file: File): { isValid: boolean; errorMessage?: string } {
+    const extension = this.getFileExtension(file.name);
+
+    // Check file type
+    if (!this.ALLOWED_FILE_TYPES.includes(extension)) {
+      return {
+        isValid: false,
+        errorMessage: `File type .${extension} is not allowed. Allowed types: ${this.ALLOWED_FILE_TYPES.join(', ')}`,
+      };
+    }
+
+    // Check file size
+    if (file.size > this.MAX_FILE_SIZE) {
+      return {
+        isValid: false,
+        errorMessage: `File size exceeds 50MB limit. File size: ${this.formatFileSize(file.size)}`,
+      };
+    }
+
+    return { isValid: true };
+  }
+
   protected updateDocumentUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const files = input.files;
 
-    if (!file) {
+    if (!files || files.length === 0) {
       return;
     }
 
-    this.documentUploadName.set(file.name);
+    const currentFiles = this.selectedFiles();
 
-    if (!this.documentFileNameInput().trim()) {
-      this.documentFileNameInput.set(file.name);
+    // Check if adding these files would exceed max files
+    if (currentFiles.length + files.length > this.MAX_FILES) {
+      // Toast error: max files exceeded
+      console.warn(
+        `Cannot add ${files.length} files. Maximum ${this.MAX_FILES} files allowed. Currently have ${currentFiles.length} files.`,
+      );
+      return;
     }
+
+    // Process each file
+    const newFiles: UploadedFile[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const validation = this.validateFile(file);
+
+      const uploadedFile: UploadedFile = {
+        id: `file-${Date.now()}-${i}`,
+        file: file,
+        fileName: file.name,
+        fileSize: this.formatFileSize(file.size),
+        isValid: validation.isValid,
+        errorMessage: validation.errorMessage,
+        comment: '',
+      };
+
+      newFiles.push(uploadedFile);
+    }
+
+    // Add valid files to the selected files array
+    this.selectedFiles.set([...currentFiles, ...newFiles.filter((f) => f.isValid)]);
+
+    // Log any invalid files for toasting
+    const invalidFiles = newFiles.filter((f) => !f.isValid);
+    if (invalidFiles.length > 0) {
+      invalidFiles.forEach((file) => {
+        console.warn(`File validation error: ${file.fileName} - ${file.errorMessage}`);
+        // TODO: Show toast error for each invalid file
+      });
+    }
+
+    // Reset the input
+    input.value = '';
+  }
+
+  protected removeUploadedFile(fileId: string): void {
+    this.selectedFiles.set(this.selectedFiles().filter((f) => f.id !== fileId));
+  }
+
+  protected updateFileComment(fileId: string, comment: string): void {
+    this.selectedFiles.update((files) =>
+      files.map((f) => (f.id === fileId ? { ...f, comment } : f)),
+    );
+  }
+
+  protected updateDocumentComment(event: Event): void {
+    this.documentCommentInput.set((event.target as HTMLTextAreaElement).value);
   }
 
   protected saveDocument(): void {
@@ -1551,21 +1735,19 @@ Generated on: ${new Date().toLocaleString()}
       return;
     }
 
-    const nextDocument: DocumentRow = {
-      name: this.documentNameInput().trim(),
-      fileName: this.documentFileNameInput().trim(),
-      updatedDate: this.formatToday(),
-    };
+    const filesToSave = this.selectedFiles().filter((f) => f.isValid);
 
-    if (this.documentModalMode() === 'edit' && this.activeDocumentIndex() !== null) {
-      this.updateCurrentDocuments((documents) =>
-        documents.map((document, index) =>
-          index === this.activeDocumentIndex() ? nextDocument : document,
-        ),
-      );
-    } else {
+    filesToSave.forEach((uploadedFile) => {
+      const nextDocument: DocumentRow = {
+        name: uploadedFile.fileName,
+        fileName: uploadedFile.fileName,
+        fileSize: uploadedFile.file.size,
+        updatedDate: this.formatToday(),
+        comment: uploadedFile.comment.trim(),
+      };
+
       this.updateCurrentDocuments((documents) => [nextDocument, ...documents]);
-    }
+    });
 
     this.closeDocumentModal();
   }

@@ -278,7 +278,10 @@
               >
                 <div class="form-card-header">
                   <h3>Form {{ formCard.formId }}</h3>
-                  <div class="form-card-last-edited" *ngIf="getFormLastEditedTimestamp(formCard.formId)">
+                  <div
+                    class="form-card-last-edited"
+                    *ngIf="getFormLastEditedTimestamp(formCard.formId)"
+                  >
                     {{ getFormLastEditedTimestamp(formCard.formId) }}
                   </div>
                 </div>
@@ -401,19 +404,38 @@
             <div>
               <h2>Notes</h2>
             </div>
-            <button pButton pRipple type="button" class="primary-btn" (click)="openNoteModal()">
-              Add Note
-            </button>
+            <div class="notes-header-controls">
+              <label class="toggle-switch">
+                <span class="toggle-label">Wrap Text</span>
+                <input
+                  type="checkbox"
+                  [checked]="notesWrapText()"
+                  (change)="toggleNotesWrapText()"
+                  aria-label="Toggle wrap text"
+                />
+                <span class="slider"></span>
+              </label>
+              <button pButton pRipple type="button" class="primary-btn" (click)="openNoteModal()">
+                Add Note
+              </button>
+            </div>
           </div>
 
-          <div class="notes-table-wrap">
-            <table class="notes-table">
+          <div class="notes-table-wrap" [class.wrap-enabled]="notesWrapText()">
+            <div *ngIf="noteRows().length === 0" class="notes-empty-state">No notes found.</div>
+            <table class="notes-table" *ngIf="noteRows().length > 0">
               <thead>
                 <tr>
-                  <th>Name ▼</th>
-                  <th>Updated Date ▼</th>
-                  <th>Updated By ▼</th>
-                  <th>Actions ▼</th>
+                  <th (click)="sortNotesByColumn('name')" class="sortable-header">
+                    Name {{ getNoteSortIndicator('name') }}
+                  </th>
+                  <th (click)="sortNotesByColumn('updatedDate')" class="sortable-header">
+                    Updated Date {{ getNoteSortIndicator('updatedDate') }}
+                  </th>
+                  <th (click)="sortNotesByColumn('updatedBy')" class="sortable-header">
+                    Updated By {{ getNoteSortIndicator('updatedBy') }}
+                  </th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -427,21 +449,43 @@
                         pButton
                         pRipple
                         type="button"
-                        class="table-action-btn"
+                        class="icon-action-btn edit-btn"
                         aria-label="Edit note"
                         (click)="openEditNoteModal(note, noteIndex)"
                       >
-                        Edit
+                        <svg
+                          class="action-icon"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z"
+                            fill="currentColor"
+                          />
+                          <path
+                            d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                            fill="currentColor"
+                          />
+                        </svg>
                       </button>
                       <button
                         pButton
                         pRipple
                         type="button"
-                        class="table-action-btn delete-action-btn"
+                        class="icon-action-btn delete-btn"
                         aria-label="Delete note"
                         (click)="openDeleteNoteModal(noteIndex)"
                       >
-                        Delete
+                        <svg
+                          class="action-icon"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-9l-1 1H5v2h14V4z"
+                            fill="currentColor"
+                          />
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -939,16 +983,13 @@
   >
     <label class="note-modal-field">
       <span>Name</span>
-      <div class="note-select-wrap">
-        <select
-          class="note-input note-select"
-          [value]="noteNameInput()"
-          (change)="updateNoteName($event)"
-          autofocus
-        >
-          <option *ngFor="let option of noteNameOptions()" [value]="option">{{ option }}</option>
-        </select>
-      </div>
+      <input
+        type="text"
+        class="note-input"
+        [value]="noteNameInput()"
+        (input)="updateNoteName($event)"
+        autofocus
+      />
     </label>
 
     <label class="note-modal-field note-modal-field-wide">
@@ -962,6 +1003,9 @@
     </label>
 
     <ng-template pTemplate="footer">
+      <button pButton pRipple type="button" class="note-cancel-btn" (click)="closeNoteModal()">
+        Cancel
+      </button>
       <button
         pButton
         pRipple
@@ -970,7 +1014,7 @@
         [disabled]="!canSaveNote()"
         (click)="saveNote()"
       >
-        {{ noteSubmitLabel() }}
+        Save
       </button>
     </ng-template>
   </p-dialog>
@@ -1017,66 +1061,97 @@
     [style]="{ width: 'min(860px, 95vw)' }"
     (onHide)="closeDocumentModal()"
   >
-    <label class="document-modal-field">
-      <span>Name</span>
-      <div class="document-select-wrap">
-        <select
-          class="document-input document-select"
-          [value]="documentNameInput()"
-          (change)="updateDocumentName($event)"
-          autofocus
-        >
-          <option *ngFor="let option of noteNameOptions()" [value]="option">{{ option }}</option>
-        </select>
-      </div>
-    </label>
-
-    <label class="document-modal-field">
-      <span>File Name</span>
-      <input
-        pInputText
-        type="text"
-        class="document-input"
-        [value]="documentFileNameInput()"
-        (input)="updateDocumentFileName($event)"
-        placeholder="Enter a document title"
-      />
-    </label>
-
-    <div class="document-modal-field">
-      <span>Upload</span>
-      <div class="document-upload-card">
+    <!-- Upload Area -->
+    <div class="document-upload-area">
+      <div
+        class="upload-zone"
+        (dragover)="$event.preventDefault()"
+        (drop)="$event.preventDefault()"
+      >
         <input
-          pInputText
-          #documentUploadInput
+          #fileInput
           type="file"
-          class="document-file-input"
+          multiple
+          class="file-input-hidden"
           (change)="updateDocumentUpload($event)"
+          accept=".jpg,.jpeg,.png,.pdf,.docx,.xlsx,.zip"
         />
 
-        <div class="document-upload-icon" aria-hidden="true">
-          <span class="document-upload-arrow"></span>
+        <div class="upload-icon" aria-hidden="true">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <!-- Document -->
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <!-- Upload arrow -->
+            <path d="M12 12v6m0 0l-3-3m3 3l3-3" />
+          </svg>
         </div>
 
-        <p class="document-upload-copy">Drag and drop your file here or</p>
+        <p class="upload-text">Drag and drop your files here or</p>
 
-        <button
-          pButton
-          pRipple
-          type="button"
-          class="document-upload-link"
-          (click)="documentUploadInput.click()"
-        >
+        <button pButton pRipple type="button" class="upload-button" (click)="fileInput.click()">
           Select from device
         </button>
 
-        <div *ngIf="documentUploadName()" class="document-upload-pill">
-          {{ documentUploadName() }}
+        <p class="upload-hint">
+          Maximum file size: 50MB | Allowed types: jpg, jpeg, png, pdf, docx, xlsx, zip
+        </p>
+      </div>
+    </div>
+
+    <!-- File Cards -->
+    <div class="file-cards-container" *ngIf="selectedFiles().length > 0">
+      <div class="file-card" *ngFor="let uploadedFile of selectedFiles()">
+        <!-- File Header with Remove Button -->
+        <div class="file-card-header">
+          <div class="file-info">
+            <div class="file-name">{{ uploadedFile.fileName }}</div>
+            <div class="file-size">{{ uploadedFile.fileSize }}</div>
+          </div>
+          <button
+            type="button"
+            class="file-remove-btn"
+            (click)="removeUploadedFile(uploadedFile.id)"
+            aria-label="Remove file"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Comments Field for This File -->
+        <div class="file-card-comments">
+          <label [for]="'comments-' + uploadedFile.id" class="comments-label">Comments</label>
+          <textarea
+            [id]="'comments-' + uploadedFile.id"
+            [ngModel]="uploadedFile.comment"
+            (ngModelChange)="updateFileComment(uploadedFile.id, $event || '')"
+            rows="3"
+            placeholder="Add notes for this document..."
+            class="comments-textarea"
+          ></textarea>
         </div>
       </div>
     </div>
 
     <ng-template pTemplate="footer">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="document-cancel-btn"
+        (click)="closeDocumentModal()"
+      >
+        Cancel
+      </button>
       <button
         pButton
         pRipple
