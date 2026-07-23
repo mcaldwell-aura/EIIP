@@ -48,6 +48,11 @@ export type DeleteInspectionFormInput = {
   formId: string;
 };
 
+export type UpdateInspectionDetailsInput = {
+  inspectionId: string;
+  changes: Partial<Pick<InspectionRecord, 'inspectionReason' | 'inspectionType'>>;
+};
+
 type AppointmentAuditAction = 'create' | 'edit';
 
 export type AppointmentAuditEntry = {
@@ -147,7 +152,8 @@ export class InspectionStoreService {
         appointmentDateTime: '2026-04-22T14:15',
         inspector: 'Jordan Alvarez',
         status: 'In Progress',
-        comments: 'Initial review in progress. Follow-up findings from prior quarter require full documentation.',
+        comments:
+          'Initial review in progress. Follow-up findings from prior quarter require full documentation.',
       },
       {
         formId: '5219',
@@ -156,7 +162,8 @@ export class InspectionStoreService {
         appointmentDateTime: '2026-04-21T10:00',
         inspector: 'Jordan Alvarez',
         status: 'Completed',
-        comments: 'Overt observation completed. Subject compliant throughout the observation period.',
+        comments:
+          'Overt observation completed. Subject compliant throughout the observation period.',
       },
     ],
   });
@@ -237,6 +244,21 @@ export class InspectionStoreService {
         [input.inspectionId]: currentRows.filter((form) => form.formId !== input.formId),
       };
     });
+  }
+
+  updateInspectionDetails(input: UpdateInspectionDetailsInput): void {
+    this.inspectionsState.update((existingRows) =>
+      existingRows.map((row) => {
+        if (row.inspectionId !== input.inspectionId) {
+          return row;
+        }
+
+        return {
+          ...row,
+          ...input.changes,
+        };
+      }),
+    );
   }
 
   saveAppointmentRows(inspectionId: string, rows: StoredAppointmentRow[]): void {

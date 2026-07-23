@@ -26,6 +26,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { MenuModule } from 'primeng/menu';
 
 type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
@@ -48,6 +49,92 @@ type FormSectionDef = {
   readonly title: string;
   readonly fields: readonly FormFieldDef[];
 };
+
+type CstimsCriteriaOutcome = 'Pass' | 'Fail' | 'N/A';
+
+type CstimsCriteriaFieldDef = {
+  readonly id: string;
+  readonly label: string;
+};
+
+type CstimsCriteriaSectionDef = {
+  readonly id: 'candidate' | 'basic-control-skills' | 'road-test';
+  readonly title: string;
+  readonly fields: readonly CstimsCriteriaFieldDef[];
+};
+
+type CstimsInspectionInformationValue = {
+  candidate: string;
+  inspector: string;
+  inspectionReason: InspectionReasonOption | '';
+  inspectionType: InspectionTypeOption | '';
+};
+
+type CstimsCriterionSelectOption = {
+  label: string;
+  value: CstimsCriteriaOutcome;
+  icon: string;
+};
+
+type CstimsValidationState = {
+  summary: string[];
+  fieldErrors: Partial<
+    Record<
+      'candidate' | 'inspector' | 'inspectionReason' | 'inspectionType' | 'appointmentDateTime',
+      string
+    >
+  >;
+};
+
+const CSTIMS_CRITERIA_SECTIONS: readonly CstimsCriteriaSectionDef[] = [
+  {
+    id: 'candidate',
+    title: 'Candidate',
+    fields: [
+      { id: 'candidate-license-class', label: 'License Class' },
+      { id: 'candidate-driving-record', label: 'Driving Record' },
+      { id: 'candidate-medical', label: 'Medical' },
+      { id: 'candidate-eldt-training', label: 'ELDT Training' },
+      { id: 'candidate-test-administration', label: 'Test Administration' },
+      { id: 'candidate-test-results', label: 'Test Results' },
+      { id: 'candidate-forms-completion', label: 'Forms Completion' },
+      { id: 'candidate-qualifications', label: 'Qualifications' },
+      { id: 'candidate-documentation', label: 'Documentation' },
+      { id: 'candidate-vision-check', label: 'Vision Check' },
+      { id: 'candidate-cdlis', label: 'CDLIS' },
+      { id: 'candidate-pdps', label: 'PDPS' },
+      { id: 'candidate-site', label: 'Site (clearance, noise)' },
+      { id: 'candidate-instructions', label: 'Instructions' },
+      { id: 'candidate-safety', label: 'Safety' },
+      { id: 'candidate-supplies', label: 'Supplies' },
+      { id: 'candidate-positioning-observation', label: 'Positioning / Observation' },
+      { id: 'candidate-items-inspected', label: 'Appropriate Items Inspected' },
+      { id: 'candidate-test-randomization', label: 'Test Randomization' },
+      { id: 'candidate-scoring', label: 'Scoring' },
+    ],
+  },
+  {
+    id: 'basic-control-skills',
+    title: 'Basic Control Skills',
+    fields: [
+      {
+        id: 'basic-control-skills-appropriate-maneuvers',
+        label: 'Appropriate Maneuvers Accomplished',
+      },
+      { id: 'basic-control-skills-positioning-observation', label: 'Positioning / Observation' },
+      { id: 'basic-control-skills-scoring', label: 'Scoring' },
+    ],
+  },
+  {
+    id: 'road-test',
+    title: 'Road Test',
+    fields: [
+      { id: 'road-test-instructions', label: 'Instructions' },
+      { id: 'road-test-appropriate-maneuvers', label: 'Appropriate Maneuvers Accomplished' },
+      { id: 'road-test-scoring', label: 'Scoring' },
+    ],
+  },
+];
 
 const FORM_CONTENT_DEFS: Readonly<Record<string, readonly FormSectionDef[]>> = {
   'Evidence Checklist': [
@@ -388,6 +475,7 @@ type SummaryFormValue = {
     TextareaModule,
     DialogModule,
     SelectModule,
+    SelectButtonModule,
     MenuModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -681,7 +769,9 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly isCreatingInspectionForm = signal(false);
   protected readonly isFormModalOpen = signal(false);
   protected readonly activeFormId = signal<string | null>(null);
+  private readonly pendingNewForm = signal<InspectionFormRecord | null>(null);
   protected readonly pendingDeleteFormId = signal<string | null>(null);
+  protected readonly cstimsShowValidation = signal(false);
   protected readonly formDraft = signal<{
     appointmentDateTime: string;
     inspector: string;
@@ -706,6 +796,13 @@ export class InspectionDetailsComponent implements OnInit {
     'Evidence Checklist',
     'Overt Observation Form',
     'Covert Observation Form',
+    'CSTIMS',
+  ];
+  protected readonly cstimsCriteriaSections = CSTIMS_CRITERIA_SECTIONS;
+  protected readonly cstimsCriteriaSelectOptions: CstimsCriterionSelectOption[] = [
+    { label: 'Pass', value: 'Pass', icon: 'pi pi-check' },
+    { label: 'Fail', value: 'Fail', icon: 'pi pi-times' },
+    { label: 'N/A', value: 'N/A', icon: 'pi pi-minus' },
   ];
   protected readonly noteNameInput = signal('');
   protected readonly noteDescriptionInput = signal('');
@@ -834,6 +931,11 @@ export class InspectionDetailsComponent implements OnInit {
       return null;
     }
 
+    const pending = this.pendingNewForm();
+    if (pending && pending.formId === formId) {
+      return pending;
+    }
+
     return this.inspectionFormCards().find((form) => form.formId === formId) ?? null;
   });
   protected readonly pendingDeleteForm = computed(() => {
@@ -874,6 +976,44 @@ export class InspectionDetailsComponent implements OnInit {
     if (!form) return [];
     return FORM_CONTENT_DEFS[form.formType] ?? [];
   });
+  protected readonly isCstimsActiveForm = computed(() => this.activeForm()?.formType === 'CSTIMS');
+
+  private readonly cstimsInspectionInfoByFormId = signal<
+    Record<string, CstimsInspectionInformationValue>
+  >({});
+  private readonly cstimsCriteriaByFormId = signal<
+    Record<string, Record<string, CstimsCriteriaOutcome>>
+  >({});
+
+  protected readonly cstimsInspectionInformation = computed<CstimsInspectionInformationValue>(
+    () => {
+      const form = this.activeForm();
+
+      if (!form || form.formType !== 'CSTIMS') {
+        return {
+          candidate: '',
+          inspector: '',
+          inspectionReason: '',
+          inspectionType: '',
+        };
+      }
+
+      const saved = this.cstimsInspectionInfoByFormId()[form.formId];
+
+      return saved ?? this.createDefaultCstimsInspectionInformation(form);
+    },
+  );
+
+  protected readonly cstimsValidationState = computed<CstimsValidationState>(() => {
+    if (!this.isCstimsActiveForm()) {
+      return {
+        summary: [],
+        fieldErrors: {},
+      };
+    }
+
+    return this.validateCstimsForm(this.cstimsInspectionInformation(), this.formDraft());
+  });
   protected readonly activeFormFieldValues = computed<Record<string, string>>(() => {
     const formId = this.activeFormId();
     if (!formId) return {};
@@ -882,6 +1022,72 @@ export class InspectionDetailsComponent implements OnInit {
 
   protected getFormFieldValue(fieldId: string): string {
     return this.activeFormFieldValues()[fieldId] ?? '';
+  }
+
+  protected getCstimsCriteriaValue(fieldId: string): CstimsCriteriaOutcome {
+    const formId = this.activeFormId();
+
+    if (!formId) {
+      return 'N/A';
+    }
+
+    return this.cstimsCriteriaByFormId()[formId]?.[fieldId] ?? 'N/A';
+  }
+
+  protected updateCstimsInspectionInformationField(
+    field: keyof CstimsInspectionInformationValue,
+    value: string,
+  ): void {
+    const formId = this.activeFormId();
+
+    if (!formId) {
+      return;
+    }
+
+    this.cstimsInspectionInfoByFormId.update((existing) => ({
+      ...existing,
+      [formId]: {
+        ...this.cstimsInspectionInformation(),
+        [field]: value,
+      },
+    }));
+  }
+
+  protected updateCstimsCriteriaField(fieldId: string, value: CstimsCriteriaOutcome): void {
+    const formId = this.activeFormId();
+
+    if (!formId) {
+      return;
+    }
+
+    this.cstimsCriteriaByFormId.update((existing) => ({
+      ...existing,
+      [formId]: {
+        ...(existing[formId] ?? this.createDefaultCstimsCriteriaValues()),
+        [fieldId]: value,
+      },
+    }));
+  }
+
+  protected passAllCstimsCriteria(): void {
+    const formId = this.activeFormId();
+
+    if (!formId) {
+      return;
+    }
+
+    const passAllValues: Record<string, CstimsCriteriaOutcome> = {};
+
+    for (const section of CSTIMS_CRITERIA_SECTIONS) {
+      for (const field of section.fields) {
+        passAllValues[field.id] = 'Pass';
+      }
+    }
+
+    this.cstimsCriteriaByFormId.update((existing) => ({
+      ...existing,
+      [formId]: passAllValues,
+    }));
   }
   private readonly activeTabFromQueryEffect = effect(() => {
     if (this.queryParamMap().get('tab') === 'forms') {
@@ -917,22 +1123,32 @@ export class InspectionDetailsComponent implements OnInit {
   protected openFormModal(form: InspectionFormRecord): void {
     this.closeDeleteFormModal();
     this.activeFormId.set(form.formId);
+    this.cstimsShowValidation.set(false);
     this.formDraft.set({
       appointmentDateTime: this.toDateTimeInputValue(form.appointmentDateTime),
       inspector: form.inspector,
       status: form.status,
       comments: form.comments,
     });
+
+    if (form.formType === 'CSTIMS') {
+      this.ensureCstimsFormState(form);
+    }
+
     const sections = FORM_CONTENT_DEFS[form.formType];
     this.activeFormSectionId.set(sections?.[0]?.id ?? '');
     this.isFormModalOpen.set(true);
   }
 
   protected closeFormModal(): void {
+    if (this.pendingNewForm() && this.activeFormId() === this.pendingNewForm()!.formId) {
+      this.pendingNewForm.set(null);
+    }
     this.isFormModalOpen.set(false);
     this.activeFormId.set(null);
     this.formDraft.set(null);
     this.activeFormSectionId.set('');
+    this.cstimsShowValidation.set(false);
   }
 
   protected scrollToFormSection(sectionId: string): void {
@@ -977,26 +1193,136 @@ export class InspectionDetailsComponent implements OnInit {
     const inspectionId = this.inspection().inspectionId;
     const form = this.activeForm();
     const draft = this.formDraft();
+    const pendingNew = this.pendingNewForm();
+    const isSavingPendingNew = !!pendingNew && pendingNew.formId === form?.formId;
 
     if (!inspectionId || !form || !draft) {
       return;
     }
 
-    this.inspectionStore.updateInspectionForm({
-      inspectionId,
-      formId: form.formId,
-      changes: {
+    if (form.formType === 'CSTIMS') {
+      this.cstimsShowValidation.set(true);
+      const validation = this.validateCstimsForm(this.cstimsInspectionInformation(), draft);
+
+      if (validation.summary.length > 0) {
+        return;
+      }
+
+      const cstimsInfo = this.cstimsInspectionInformation();
+      const normalizedInspector = cstimsInfo.inspector.trim() || 'Unassigned';
+
+      if (!cstimsInfo.inspectionReason || !cstimsInfo.inspectionType) {
+        return;
+      }
+
+      this.updateSummaryForm({
+        candidate: cstimsInfo.candidate.trim() || this.inspection().subjectName,
+        inspector: normalizedInspector,
+        inspectionReason: cstimsInfo.inspectionReason,
+        inspectionType: cstimsInfo.inspectionType,
+      });
+
+      this.assignedInspectorByInspection.update((existing) => ({
+        ...existing,
+        [inspectionId]: normalizedInspector,
+      }));
+
+      this.inspectionStore.updateInspectionDetails({
+        inspectionId,
+        changes: {
+          inspectionReason: cstimsInfo.inspectionReason,
+          inspectionType: cstimsInfo.inspectionType,
+        },
+      });
+    }
+
+    let persistedFormId = form.formId;
+
+    if (isSavingPendingNew) {
+      const created = this.inspectionStore.createInspectionForm({
+        inspectionId,
+        formType: form.formType,
         appointmentDateTime: draft.appointmentDateTime,
         inspector: draft.inspector.trim() || 'Unassigned',
         status: draft.status,
         comments: draft.comments.trim(),
-      },
-    });
+      });
 
-    this.lastEditedByFormId.update((existing) => ({
-      ...existing,
-      [form.formId]: new Date().toISOString(),
-    }));
+      persistedFormId = created.formId;
+      const pendingFormId = pendingNew.formId;
+
+      this.lastEditedByFormId.update((existing) => {
+        const next = { ...existing, [created.formId]: new Date().toISOString() };
+        delete next[pendingFormId];
+        return next;
+      });
+
+      this.formFieldValuesByFormId.update((existing) => {
+        const pendingValues = existing[pendingFormId];
+
+        if (!pendingValues) {
+          return existing;
+        }
+
+        const next = {
+          ...existing,
+          [created.formId]: { ...pendingValues },
+        };
+        delete next[pendingFormId];
+        return next;
+      });
+
+      this.cstimsInspectionInfoByFormId.update((existing) => {
+        const pendingValues = existing[pendingFormId];
+
+        if (!pendingValues) {
+          return existing;
+        }
+
+        const next = {
+          ...existing,
+          [created.formId]: { ...pendingValues },
+        };
+        delete next[pendingFormId];
+        return next;
+      });
+
+      this.cstimsCriteriaByFormId.update((existing) => {
+        const pendingValues = existing[pendingFormId];
+
+        if (!pendingValues) {
+          return existing;
+        }
+
+        const next = {
+          ...existing,
+          [created.formId]: { ...pendingValues },
+        };
+        delete next[pendingFormId];
+        return next;
+      });
+
+      this.pendingNewForm.set(null);
+      this.activeFormId.set(created.formId);
+    }
+
+    if (!isSavingPendingNew) {
+      this.inspectionStore.updateInspectionForm({
+        inspectionId,
+        formId: persistedFormId,
+        changes: {
+          appointmentDateTime: draft.appointmentDateTime,
+          inspector: draft.inspector.trim() || 'Unassigned',
+          status: draft.status,
+          comments: draft.comments.trim(),
+        },
+      });
+
+      this.lastEditedByFormId.update((existing) => ({
+        ...existing,
+        [persistedFormId]: new Date().toISOString(),
+      }));
+    }
 
     this.closeFormModal();
     this.triggerSaveToast();
@@ -1080,19 +1406,22 @@ Generated on: ${new Date().toLocaleString()}
     const selectedFormType = this.selectedFormTypeInput();
     const inspectionId = this.inspection().inspectionId;
 
-    const newForm = this.inspectionStore.createInspectionForm({
+    const pendingFormId = `new-${Date.now()}`;
+    const inspection = this.inspection();
+    const pendingForm: InspectionFormRecord = {
+      formId: pendingFormId,
       inspectionId,
       formType: selectedFormType,
-    });
+      appointmentDateTime: this.toDateTimeInputValue(new Date().toISOString()),
+      inspector: inspection.assignedInspector?.trim() || 'Unassigned',
+      status: 'Scheduled',
+      comments: '',
+    };
 
-    // Initialize timestamp for newly created form
-    this.lastEditedByFormId.update((existing) => ({
-      ...existing,
-      [newForm.formId]: new Date().toISOString(),
-    }));
+    this.pendingNewForm.set(pendingForm);
 
     this.closeAddFormModal();
-    this.triggerSaveToast();
+    this.openFormModal(pendingForm);
   }
 
   protected formatFormAppointmentDate(dateTime: string): string {
@@ -1947,6 +2276,117 @@ Generated on: ${new Date().toLocaleString()}
     }
 
     return `${year}-${month}-${day}T${`${hour}`.padStart(2, '0')}:${minute}`;
+  }
+
+  private ensureCstimsFormState(form: InspectionFormRecord): void {
+    this.cstimsInspectionInfoByFormId.update((existing) => {
+      if (existing[form.formId]) {
+        return existing;
+      }
+
+      return {
+        ...existing,
+        [form.formId]: this.createDefaultCstimsInspectionInformation(form),
+      };
+    });
+
+    this.cstimsCriteriaByFormId.update((existing) => {
+      if (existing[form.formId]) {
+        return existing;
+      }
+
+      return {
+        ...existing,
+        [form.formId]: this.createDefaultCstimsCriteriaValues(),
+      };
+    });
+  }
+
+  private createDefaultCstimsInspectionInformation(
+    form: InspectionFormRecord,
+  ): CstimsInspectionInformationValue {
+    const inspection = this.inspection();
+    const inspector = form.inspector === 'Unassigned' ? '' : form.inspector;
+    const inspectionReason = this.inspectionReasonOptions.includes(
+      inspection.inspectionReason as InspectionReasonOption,
+    )
+      ? (inspection.inspectionReason as InspectionReasonOption)
+      : '';
+    const inspectionType = this.inspectionTypeOptions.includes(
+      inspection.inspectionType as InspectionTypeOption,
+    )
+      ? (inspection.inspectionType as InspectionTypeOption)
+      : '';
+
+    return {
+      candidate: inspection.subjectName,
+      inspector,
+      inspectionReason,
+      inspectionType,
+    };
+  }
+
+  private createDefaultCstimsCriteriaValues(): Record<string, CstimsCriteriaOutcome> {
+    return Object.fromEntries(
+      CSTIMS_CRITERIA_SECTIONS.flatMap((section) =>
+        section.fields.map((field) => [field.id, 'N/A' satisfies CstimsCriteriaOutcome]),
+      ),
+    );
+  }
+
+  private validateCstimsForm(
+    info: CstimsInspectionInformationValue,
+    draft: {
+      appointmentDateTime: string;
+      inspector: string;
+      status: InspectionFormStatus;
+      comments: string;
+    } | null,
+  ): CstimsValidationState {
+    const summary: string[] = [];
+    const fieldErrors: CstimsValidationState['fieldErrors'] = {};
+
+    if (!info.candidate.trim()) {
+      fieldErrors.candidate = 'Candidate is required.';
+      summary.push('Candidate is required.');
+    }
+
+    if (!info.inspector.trim()) {
+      fieldErrors.inspector = 'Inspector is required.';
+      summary.push('Inspector is required.');
+    }
+
+    if (!info.inspectionReason) {
+      fieldErrors.inspectionReason = 'Inspection Reason is required.';
+      summary.push('Inspection Reason is required.');
+    }
+
+    if (!info.inspectionType) {
+      fieldErrors.inspectionType = 'Inspection Type is required.';
+      summary.push('Inspection Type is required.');
+    }
+
+    const appointmentDateTime = draft?.appointmentDateTime.trim() ?? '';
+
+    if (!appointmentDateTime) {
+      fieldErrors.appointmentDateTime = 'Appointment date is required.';
+      summary.push('Appointment date is required.');
+    } else {
+      const parsedDateTime = Date.parse(appointmentDateTime);
+
+      if (Number.isNaN(parsedDateTime)) {
+        fieldErrors.appointmentDateTime = 'Appointment date must be valid.';
+        summary.push('Appointment date must be valid.');
+      } else if (parsedDateTime > Date.now()) {
+        fieldErrors.appointmentDateTime = 'Appointment date cannot be in the future.';
+        summary.push('Appointment date cannot be in the future.');
+      }
+    }
+
+    return {
+      summary,
+      fieldErrors,
+    };
   }
 
   private triggerSaveToast(): void {

@@ -2679,6 +2679,12 @@ a:focus-visible {
   max-height: min(82dvh, 680px);
 }
 
+:host ::ng-deep .form-detail-dialog .p-dialog-header .p-dialog-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 :host ::ng-deep .form-detail-dialog .p-dialog-content {
   display: flex;
   flex-direction: column;
@@ -2758,9 +2764,134 @@ a:focus-visible {
   }
 }
 
+.cstims-error-summary {
+  background: #fff8f7;
+  border: 1px solid #f0c6c3;
+  border-radius: 10px;
+  margin: 1rem 1.5rem 0;
+  padding: 0.85rem 1rem;
+}
+
+.cstims-error-summary h3 {
+  color: #8a1f18;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cstims-error-summary ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1rem;
+}
+
+.cstims-error-summary li {
+  color: #8a1f18;
+  font-size: 0.82rem;
+  margin-top: 0.28rem;
+}
+
+.cstims-divider {
+  background: #d7e0ef;
+  height: 1px;
+  width: 100%;
+}
+
+.cstims-divider {
+  margin: 0.9rem 0 1.35rem;
+}
+
+.cstims-criteria-header-row {
+  align-items: center;
+  display: flex;
+  gap: 0.9rem;
+  justify-content: space-between;
+}
+
+.cstims-criteria-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.cstims-criteria-actions .secondary-btn,
+.cstims-criteria-actions .primary-btn {
+  min-height: 2.35rem;
+  padding-inline: 0.9rem;
+}
+
+.cstims-criteria-actions .secondary-btn {
+  background: #ffffff;
+  border-color: #d5def2;
+  color: var(--accent);
+}
+
+.cstims-section .form-section-heading {
+  margin-bottom: 1.1rem;
+}
+
+.cstims-section {
+  padding: 1.5rem;
+}
+
+.cstims-section#form-section-cstims-inspection-information {
+  padding-top: 1rem;
+}
+
+.cstims-subsection {
+  margin-top: 1.5rem;
+}
+
+.cstims-subsection:first-of-type {
+  margin-top: 0.7rem;
+}
+
+.cstims-subsection-title {
+  color: #233453;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0 0 1rem;
+}
+
+.cstims-criteria-list {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .cstims-criteria-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cstims-criteria-row {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cstims-criteria-label {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.form-content-field.form-content-field-error input,
+.form-content-field.form-content-field-error select,
+.form-content-field.form-content-field-error textarea {
+  border-color: #c43e36;
+}
+
+.form-field-error {
+  color: #b42318;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .form-section-heading {
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.14rem;
   font-weight: 800;
   letter-spacing: 0.01em;
   margin: 0 0 1rem;
@@ -2823,6 +2954,151 @@ a:focus-visible {
   }
 }
 
+.cstims-option-label {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.3rem;
+  line-height: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cstims-option-pass {
+  color: #1f7a40 !important;
+}
+
+.cstims-option-fail {
+  color: #b42318 !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton {
+  align-items: center;
+  background: #eef3fb;
+  border: 0.5px solid #d5deef;
+  border-radius: 10px;
+  display: inline-flex;
+  max-width: 100%;
+  padding: 3px;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button {
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--text-soft);
+  flex: 0 0 auto;
+  justify-content: center;
+  min-height: 2rem;
+  min-width: 5.25rem;
+  padding: 0.32rem 0.72rem;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:not(.p-highlight):hover {
+  background: transparent;
+  color: var(--text-soft);
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-togglebutton-checked,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button[aria-pressed='true'] {
+  background: var(--accent) !important;
+  border-color: transparent !important;
+  box-shadow: 0 3px 8px rgba(31, 86, 216, 0.24) !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1).p-highlight,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1).p-togglebutton-checked,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1)[aria-pressed='true'] {
+  background: #1f7a40 !important;
+  box-shadow: 0 3px 8px rgba(31, 122, 64, 0.26) !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2).p-highlight,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2).p-togglebutton-checked,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2)[aria-pressed='true'] {
+  background: #b42318 !important;
+  box-shadow: 0 3px 8px rgba(180, 35, 24, 0.28) !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight:has(.cstims-option-pass),
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button.p-togglebutton-checked:has(.cstims-option-pass),
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button[aria-pressed='true']:has(.cstims-option-pass) {
+  background: #1f7a40 !important;
+  box-shadow: 0 3px 8px rgba(31, 122, 64, 0.26) !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight:has(.cstims-option-fail),
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button.p-togglebutton-checked:has(.cstims-option-fail),
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button[aria-pressed='true']:has(.cstims-option-fail) {
+  background: #b42318 !important;
+  box-shadow: 0 3px 8px rgba(180, 35, 24, 0.28) !important;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight .cstims-option-pass,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight .cstims-option-fail,
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button.p-togglebutton-checked
+  .cstims-option-pass,
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button.p-togglebutton-checked
+  .cstims-option-fail,
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button[aria-pressed='true']
+  .cstims-option-pass,
+:host
+  ::ng-deep
+  .cstims-criteria-row
+  .p-selectbutton
+  .p-button[aria-pressed='true']
+  .cstims-option-fail {
+  color: #ffffff;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button .pi {
+  display: none;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight .pi,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-togglebutton-checked .pi,
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button[aria-pressed='true'] .pi {
+  display: inline-block;
+}
+
+:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button .pi {
+  font-size: 0.72rem;
+}
+
 .form-content-field-full {
   grid-column: 1 / -1;
 }
@@ -2845,6 +3121,30 @@ a:focus-visible {
 
   .form-content-section {
     padding: 1.4rem 1rem 1.2rem;
+  }
+
+  .cstims-error-summary {
+    margin: 0.75rem 1rem 0;
+  }
+
+  .cstims-criteria-header-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cstims-criteria-actions {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .cstims-criteria-row {
+    gap: 0.4rem;
+  }
+
+  :host ::ng-deep .cstims-criteria-row .p-selectbutton {
+    max-width: 100%;
   }
 
   .form-section-field-grid {

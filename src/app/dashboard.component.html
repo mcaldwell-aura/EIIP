@@ -75,8 +75,17 @@
               />
             </svg>
           </div>
-          <h3>Active Examiners</h3>
-          <p class="counter-value">{{ totalExaminers() }}</p>
+          <h3>Total Active Candidates</h3>
+          <p class="counter-value">{{ candidateMaturitySummaryRows()[0].value }}</p>
+          <div class="candidate-maturity-grid" aria-label="Candidate maturity summary">
+            <div
+              *ngFor="let row of candidateMaturitySummaryRows().slice(1)"
+              class="candidate-maturity-row"
+            >
+              <span class="candidate-maturity-label">{{ row.label }}</span>
+              <strong class="candidate-maturity-pill">{{ row.value }}</strong>
+            </div>
+          </div>
         </article>
 
         <article class="panel counter-panel due-counter-panel">
@@ -93,15 +102,28 @@
       <div class="panel-stack">
         <article class="panel chart-panel">
           <div class="panel-header">
-            <h3>Inspection Results</h3>
+            <h3>Inspection Results in Last 30 Days</h3>
           </div>
-          <div class="bar-chart" aria-label="Inspection result chart">
-            <div *ngFor="let item of inspectionResults()" class="bar-group">
+          <div class="maturity-legend" aria-label="Candidate maturity legend">
+            <span class="legend-item"><i class="legend-swatch new"></i>New</span>
+            <span class="legend-item"><i class="legend-swatch established"></i>Established</span>
+          </div>
+          <div class="bar-chart" aria-label="Inspection result chart by candidate maturity">
+            <div *ngFor="let item of inspectionResultsByMaturityWithTotals()" class="bar-group">
               <div class="bar-rail">
                 <div
-                  class="bar"
-                  [style.height.%]="(item.value / inspectionResultsMax()) * 100"
-                ></div>
+                  class="stacked-bar"
+                  [style.height.%]="(item.total / inspectionResultsByMaturityMax()) * 100"
+                >
+                  <div
+                    class="bar-segment established"
+                    [style.height.%]="(item.establishedCount / item.total) * 100"
+                  ></div>
+                  <div
+                    class="bar-segment new"
+                    [style.height.%]="(item.newCount / item.total) * 100"
+                  ></div>
+                </div>
               </div>
               <span>{{ item.label }}</span>
             </div>

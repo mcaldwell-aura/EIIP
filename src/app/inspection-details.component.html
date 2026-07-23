@@ -67,7 +67,6 @@
     <section class="tabs" aria-label="Inspection details tabs">
       <button
         pButton
-        pRipple
         type="button"
         class="tab-btn"
         [class.active]="activeTab() === 'summary'"
@@ -597,56 +596,261 @@
     <ng-container *ngIf="activeForm() && formDraft() as currentDraft">
       <!-- Scrollable form body -->
       <div class="form-sections-body">
-        <!-- Form content sections -->
-        <ng-container *ngFor="let section of activeFormSections()">
-          <section class="form-content-section" [id]="'form-section-' + section.id">
-            <h3 class="form-section-heading">{{ section.title }}</h3>
+        <ng-container *ngIf="isCstimsActiveForm(); else standardFormSections">
+          <div
+            *ngIf="cstimsShowValidation() && cstimsValidationState().summary.length > 0"
+            class="cstims-error-summary"
+            role="status"
+            aria-live="polite"
+          >
+            <h3>Fix the following before saving:</h3>
+            <ul>
+              <li *ngFor="let error of cstimsValidationState().summary">{{ error }}</li>
+            </ul>
+          </div>
+
+          <section
+            class="form-content-section cstims-section"
+            id="form-section-cstims-inspection-information"
+          >
+            <h3 class="form-section-heading">Inspection Information</h3>
             <div class="form-section-field-grid">
-              <ng-container *ngFor="let field of section.fields">
-                <label
-                  class="form-content-field"
-                  [class.form-content-field-full]="field.colSpan === 'full'"
+              <label
+                class="form-content-field"
+                [class.form-content-field-full]="true"
+                [class.form-content-field-error]="
+                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.candidate
+                "
+              >
+                <span>Candidate</span>
+                <input
+                  type="text"
+                  [value]="cstimsInspectionInformation().candidate"
+                  (input)="
+                    updateCstimsInspectionInformationField('candidate', $any($event.target).value)
+                  "
+                />
+                <p
+                  *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.candidate"
+                  class="form-field-error"
                 >
-                  <span>{{ field.label }}</span>
-                  <select
-                    *ngIf="field.type === 'select'"
-                    [value]="getFormFieldValue(field.id)"
-                    (change)="updateFormFieldValue(field.id, $any($event.target).value)"
+                  {{ cstimsValidationState().fieldErrors.candidate }}
+                </p>
+              </label>
+
+              <label
+                class="form-content-field"
+                [class.form-content-field-error]="
+                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspector
+                "
+              >
+                <span>Inspector</span>
+                <input
+                  type="text"
+                  [value]="cstimsInspectionInformation().inspector"
+                  (input)="
+                    updateCstimsInspectionInformationField('inspector', $any($event.target).value)
+                  "
+                />
+                <p
+                  *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.inspector"
+                  class="form-field-error"
+                >
+                  {{ cstimsValidationState().fieldErrors.inspector }}
+                </p>
+              </label>
+
+              <label
+                class="form-content-field"
+                [class.form-content-field-error]="
+                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspectionReason
+                "
+              >
+                <span>Inspection Reason</span>
+                <select
+                  [value]="cstimsInspectionInformation().inspectionReason"
+                  (change)="
+                    updateCstimsInspectionInformationField(
+                      'inspectionReason',
+                      $any($event.target).value
+                    )
+                  "
+                >
+                  <option value="" disabled>Select reason</option>
+                  <option *ngFor="let reason of inspectionReasonOptions" [value]="reason">
+                    {{ reason }}
+                  </option>
+                </select>
+                <p
+                  *ngIf="
+                    cstimsShowValidation() && cstimsValidationState().fieldErrors.inspectionReason
+                  "
+                  class="form-field-error"
+                >
+                  {{ cstimsValidationState().fieldErrors.inspectionReason }}
+                </p>
+              </label>
+
+              <label
+                class="form-content-field"
+                [class.form-content-field-error]="
+                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspectionType
+                "
+              >
+                <span>Inspection Type</span>
+                <select
+                  [value]="cstimsInspectionInformation().inspectionType"
+                  (change)="
+                    updateCstimsInspectionInformationField(
+                      'inspectionType',
+                      $any($event.target).value
+                    )
+                  "
+                >
+                  <option value="" disabled>Select type</option>
+                  <option
+                    *ngFor="let inspectionType of inspectionTypeOptions"
+                    [value]="inspectionType"
                   >
-                    <option value="" disabled>Select…</option>
-                    <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
-                  </select>
-                  <textarea
-                    *ngIf="field.type === 'textarea'"
-                    rows="3"
-                    [placeholder]="field.placeholder ?? ''"
-                    [value]="getFormFieldValue(field.id)"
-                    (input)="updateFormFieldValue(field.id, $any($event.target).value)"
-                  ></textarea>
-                  <input
-                    *ngIf="field.type !== 'select' && field.type !== 'textarea'"
-                    [type]="field.type"
-                    [placeholder]="field.placeholder ?? ''"
-                    [value]="getFormFieldValue(field.id)"
-                    (input)="updateFormFieldValue(field.id, $any($event.target).value)"
-                  />
-                </label>
-              </ng-container>
+                    {{ inspectionType }}
+                  </option>
+                </select>
+                <p
+                  *ngIf="
+                    cstimsShowValidation() && cstimsValidationState().fieldErrors.inspectionType
+                  "
+                  class="form-field-error"
+                >
+                  {{ cstimsValidationState().fieldErrors.inspectionType }}
+                </p>
+              </label>
             </div>
           </section>
+
+          <section
+            class="form-content-section cstims-section"
+            id="form-section-cstims-inspection-criteria"
+          >
+            <div class="cstims-criteria-header-row">
+              <h3 class="form-section-heading">Inspection Criteria</h3>
+              <div class="cstims-criteria-actions">
+                <button
+                  pButton
+                  pRipple
+                  type="button"
+                  class="secondary-btn"
+                  (click)="passAllCstimsCriteria()"
+                >
+                  Pass All
+                </button>
+              </div>
+            </div>
+
+            <section
+              *ngFor="let criteriaSection of cstimsCriteriaSections"
+              class="cstims-subsection"
+            >
+              <h4 class="cstims-subsection-title">{{ criteriaSection.title }}</h4>
+
+              <div class="cstims-criteria-list">
+                <div
+                  *ngFor="let criteriaField of criteriaSection.fields"
+                  class="cstims-criteria-row"
+                >
+                  <span class="cstims-criteria-label">{{ criteriaField.label }}</span>
+                  <p-selectbutton
+                    [options]="$any(cstimsCriteriaSelectOptions)"
+                    [ngModel]="getCstimsCriteriaValue(criteriaField.id)"
+                    optionLabel="label"
+                    optionValue="value"
+                    (ngModelChange)="updateCstimsCriteriaField(criteriaField.id, $event)"
+                  >
+                    <ng-template pTemplate="item" let-option>
+                      <span
+                        class="cstims-option-label"
+                        [class.cstims-option-pass]="option.value === 'Pass'"
+                        [class.cstims-option-fail]="option.value === 'Fail'"
+                      >
+                        <i class="pi" [class]="option.icon" aria-hidden="true"></i>
+                        {{ option.label }}
+                      </span>
+                    </ng-template>
+                  </p-selectbutton>
+                </div>
+              </div>
+            </section>
+          </section>
         </ng-container>
+
+        <ng-template #standardFormSections>
+          <!-- Form content sections -->
+          <ng-container *ngFor="let section of activeFormSections()">
+            <section class="form-content-section" [id]="'form-section-' + section.id">
+              <h3 class="form-section-heading">{{ section.title }}</h3>
+              <div class="form-section-field-grid">
+                <ng-container *ngFor="let field of section.fields">
+                  <label
+                    class="form-content-field"
+                    [class.form-content-field-full]="field.colSpan === 'full'"
+                  >
+                    <span>{{ field.label }}</span>
+                    <select
+                      *ngIf="field.type === 'select'"
+                      [value]="getFormFieldValue(field.id)"
+                      (change)="updateFormFieldValue(field.id, $any($event.target).value)"
+                    >
+                      <option value="" disabled>Select…</option>
+                      <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
+                    </select>
+                    <textarea
+                      *ngIf="field.type === 'textarea'"
+                      rows="3"
+                      [placeholder]="field.placeholder ?? ''"
+                      [value]="getFormFieldValue(field.id)"
+                      (input)="updateFormFieldValue(field.id, $any($event.target).value)"
+                    ></textarea>
+                    <input
+                      *ngIf="field.type !== 'select' && field.type !== 'textarea'"
+                      [type]="field.type"
+                      [placeholder]="field.placeholder ?? ''"
+                      [value]="getFormFieldValue(field.id)"
+                      (input)="updateFormFieldValue(field.id, $any($event.target).value)"
+                    />
+                  </label>
+                </ng-container>
+              </div>
+            </section>
+          </ng-container>
+        </ng-template>
 
         <!-- Metadata section -->
         <section class="form-content-section form-meta-section" id="form-section-details">
           <h3 class="form-section-heading">Appointment details</h3>
           <div class="form-section-field-grid">
-            <label class="form-content-field form-content-field-full">
+            <label
+              class="form-content-field form-content-field-full"
+              [class.form-content-field-error]="
+                isCstimsActiveForm() &&
+                cstimsShowValidation() &&
+                !!cstimsValidationState().fieldErrors.appointmentDateTime
+              "
+            >
               <span>Appointment date</span>
               <input
                 type="datetime-local"
                 [value]="currentDraft.appointmentDateTime"
                 (input)="updateFormDraftField('appointmentDateTime', $any($event.target).value)"
               />
+              <p
+                *ngIf="
+                  isCstimsActiveForm() &&
+                  cstimsShowValidation() &&
+                  cstimsValidationState().fieldErrors.appointmentDateTime
+                "
+                class="form-field-error"
+              >
+                {{ cstimsValidationState().fieldErrors.appointmentDateTime }}
+              </p>
             </label>
             <label class="form-content-field">
               <span>Inspector</span>

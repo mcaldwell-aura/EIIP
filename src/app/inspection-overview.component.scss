@@ -323,12 +323,12 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid #d8e0f1;
   padding: 0.72rem 0.45rem;
   text-align: left;
 }
 
 th {
+  border-bottom: 0;
   color: var(--text-soft);
   font-size: 0.88rem;
   font-weight: 700;
@@ -348,8 +348,18 @@ th {
 }
 
 td {
+  border-bottom: 1px solid #d8e0f1;
   color: #2a3652;
   font-size: 0.86rem;
+}
+
+:host ::ng-deep .table-card .p-datatable .p-datatable-thead > tr > th {
+  border-bottom: 0 !important;
+  box-shadow: none;
+}
+
+:host ::ng-deep .table-card .p-datatable .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #d8e0f1 !important;
 }
 
 .empty-results-cell {

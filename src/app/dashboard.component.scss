@@ -367,6 +367,39 @@ h2 {
   margin: 0;
 }
 
+.candidate-maturity-grid {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+}
+
+.candidate-maturity-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  min-height: 1.9rem;
+}
+
+.candidate-maturity-label {
+  color: #4f5f7e;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.candidate-maturity-pill {
+  align-items: center;
+  background: #e9eef7;
+  border-radius: 8px;
+  color: #29364f;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  height: 1.75rem;
+  justify-content: center;
+  min-width: 2.2rem;
+  padding: 0 0.5rem;
+}
+
 .due-counter-panel {
   gap: 0.5rem;
   justify-content: flex-start;
@@ -434,6 +467,37 @@ h2 {
   margin: 0;
 }
 
+.maturity-legend {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+.legend-item {
+  align-items: center;
+  color: #54627e;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 700;
+  gap: 0.35rem;
+}
+
+.legend-swatch {
+  border-radius: 2px;
+  display: inline-block;
+  height: 0.7rem;
+  width: 0.7rem;
+}
+
+.legend-swatch.new {
+  background: #3f83f8;
+}
+
+.legend-swatch.established {
+  background: #1d4ed8;
+}
+
 .bar-chart {
   align-items: end;
   border-top: 1px solid #dde4f2;
@@ -475,6 +539,29 @@ h2 {
   max-height: 100%;
   min-height: 10%;
   width: 58%;
+}
+
+.stacked-bar {
+  border-radius: 3px 3px 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  max-height: 100%;
+  min-height: 10%;
+  overflow: hidden;
+  width: 58%;
+}
+
+.bar-segment {
+  width: 100%;
+}
+
+.bar-segment.established {
+  background: linear-gradient(180deg, #1d4ed8, #1e40af);
+}
+
+.bar-segment.new {
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
 }
 
 .bar-group span {
@@ -669,12 +756,13 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid #dbe2f0;
   padding: 0.62rem 0.45rem;
   text-align: left;
 }
 
 th {
+  border-bottom: 0;
+  box-shadow: none;
   color: var(--text-soft);
   font-family: var(--app-font-family);
   font-size: 0.88rem;
@@ -687,6 +775,7 @@ th {
   align-items: center;
   background: transparent;
   border: 0;
+  box-shadow: none;
   color: inherit;
   cursor: pointer;
   display: inline-flex;
@@ -694,6 +783,14 @@ th {
   font-weight: inherit;
   gap: 0.25rem;
   padding: 0;
+  text-decoration: none;
+}
+
+thead,
+thead tr,
+thead th {
+  border-bottom: 0 !important;
+  box-shadow: none;
 }
 
 .sort-btn:hover {
@@ -701,6 +798,7 @@ th {
 }
 
 td {
+  border-bottom: 1px solid #dbe2f0;
   color: #2d3650;
   font-size: 0.86rem;
 }

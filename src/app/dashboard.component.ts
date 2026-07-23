@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { CandidateStoreService } from './candidate-store.service';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
 import { NavMenuService } from './nav-menu.service';
 
@@ -19,6 +20,19 @@ type SummaryCard = {
 type ChartDatum = {
   label: string;
   value: number;
+};
+
+type CandidateMaturity = 'New' | 'Established';
+
+type CandidateMaturitySummaryRow = {
+  label: string;
+  value: number;
+};
+
+type InspectionResultByMaturityDatum = {
+  label: string;
+  newCount: number;
+  establishedCount: number;
 };
 
 type DueWindowCounter = {
@@ -89,6 +103,7 @@ type SelectOption<T extends string> = {
 export class DashboardComponent {
   protected readonly menuService = inject(NavMenuService);
   protected readonly currentInspector = signal('Monique Hale');
+  private readonly candidateStore = inject(CandidateStoreService);
 
   private static readonly lastThirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
@@ -96,10 +111,29 @@ export class DashboardComponent {
 
   private readonly excludedStatuses = new Set<ActivityStatus>(['Planned', 'Scheduled', 'Canceled']);
 
-  private readonly examinerCounts = signal({
-    thirdPartyActive: 54,
-    stateActive: 21,
+  protected readonly candidateMaturitySummaryRows = computed<CandidateMaturitySummaryRow[]>(() => {
+    const activeCandidates = this.candidateStore
+      .candidates()
+      .filter((candidate) => this.isActiveCandidate(candidate.endDate));
+    const newCandidates = activeCandidates.filter(
+      (candidate) => this.getCandidateMaturity(candidate.startDate) === 'New',
+    ).length;
+    const establishedCandidates = activeCandidates.length - newCandidates;
+
+    return [
+      { label: 'Total Active Candidates', value: activeCandidates.length },
+      { label: 'New Candidates', value: newCandidates },
+      { label: 'Established Candidates', value: establishedCandidates },
+    ];
   });
+
+  protected readonly inspectionResultsByMaturity = signal<InspectionResultByMaturityDatum[]>([
+    { label: 'Excellent', newCount: 8, establishedCount: 15 },
+    { label: 'Good', newCount: 9, establishedCount: 17 },
+    { label: 'Satisfactory', newCount: 4, establishedCount: 8 },
+    { label: 'Marginal', newCount: 9, establishedCount: 15 },
+    { label: 'Unsatisfactory', newCount: 7, establishedCount: 11 },
+  ]);
 
   protected readonly summaryCards = computed<SummaryCard[]>(() => {
     const today = this.startOfDay(new Date());
@@ -163,13 +197,16 @@ export class DashboardComponent {
     ];
   });
 
-  protected readonly inspectionResults = signal<ChartDatum[]>([
-    { label: 'Excellent', value: 23 },
-    { label: 'Good', value: 26 },
-    { label: 'Satisfactory', value: 12 },
-    { label: 'Marginal', value: 24 },
-    { label: 'Unsatisfactory', value: 18 },
-  ]);
+  protected readonly inspectionResultsByMaturityWithTotals = computed(() =>
+    this.inspectionResultsByMaturity().map((item) => ({
+      ...item,
+      total: item.newCount + item.establishedCount,
+    })),
+  );
+
+  protected readonly inspectionResultsByMaturityMax = computed(() =>
+    Math.max(...this.inspectionResultsByMaturityWithTotals().map((item) => item.total)),
+  );
 
   protected readonly reasonsForInspection = signal<ChartDatum[]>([
     { label: 'Change', value: 10 },
@@ -353,11 +390,6 @@ export class DashboardComponent {
     return this.activitySort().direction;
   });
 
-  protected readonly totalExaminers = computed(() => {
-    const counts = this.examinerCounts();
-    return counts.thirdPartyActive + counts.stateActive;
-  });
-
   protected readonly inspectionsDueCounters = computed<DueWindowCounter[]>(() => {
     let dueIn30 = 0;
     let dueIn60 = 0;
@@ -384,10 +416,6 @@ export class DashboardComponent {
       { label: '90 Days', count: dueIn90 },
     ];
   });
-
-  protected readonly inspectionResultsMax = computed(() =>
-    Math.max(...this.inspectionResults().map((item) => item.value)),
-  );
 
   protected readonly reasonsForInspectionMax = computed(() =>
     Math.max(...this.reasonsForInspection().map((item) => item.value)),
@@ -523,6 +551,24 @@ export class DashboardComponent {
     return Math.floor(
       (startOfDue.getTime() - startOfToday.getTime()) / DashboardComponent.millisecondsPerDay,
     );
+  }
+
+  private isActiveCandidate(endDate: string | null): boolean {
+    if (!endDate) {
+      return true;
+    }
+
+    return this.startOfDay(new Date(endDate)).getTime() >= this.startOfDay(new Date()).getTime();
+  }
+
+  private getCandidateMaturity(startDate: string): CandidateMaturity {
+    const startedAt = this.startOfDay(new Date(startDate));
+    const daysSinceStart = this.dayDifference(startedAt, this.startOfDay(new Date()));
+    return daysSinceStart <= 730 ? 'New' : 'Established';
+  }
+
+  private dayDifference(start: Date, end: Date): number {
+    return Math.floor((end.getTime() - start.getTime()) / DashboardComponent.millisecondsPerDay);
   }
 
   private isPendingStatus(status: InspectionStatus): boolean {

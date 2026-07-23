@@ -371,18 +371,19 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid #dce4f4;
   padding: 0.8rem 0.65rem;
   text-align: left;
 }
 
 th {
+  border-bottom: 0;
   color: var(--text-soft);
   font-size: 0.84rem;
   font-weight: 700;
 }
 
 td {
+  border-bottom: 1px solid #dce4f4;
   color: #2a3652;
   font-size: 0.86rem;
 }
