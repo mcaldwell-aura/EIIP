@@ -16,6 +16,9 @@
   --app-btn-hover-bg: #0a2e8a;
   --app-btn-hover-border: #08266f;
   --app-btn-hover-text: #ffffff;
+  --app-readonly-bg: #eef3fb;
+  --app-readonly-border: #9aaed4;
+  --app-readonly-text: #32405f;
   /* Dropdown option hover — light blue consistent with brand palette. */
   --p-select-option-focus-background: #dae9ff;
   --p-select-option-focus-color: #18223a;
@@ -85,6 +88,26 @@ textarea:focus {
   border-color: var(--p-primary-color);
   box-shadow: 0 0 0 3px rgba(31, 86, 216, 0.12);
   outline: none;
+}
+
+/* Read-only fields should be visually distinct from editable fields. */
+input[readonly]:not(:disabled),
+textarea[readonly]:not(:disabled),
+.p-inputtext[readonly]:not(:disabled),
+[aria-readonly='true'] {
+  background: var(--app-readonly-bg) !important;
+  border-color: var(--app-readonly-border) !important;
+  border-style: dashed;
+  color: var(--app-readonly-text);
+  cursor: default;
+}
+
+input[readonly]:not(:disabled):focus,
+textarea[readonly]:not(:disabled):focus,
+.p-inputtext[readonly]:not(:disabled):focus,
+[aria-readonly='true']:focus {
+  border-color: var(--app-readonly-border) !important;
+  box-shadow: 0 0 0 3px rgba(154, 174, 212, 0.22);
 }
 
 .top-nav .nav-left {

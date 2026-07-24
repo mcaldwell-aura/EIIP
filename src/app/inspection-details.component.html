@@ -626,9 +626,7 @@
                 <input
                   type="text"
                   [value]="cstimsInspectionInformation().candidate"
-                  (input)="
-                    updateCstimsInspectionInformationField('candidate', $any($event.target).value)
-                  "
+                  readonly
                 />
                 <p
                   *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.candidate"
