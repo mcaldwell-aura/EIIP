@@ -29,9 +29,14 @@
       <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
         <i class="pi pi-th"></i>
       </button>
-      <button pButton pRipple type="button" class="profile-btn" aria-label="Profile">
-        <i class="pi pi-user"></i>
-      </button>
+      <details class="profile-menu">
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </summary>
+        <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
+          <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
+        </div>
+      </details>
     </div>
   </header>
 

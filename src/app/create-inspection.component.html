@@ -12,7 +12,14 @@
     <div class="nav-right">
       <button type="button" class="icon-btn" aria-label="Search">⌕</button>
       <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
-      <button type="button" class="profile-btn" aria-label="Profile">◯</button>
+      <details class="profile-menu">
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
+          ◯
+        </summary>
+        <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
+          <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
+        </div>
+      </details>
     </div>
   </header>
 

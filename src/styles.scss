@@ -16,9 +16,12 @@
   --app-btn-hover-bg: #0a2e8a;
   --app-btn-hover-border: #08266f;
   --app-btn-hover-text: #ffffff;
-  --app-readonly-bg: #eef3fb;
-  --app-readonly-border: #9aaed4;
-  --app-readonly-text: #32405f;
+  --app-readonly-bg: #f1f3f6;
+  --app-readonly-border: #b8c0cb;
+  --app-readonly-text: #4a5568;
+  --app-disabled-bg: #eef1f5;
+  --app-disabled-border: #bcc4cf;
+  --app-disabled-text: #5b6679;
   /* Dropdown option hover — light blue consistent with brand palette. */
   --p-select-option-focus-background: #dae9ff;
   --p-select-option-focus-color: #18223a;
@@ -107,7 +110,61 @@ textarea[readonly]:not(:disabled):focus,
 .p-inputtext[readonly]:not(:disabled):focus,
 [aria-readonly='true']:focus {
   border-color: var(--app-readonly-border) !important;
-  box-shadow: 0 0 0 3px rgba(154, 174, 212, 0.22);
+  box-shadow: 0 0 0 3px rgba(184, 192, 203, 0.22);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled,
+.p-inputtext:disabled,
+[aria-disabled='true'] {
+  background: var(--app-disabled-bg) !important;
+  border-color: var(--app-disabled-border) !important;
+  color: var(--app-disabled-text) !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+/* Header avatar dropdown used across screens. */
+.profile-menu {
+  display: inline-flex;
+  position: relative;
+}
+
+.profile-menu summary {
+  list-style: none;
+}
+
+.profile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-menu-panel {
+  background: #ffffff;
+  border: 1px solid #d6def4;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(14, 28, 68, 0.14);
+  min-width: 180px;
+  padding: 0.4rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 35;
+}
+
+.profile-menu-item {
+  border-radius: 8px;
+  color: #1d2b47;
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0.58rem 0.7rem;
+  text-decoration: none;
+}
+
+.profile-menu-item:hover {
+  background: #eef3ff;
+  color: #1f56d8;
 }
 
 .top-nav .nav-left {
@@ -279,6 +336,20 @@ a.icon-action-btn:active {
   color: var(--accent) !important;
   outline: none !important;
   transform: none !important;
+}
+
+/* Keep tab labels text-only on desktop; mobile retains icon cues. */
+@media (min-width: 761px) {
+  .tabs .tab-btn::before,
+  .tabs .p-button.tab-btn::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .tabs .tab-btn,
+  .tabs .p-button.tab-btn {
+    gap: 0.35rem !important;
+  }
 }
 
 .tabs .tab-btn:hover .p-button-label,

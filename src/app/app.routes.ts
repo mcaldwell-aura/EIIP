@@ -15,6 +15,7 @@ import { InspectorDashboardComponent } from './inspector-dashboard.component';
 import { InspectionSearchComponent } from './inspection-search.component';
 import { FormsMockupAccordionComponent } from './forms-mockup-accordion.component';
 import { FormsMockupModalComponent } from './forms-mockup-modal.component';
+import { UserSettingsComponent } from './user-settings.component';
 
 export const routes: Routes = [
   {
@@ -52,6 +53,10 @@ export const routes: Routes = [
   {
     path: 'users/:userId/edit',
     component: EditUserComponent,
+  },
+  {
+    path: 'user-settings',
+    component: UserSettingsComponent,
   },
   {
     path: 'locations',
