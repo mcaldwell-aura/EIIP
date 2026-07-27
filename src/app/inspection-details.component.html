@@ -84,20 +84,20 @@
         pRipple
         type="button"
         class="tab-btn"
-        [class.active]="activeTab() === 'forms'"
-        (click)="selectTab('forms')"
+        [class.active]="activeTab() === 'appointments'"
+        (click)="selectTab('appointments')"
       >
-        Forms
+        Appointments
       </button>
       <button
         pButton
         pRipple
         type="button"
         class="tab-btn"
-        [class.active]="activeTab() === 'appointments'"
-        (click)="selectTab('appointments')"
+        [class.active]="activeTab() === 'forms'"
+        (click)="selectTab('forms')"
       >
-        Appointments
+        Forms
       </button>
       <button
         pButton
@@ -628,11 +628,7 @@
                 "
               >
                 <span>Candidate</span>
-                <input
-                  type="text"
-                  [value]="cstimsInspectionInformation().candidate"
-                  readonly
-                />
+                <input type="text" [value]="cstimsInspectionInformation().candidate" readonly />
                 <p
                   *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.candidate"
                   class="form-field-error"
