@@ -2148,8 +2148,12 @@ a:focus-visible {
 .cstims-divider {
   background: #d7e0ef;
   height: 1px;
-  margin: 0.9rem 0 1.35rem;
+  margin: 0 0 0.95rem;
   width: 100%;
+}
+
+.cstims-subsection-divider {
+  margin: 0 0 0.75rem;
 }
 
 .cstims-criteria-header-row {
@@ -2170,12 +2174,6 @@ a:focus-visible {
   padding-inline: 0.9rem;
 }
 
-.cstims-criteria-actions .secondary-btn {
-  background: #ffffff;
-  border-color: #d5def2;
-  color: var(--accent);
-}
-
 .cstims-section .form-section-heading {
   margin-bottom: 1.1rem;
 }
@@ -2184,16 +2182,16 @@ a:focus-visible {
   padding: 1.5rem;
 }
 
-.cstims-section#form-section-cstims-inspection-information {
+.cstims-section + .cstims-section {
+  border-top: 0 !important;
+}
+
+.cstims-section#form-section-cstims-appointment-information {
   padding-top: 1rem;
 }
 
 .cstims-subsection {
-  margin-top: 1.8rem;
-}
-
-.cstims-subsection:first-of-type {
-  margin-top: 0.9rem;
+  margin-top: 1rem;
 }
 
 .cstims-subsection-title {
@@ -2316,12 +2314,17 @@ a:focus-visible {
   font-weight: 700;
 }
 
-.cstims-option-pass {
-  color: #1f7a40 !important;
+.cstims-option-icon {
+  display: inline-block;
+  font-size: 0.72rem;
 }
 
-.cstims-option-fail {
-  color: #b42318 !important;
+.cstims-option-pass-icon {
+  color: #1f7a40;
+}
+
+.cstims-option-fail-icon {
+  color: #b42318;
 }
 
 :host ::ng-deep .cstims-criteria-row .p-selectbutton {
@@ -2365,20 +2368,6 @@ a:focus-visible {
   color: #ffffff !important;
 }
 
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1).p-highlight,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1).p-togglebutton-checked,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(1)[aria-pressed='true'] {
-  background: #1f7a40 !important;
-  box-shadow: 0 3px 8px rgba(31, 122, 64, 0.26) !important;
-}
-
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2).p-highlight,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2).p-togglebutton-checked,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button:nth-child(2)[aria-pressed='true'] {
-  background: #b42318 !important;
-  box-shadow: 0 3px 8px rgba(180, 35, 24, 0.28) !important;
-}
-
 :host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight .cstims-option-label,
 :host
   ::ng-deep
@@ -2396,14 +2385,8 @@ a:focus-visible {
 }
 
 :host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button .pi {
-  display: none;
-  font-size: 0.72rem;
-}
-
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-highlight .pi,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button.p-togglebutton-checked .pi,
-:host ::ng-deep .cstims-criteria-row .p-selectbutton .p-button[aria-pressed='true'] .pi {
   display: inline-block;
+  font-size: 0.72rem;
 }
 
 .form-content-field-full {
@@ -2458,4 +2441,3 @@ a:focus-visible {
     gap: 0.75rem;
   }
 }
-

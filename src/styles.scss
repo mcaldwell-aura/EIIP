@@ -4,6 +4,7 @@
 /* You can add global styles to this file, and also import other style files */
 
 :root {
+  color-scheme: light;
   --app-font-family: Roboto;
   --p-font-family: var(--app-font-family);
   --p-primary-color: #1f56d8;
@@ -50,8 +51,19 @@
 
 html,
 body {
+  color-scheme: light;
   font-family: var(--app-font-family);
   background: #ffffff;
+}
+
+/* Keep app components in light mode even when the OS/browser prefers dark mode. */
+@media (prefers-color-scheme: dark) {
+  :root,
+  html,
+  body,
+  .p-component {
+    color-scheme: light;
+  }
 }
 
 body {

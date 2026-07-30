@@ -43,18 +43,11 @@
     <section class="title-row" data-node-id="173:4707" aria-label="Dashboard title">
       <div class="title-block">
         <h1>Dashboard</h1>
-        <div class="collaborators" aria-label="Collaborators">
-          <span *ngFor="let initial of collaboratorInitials()" class="avatar">{{ initial }}</span>
-          <span class="collaborator-line" aria-hidden="true">────────</span>
-        </div>
       </div>
-      <button pButton pRipple type="button" class="settings-btn" aria-label="Dashboard settings">
-        ⚙
-      </button>
     </section>
 
     <section class="summary-header-row">
-      <h2>Weekly Summary</h2>
+      <h2>At a Glance</h2>
     </section>
 
     <section class="summary-cards" aria-label="Weekly summary cards" data-node-id="173:4752">
@@ -66,97 +59,275 @@
       </article>
     </section>
 
-    <section class="section-heading-row">
-      <h2>Operational Visibility</h2>
+    <section class="section-heading-row operational-heading-row">
+      <div class="operational-heading-main">
+        <h2>Operational Visibility</h2>
+
+        <div class="visibility-toggle" role="radiogroup" aria-label="Operational visibility scope">
+          <button
+            pButton
+            pRipple
+            type="button"
+            role="radio"
+            class="scope-toggle-btn"
+            [class.is-active]="visibilityScope() === 'candidateMaturity'"
+            [attr.aria-checked]="visibilityScope() === 'candidateMaturity'"
+            (click)="setVisibilityScope('candidateMaturity')"
+          >
+            Candidate Maturity
+          </button>
+          <button
+            pButton
+            pRipple
+            type="button"
+            role="radio"
+            class="scope-toggle-btn"
+            [class.is-active]="visibilityScope() === 'candidateType'"
+            [attr.aria-checked]="visibilityScope() === 'candidateType'"
+            (click)="setVisibilityScope('candidateType')"
+          >
+            Candidate Type
+          </button>
+        </div>
+      </div>
     </section>
 
-    <section class="visibility-grid" aria-label="Operational visibility panels">
-      <div class="visibility-counters">
-        <article class="panel counter-panel">
-          <div class="counter-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-              <path
-                d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3 0-7 1.5-7 4.5V20h14v-2.5C16 14.5 12 13 9 13Zm9.5-2.5a3.5 3.5 0 1 0-2.55-5.9 5.8 5.8 0 0 1 0 4.8 3.49 3.49 0 0 0 2.55 1.1Zm.5 2.5c-.72 0-1.52.08-2.35.24A6.5 6.5 0 0 1 18 17.5V20h4v-1.7c0-2.23-1.87-4.03-5-4.3Z"
-              />
-            </svg>
-          </div>
+    <section class="visibility-shell" aria-label="Operational visibility panels">
+      <div
+        class="maturity-legend operational-heading-legend"
+        [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
+        aria-label="Operational visibility color coding"
+      >
+        <span class="legend-item"
+          ><i class="legend-swatch primary"></i>{{ visibilityLegendLabels().primary }}</span
+        >
+        <span class="legend-item"
+          ><i class="legend-swatch secondary"></i>{{ visibilityLegendLabels().secondary }}</span
+        >
+      </div>
+
+      <div class="visibility-grid">
+        <article
+          class="panel counter-panel total-active-card"
+          [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
+        >
           <h3>Total Active Candidates</h3>
-          <p class="counter-value">{{ candidateMaturitySummaryRows()[0].value }}</p>
-          <div class="candidate-maturity-grid" aria-label="Candidate maturity summary">
-            <div
-              *ngFor="let row of candidateMaturitySummaryRows().slice(1)"
-              class="candidate-maturity-row"
-            >
+
+          <div class="total-circle-wrap" aria-hidden="true">
+            <div class="total-circle" [style.background]="activeCandidateCircleGradient()">
+              <div class="total-circle-inner">
+                <p class="counter-value">{{ activeCandidateTotal() }}</p>
+                <span class="counter-caption">active</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="candidate-maturity-grid">
+            <div *ngFor="let row of activeCandidateBreakdownRows()" class="candidate-maturity-row">
               <span class="candidate-maturity-label">{{ row.label }}</span>
               <strong class="candidate-maturity-pill">{{ row.value }}</strong>
             </div>
           </div>
         </article>
 
-        <article class="panel counter-panel due-counter-panel">
-          <h3>Inspections Due</h3>
-          <div class="due-counter-grid">
-            <div *ngFor="let counter of inspectionsDueCounters()" class="due-counter-item">
-              <span class="due-counter-label">Next {{ counter.label }}</span>
-              <strong class="due-counter-value-pill">{{ counter.count }}</strong>
+        <div class="chart-stack">
+          <article
+            class="panel chart-panel"
+            [class.scope-candidate-maturity]="visibilityScope() === 'candidateMaturity'"
+            [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
+          >
+            <div class="panel-header">
+              <h3>Inspection Results in Last 30 Days</h3>
             </div>
-          </div>
-        </article>
-      </div>
 
-      <div class="panel-stack">
-        <article class="panel chart-panel">
-          <div class="panel-header">
-            <h3>Inspection Results in Last 30 Days</h3>
-          </div>
-          <div class="maturity-legend" aria-label="Candidate maturity legend">
-            <span class="legend-item"><i class="legend-swatch new"></i>New</span>
-            <span class="legend-item"><i class="legend-swatch established"></i>Established</span>
-          </div>
-          <div class="bar-chart" aria-label="Inspection result chart by candidate maturity">
-            <div *ngFor="let item of inspectionResultsByMaturityWithTotals()" class="bar-group">
-              <div class="bar-rail">
-                <div
-                  class="stacked-bar"
-                  [style.height.%]="(item.total / inspectionResultsByMaturityMax()) * 100"
-                >
+            <div
+              class="bar-chart"
+              aria-label="Inspection result chart by selected visibility scope"
+            >
+              <div *ngFor="let item of inspectionResultsChartData()" class="bar-group">
+                <div class="bar-rail">
                   <div
-                    class="bar-segment established"
-                    [style.height.%]="(item.establishedCount / item.total) * 100"
-                  ></div>
-                  <div
-                    class="bar-segment new"
-                    [style.height.%]="(item.newCount / item.total) * 100"
-                  ></div>
+                    class="stacked-bar"
+                    [style.height.%]="(item.total / inspectionResultsChartMax()) * 100"
+                  >
+                    <div
+                      class="bar-segment secondary"
+                      [style.height.%]="(item.secondaryCount / item.total) * 100"
+                    ></div>
+                    <div
+                      class="bar-segment primary"
+                      [style.height.%]="(item.primaryCount / item.total) * 100"
+                    ></div>
+                  </div>
                 </div>
+                <span>{{ item.label }}</span>
               </div>
-              <span>{{ item.label }}</span>
             </div>
-          </div>
-        </article>
+          </article>
 
-        <article class="panel chart-panel">
-          <div class="panel-header">
-            <h3>Reasons for Inspection</h3>
-          </div>
-          <div class="bar-chart" aria-label="Reasons for inspection chart">
-            <div *ngFor="let item of reasonsForInspection()" class="bar-group">
-              <div class="bar-rail">
-                <div
-                  class="bar"
-                  [style.height.%]="(item.value / reasonsForInspectionMax()) * 100"
-                ></div>
-              </div>
-              <span>{{ item.label }}</span>
+          <article
+            class="panel chart-panel"
+            [class.scope-candidate-maturity]="visibilityScope() === 'candidateMaturity'"
+            [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
+          >
+            <div class="panel-header">
+              <h3>Reasons for Inspection</h3>
             </div>
-          </div>
-        </article>
+
+            <div
+              class="bar-chart"
+              aria-label="Reasons for inspection chart by selected visibility scope"
+            >
+              <div *ngFor="let item of reasonsForInspectionChartData()" class="bar-group">
+                <div class="bar-rail">
+                  <div
+                    class="stacked-bar"
+                    [style.height.%]="(item.total / reasonsForInspectionChartMax()) * 100"
+                  >
+                    <div
+                      class="bar-segment secondary"
+                      [style.height.%]="(item.secondaryCount / item.total) * 100"
+                    ></div>
+                    <div
+                      class="bar-segment primary"
+                      [style.height.%]="(item.primaryCount / item.total) * 100"
+                    ></div>
+                  </div>
+                </div>
+                <span>{{ item.label }}</span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="activity-section" data-node-id="173:4705">
-      <h2>Recent Inspection Activity</h2>
-      <div class="desktop-activity-results">
+    <section class="inspection-data-stack" aria-label="Inspection data panels">
+      <section class="inspection-block">
+        <h2>Inspections Due</h2>
+        <div class="due-stat-cards">
+          <article
+            *ngFor="let bucket of dueBucketsForCards()"
+            class="stat-card due-stat-card"
+            [class.is-overdue]="bucket.tone === 'overdue'"
+            [class.is-date-unset]="bucket.tone === 'unset'"
+          >
+            <div class="card-top">
+              <p>{{ bucket.label }}</p>
+            </div>
+            <strong>{{ bucket.count }}</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="inspection-block">
+        <h2>Upcoming Inspections in the Next 30 Days</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Candidate Name</th>
+                <th>Inspector</th>
+                <th>Appointment Date</th>
+                <th>Next Due</th>
+                <th>Priority</th>
+                <th>Inspection Reason</th>
+                <th>Inspection Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of pagedUpcomingInspections()">
+                <td>
+                  <a class="candidate-link" [routerLink]="['/candidates', row.candidateId]">
+                    {{ row.candidateName }}
+                  </a>
+                </td>
+                <td>{{ row.inspector }}</td>
+                <td>{{ row.appointmentDate }}</td>
+                <td>{{ row.nextDue }}</td>
+                <td>{{ row.priority }}</td>
+                <td>{{ row.inspectionReason }}</td>
+                <td>
+                  <span [class]="getStatusPillClass(row.inspectionStatus)">
+                    {{ row.inspectionStatus }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="!upcomingInspectionsInNext30Days().length">
+                <td class="empty-message" colspan="7">
+                  No upcoming inspections in the next 30 days.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div
+          *ngIf="shouldShowUpcomingPagination()"
+          class="table-pagination upcoming-table-pagination"
+        >
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="First page"
+            [disabled]="upcomingCurrentPage() === 1"
+            (click)="setUpcomingPage(1)"
+          >
+            <<
+          </button>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Previous page"
+            [disabled]="upcomingCurrentPage() === 1"
+            (click)="setUpcomingPage(upcomingCurrentPage() - 1)"
+          >
+            <
+          </button>
+          <div class="page-number-row" role="navigation" aria-label="Upcoming inspections pages">
+            <button
+              *ngFor="let page of upcomingPageNumbers()"
+              pButton
+              pRipple
+              type="button"
+              class="page-number-btn"
+              [class.is-active]="page === upcomingCurrentPage()"
+              [attr.aria-current]="page === upcomingCurrentPage() ? 'page' : null"
+              (click)="setUpcomingPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Next page"
+            [disabled]="upcomingCurrentPage() === upcomingTotalPages()"
+            (click)="setUpcomingPage(upcomingCurrentPage() + 1)"
+          >
+            >
+          </button>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Last page"
+            [disabled]="upcomingCurrentPage() === upcomingTotalPages()"
+            (click)="setUpcomingPage(upcomingTotalPages())"
+          >
+            >>
+          </button>
+        </div>
+      </section>
+
+      <section class="inspection-block" data-node-id="173:4705">
+        <h2>Recent Inspection Activity in Last 30 Days</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -241,15 +412,19 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of filteredSortedActivityRows()">
-                <td>{{ row.candidateName }}</td>
+              <tr *ngFor="let row of pagedRecentActivityRows()">
+                <td>
+                  <a class="candidate-link" [routerLink]="['/candidates', row.candidateId]">
+                    {{ row.candidateName }}
+                  </a>
+                </td>
                 <td>{{ formatDateTime(row.inspectionDate) }}</td>
                 <td>{{ formatDate(row.nextDue) }}</td>
                 <td>{{ row.priority }}</td>
                 <td>{{ row.inspectionReason }}</td>
                 <td>{{ row.inspectionType }}</td>
                 <td>
-                  <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
+                  <span [class]="getStatusPillClass(row.inspectionStatus)">
                     {{ row.inspectionStatus }}
                   </span>
                 </td>
@@ -260,50 +435,67 @@
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div class="mobile-activity-results" aria-label="Recent inspection activity card list">
-        <div
-          class="mobile-activity-cards"
-          *ngIf="filteredSortedActivityRows().length; else noActivityCards"
-        >
-          <article class="activity-card" *ngFor="let row of filteredSortedActivityRows()">
-            <header class="activity-card-header">
-              <h3>{{ row.candidateName }}</h3>
-              <span class="status-pill" [class.planned]="row.inspectionStatus === 'Planned'">
-                {{ row.inspectionStatus }}
-              </span>
-            </header>
-
-            <div class="activity-card-columns">
-              <div class="activity-card-item">
-                <dt>Inspection Date</dt>
-                <dd>{{ formatDateTime(row.inspectionDate) }}</dd>
-              </div>
-              <div class="activity-card-item">
-                <dt>Next Due</dt>
-                <dd>{{ formatDate(row.nextDue) }}</dd>
-              </div>
-              <div class="activity-card-item">
-                <dt>Priority</dt>
-                <dd>{{ row.priority }}</dd>
-              </div>
-              <div class="activity-card-item">
-                <dt>Type</dt>
-                <dd>{{ row.inspectionType }}</dd>
-              </div>
-              <div class="activity-card-item">
-                <dt>Reason</dt>
-                <dd>{{ row.inspectionReason }}</dd>
-              </div>
-            </div>
-          </article>
+        <div *ngIf="shouldShowRecentPagination()" class="table-pagination">
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="First page"
+            [disabled]="recentCurrentPage() === 1"
+            (click)="setRecentPage(1)"
+          >
+            <<
+          </button>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Previous page"
+            [disabled]="recentCurrentPage() === 1"
+            (click)="setRecentPage(recentCurrentPage() - 1)"
+          >
+            <
+          </button>
+          <div class="page-number-row" role="navigation" aria-label="Recent activity pages">
+            <button
+              *ngFor="let page of recentPageNumbers()"
+              pButton
+              pRipple
+              type="button"
+              class="page-number-btn"
+              [class.is-active]="page === recentCurrentPage()"
+              [attr.aria-current]="page === recentCurrentPage() ? 'page' : null"
+              (click)="setRecentPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Next page"
+            [disabled]="recentCurrentPage() === recentTotalPages()"
+            (click)="setRecentPage(recentCurrentPage() + 1)"
+          >
+            >
+          </button>
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="page-nav-btn"
+            aria-label="Last page"
+            [disabled]="recentCurrentPage() === recentTotalPages()"
+            (click)="setRecentPage(recentTotalPages())"
+          >
+            >>
+          </button>
         </div>
-
-        <ng-template #noActivityCards>
-          <p class="empty-message mobile-empty-message">No inspections match the current filter.</p>
-        </ng-template>
-      </div>
+      </section>
     </section>
   </main>
 </div>

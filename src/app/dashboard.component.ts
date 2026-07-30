@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CandidateStoreService } from './candidate-store.service';
+import { type CandidateType } from './candidates.data';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
 import { NavMenuService } from './nav-menu.service';
 
@@ -22,10 +23,29 @@ type ChartDatum = {
   value: number;
 };
 
+type VisibilityScope = 'candidateMaturity' | 'candidateType';
+
+type VisibilitySplitLabel = {
+  primary: string;
+  secondary: string;
+};
+
+type VisibilitySplitDatum = {
+  label: string;
+  total: number;
+  primaryCount: number;
+  secondaryCount: number;
+};
+
 type CandidateMaturity = 'New' | 'Established';
 
 type CandidateMaturitySummaryRow = {
   label: string;
+  value: number;
+};
+
+type CandidateTypeSummaryRow = {
+  label: CandidateType;
   value: number;
 };
 
@@ -35,9 +55,23 @@ type InspectionResultByMaturityDatum = {
   establishedCount: number;
 };
 
-type DueWindowCounter = {
-  label: '30 Days' | '60 Days' | '90 Days';
+type DueBucketLabel = 'Overdue' | '0-30 Days' | '31-60 Days' | '61-90 Days' | 'Date not set';
+
+type DueBucketRow = {
+  label: DueBucketLabel;
   count: number;
+  tone: 'overdue' | 'soon' | 'upcoming' | 'later' | 'unset';
+};
+
+type InspectionTableRow = {
+  candidateId: string;
+  candidateName: string;
+  inspector: string;
+  appointmentDate: string;
+  nextDue: string;
+  priority: number;
+  inspectionReason: string;
+  inspectionStatus: InspectionStatus;
 };
 
 type ActivityStatus =
@@ -50,6 +84,7 @@ type ActivityStatus =
   | 'Escalated';
 
 type ActivityRow = {
+  candidateId: string;
   candidateName: string;
   inspectionDate: string;
   nextDue: string;
@@ -109,7 +144,13 @@ export class DashboardComponent {
 
   private static readonly millisecondsPerDay = 24 * 60 * 60 * 1000;
 
+  private static readonly upcomingRowsPerPage = 4;
+
+  private static readonly recentRowsPerPage = 5;
+
   private readonly excludedStatuses = new Set<ActivityStatus>(['Planned', 'Scheduled', 'Canceled']);
+
+  protected readonly visibilityScope = signal<VisibilityScope>('candidateMaturity');
 
   protected readonly candidateMaturitySummaryRows = computed<CandidateMaturitySummaryRow[]>(() => {
     const activeCandidates = this.candidateStore
@@ -125,6 +166,83 @@ export class DashboardComponent {
       { label: 'New Candidates', value: newCandidates },
       { label: 'Established Candidates', value: establishedCandidates },
     ];
+  });
+
+  protected readonly candidateTypeSummaryRows = computed<CandidateTypeSummaryRow[]>(() => {
+    const activeCandidates = this.candidateStore
+      .candidates()
+      .filter((candidate) => this.isActiveCandidate(candidate.endDate));
+    const individualCandidates = activeCandidates.filter(
+      (candidate) => candidate.candidateType === 'Individual',
+    ).length;
+    const organizationCandidates = activeCandidates.length - individualCandidates;
+
+    return [
+      { label: 'Individual', value: individualCandidates },
+      { label: 'Organization', value: organizationCandidates },
+    ];
+  });
+
+  protected readonly activeCandidateBreakdownRows = computed<CandidateMaturitySummaryRow[]>(() => {
+    if (this.visibilityScope() === 'candidateMaturity') {
+      return this.candidateMaturitySummaryRows().slice(1);
+    }
+
+    return this.candidateTypeSummaryRows().map((row) => ({
+      label: row.label,
+      value: row.value,
+    }));
+  });
+
+  protected readonly activeCandidateTotal = computed(
+    () => this.candidateMaturitySummaryRows()[0].value,
+  );
+
+  protected readonly activeCandidateCircleGradient = computed(() => {
+    const total = this.activeCandidateTotal();
+    if (total <= 0) {
+      return 'conic-gradient(#d8e0f2 0deg 360deg)';
+    }
+
+    const scope = this.visibilityScope();
+    let primaryCount = 0;
+    let secondaryCount = 0;
+    let primaryColor = '#3f83f8';
+    let secondaryColor = '#1d4ed8';
+
+    if (scope === 'candidateMaturity') {
+      const [newCandidates, establishedCandidates] = this.candidateMaturitySummaryRows().slice(1);
+      primaryCount = newCandidates?.value ?? 0;
+      secondaryCount = establishedCandidates?.value ?? 0;
+      primaryColor = '#3f83f8';
+      secondaryColor = '#1d4ed8';
+    } else {
+      const [individualCandidates, organizationCandidates] = this.candidateTypeSummaryRows();
+      primaryCount = individualCandidates?.value ?? 0;
+      secondaryCount = organizationCandidates?.value ?? 0;
+      // Keep candidate-type donut colors exactly aligned with bar/legend colors in SCSS.
+      primaryColor = '#4f79b3';
+      secondaryColor = '#2f5d93';
+    }
+
+    const segmentTotal = Math.max(1, primaryCount + secondaryCount);
+    const primaryDegrees = (primaryCount / segmentTotal) * 360;
+
+    return `conic-gradient(${primaryColor} 0deg ${primaryDegrees}deg, ${secondaryColor} ${primaryDegrees}deg 360deg)`;
+  });
+
+  protected readonly visibilityLegendLabels = computed<VisibilitySplitLabel>(() => {
+    if (this.visibilityScope() === 'candidateMaturity') {
+      return {
+        primary: 'New',
+        secondary: 'Established',
+      };
+    }
+
+    return {
+      primary: 'Individual',
+      secondary: 'Organization',
+    };
   });
 
   protected readonly inspectionResultsByMaturity = signal<InspectionResultByMaturityDatum[]>([
@@ -149,6 +267,8 @@ export class DashboardComponent {
     let scheduledInspections = 0;
     let completedThisWeek = 0;
     let missedInspections = 0;
+    let inspectionsToBeAssigned = 0;
+    let inspectionsToBeCompleted = 0;
 
     for (const inspection of INSPECTIONS) {
       const inspectionDateTime = this.parseInspectionDateTime(inspection);
@@ -185,6 +305,14 @@ export class DashboardComponent {
       if (isScheduled && inspectionDateTime.getTime() < Date.now()) {
         missedInspections += 1;
       }
+
+      if (inspection.assignedInspector === 'Unassigned' && (isPending || isScheduled)) {
+        inspectionsToBeAssigned += 1;
+      }
+
+      if (inspection.assignedInspector !== 'Unassigned' && (isPending || isScheduled)) {
+        inspectionsToBeCompleted += 1;
+      }
     }
 
     return [
@@ -194,21 +322,20 @@ export class DashboardComponent {
       { label: 'Scheduled Inspections', value: scheduledInspections },
       { label: 'Completed this week', value: completedThisWeek },
       { label: 'Missed Inspections', value: missedInspections },
+      { label: 'Inspections to be Assigned', value: inspectionsToBeAssigned },
+      { label: 'Inspections to be Completed', value: inspectionsToBeCompleted },
     ];
   });
 
-  protected readonly inspectionResultsByMaturityWithTotals = computed(() =>
-    this.inspectionResultsByMaturity().map((item) => ({
-      ...item,
-      total: item.newCount + item.establishedCount,
-    })),
-  );
+  protected readonly inspectionResultTotals = signal<ChartDatum[]>([
+    { label: 'Excellent', value: 23 },
+    { label: 'Good', value: 26 },
+    { label: 'Satisfactory', value: 12 },
+    { label: 'Marginal', value: 24 },
+    { label: 'Unsatisfactory', value: 18 },
+  ]);
 
-  protected readonly inspectionResultsByMaturityMax = computed(() =>
-    Math.max(...this.inspectionResultsByMaturityWithTotals().map((item) => item.total)),
-  );
-
-  protected readonly reasonsForInspection = signal<ChartDatum[]>([
+  protected readonly reasonsForInspectionTotals = signal<ChartDatum[]>([
     { label: 'Change', value: 10 },
     { label: 'Original', value: 15 },
     { label: 'ReExam', value: 22 },
@@ -216,10 +343,82 @@ export class DashboardComponent {
     { label: 'Periodic', value: 21 },
   ]);
 
+  protected readonly inspectionResultsChartData = computed<VisibilitySplitDatum[]>(() =>
+    this.toVisibilitySplitData(this.inspectionResultTotals()),
+  );
+
+  protected readonly reasonsForInspectionChartData = computed<VisibilitySplitDatum[]>(() =>
+    this.toVisibilitySplitData(this.reasonsForInspectionTotals()),
+  );
+
+  protected readonly inspectionResultsChartMax = computed(() =>
+    Math.max(1, ...this.inspectionResultsChartData().map((item) => item.total)),
+  );
+
+  protected readonly reasonsForInspectionChartMax = computed(() =>
+    Math.max(1, ...this.reasonsForInspectionChartData().map((item) => item.total)),
+  );
+
+  protected readonly dueBuckets = signal<DueBucketRow[]>([
+    { label: 'Overdue', count: 12, tone: 'overdue' },
+    { label: '0-30 Days', count: 4, tone: 'soon' },
+    { label: '31-60 Days', count: 21, tone: 'upcoming' },
+    { label: '61-90 Days', count: 6, tone: 'later' },
+    { label: 'Date not set', count: 15, tone: 'unset' },
+  ]);
+
+  protected readonly dueBucketsForCards = computed(() =>
+    this.dueBuckets().filter((bucket) => bucket.label !== 'Date not set'),
+  );
+
+  protected readonly upcomingInspectionsInNext30Days = signal<InspectionTableRow[]>([
+    {
+      candidateId: 'organization-1',
+      candidateName: 'Living Trust for Michelle T.',
+      inspector: 'Brent Julius, Colton Patch',
+      appointmentDate: '07/29/2026 02:45 PM',
+      nextDue: '06/25/2026',
+      priority: 93,
+      inspectionReason: 'Change',
+      inspectionStatus: 'Scheduled',
+    },
+    {
+      candidateId: 'organization-2',
+      candidateName: 'Scooby Doo Detective Agency',
+      inspector: 'Colton Patch, Dana Reed',
+      appointmentDate: '07/30/2026 10:16 AM',
+      nextDue: '06/01/2026',
+      priority: 88,
+      inspectionReason: 'Change',
+      inspectionStatus: 'Scheduled',
+    },
+    {
+      candidateId: 'organization-3',
+      candidateName: 'First Special Cars LLC',
+      inspector: 'Dana Reed, Ezra Zheng',
+      appointmentDate: '08/05/2026 01:38 PM',
+      nextDue: '08/29/2026',
+      priority: 71,
+      inspectionReason: 'Change',
+      inspectionStatus: 'Scheduled',
+    },
+    {
+      candidateId: 'individual-1',
+      candidateName: 'Jose Maria OBrien-Nunez',
+      inspector: 'Grant Hawkes',
+      appointmentDate: '08/19/2026 09:06 PM',
+      nextDue: '09/22/2026',
+      priority: 64,
+      inspectionReason: 'Change',
+      inspectionStatus: 'Planned',
+    },
+  ]);
+
   protected readonly activityRows = signal<ActivityRow[]>([
     {
+      candidateId: 'individual-1',
       candidateName: 'Alyssa Campos',
-      inspectionDate: '2026-06-16T14:20:00',
+      inspectionDate: '2026-07-27T14:20:00',
       nextDue: '2026-09-16',
       priority: 93,
       inspectionReason: 'Follow Up',
@@ -227,8 +426,9 @@ export class DashboardComponent {
       inspectionType: 'Overt',
     },
     {
+      candidateId: 'individual-2',
       candidateName: 'Brandon Lin',
-      inspectionDate: '2026-06-12T09:45:00',
+      inspectionDate: '2026-07-22T09:45:00',
       nextDue: '2026-09-12',
       priority: 97,
       inspectionReason: 'Follow Up',
@@ -236,8 +436,9 @@ export class DashboardComponent {
       inspectionType: 'Overt',
     },
     {
+      candidateId: 'individual-3',
       candidateName: 'Carlos Vega',
-      inspectionDate: '2026-06-10T08:15:00',
+      inspectionDate: '2026-07-19T08:15:00',
       nextDue: '2026-09-10',
       priority: 98,
       inspectionReason: 'Re-Examination',
@@ -245,8 +446,9 @@ export class DashboardComponent {
       inspectionType: 'Covert',
     },
     {
+      candidateId: 'individual-4',
       candidateName: 'Diana Reeves',
-      inspectionDate: '2026-06-05T15:30:00',
+      inspectionDate: '2026-07-14T15:30:00',
       nextDue: '2026-09-05',
       priority: 97,
       inspectionReason: 'Follow Up',
@@ -254,8 +456,9 @@ export class DashboardComponent {
       inspectionType: 'Overt',
     },
     {
+      candidateId: 'individual-5',
       candidateName: 'Ethan Patel',
-      inspectionDate: '2026-05-30T13:05:00',
+      inspectionDate: '2026-07-09T13:05:00',
       nextDue: '2026-08-30',
       priority: 98,
       inspectionReason: 'Follow Up',
@@ -263,8 +466,9 @@ export class DashboardComponent {
       inspectionType: 'Covert',
     },
     {
+      candidateId: 'individual-6',
       candidateName: 'Farah Nouri',
-      inspectionDate: '2026-05-25T11:40:00',
+      inspectionDate: '2026-07-07T11:40:00',
       nextDue: '2026-08-25',
       priority: 91,
       inspectionReason: 'Biennial',
@@ -272,8 +476,9 @@ export class DashboardComponent {
       inspectionType: 'Overt',
     },
     {
+      candidateId: 'individual-7',
       candidateName: 'Grace Ito',
-      inspectionDate: '2026-05-20T10:10:00',
+      inspectionDate: '2026-07-03T10:10:00',
       nextDue: '2026-08-20',
       priority: 89,
       inspectionReason: 'Investigate',
@@ -390,38 +595,73 @@ export class DashboardComponent {
     return this.activitySort().direction;
   });
 
-  protected readonly inspectionsDueCounters = computed<DueWindowCounter[]>(() => {
-    let dueIn30 = 0;
-    let dueIn60 = 0;
-    let dueIn90 = 0;
+  protected readonly upcomingCurrentPage = signal(1);
 
-    for (const row of this.activityRows()) {
-      const daysUntilDue = this.dayDifferenceFromToday(row.nextDue);
-      if (daysUntilDue < 0 || daysUntilDue > 90) {
-        continue;
-      }
+  protected readonly recentCurrentPage = signal(1);
 
-      if (daysUntilDue <= 30) {
-        dueIn30 += 1;
-      } else if (daysUntilDue <= 60) {
-        dueIn60 += 1;
-      } else {
-        dueIn90 += 1;
-      }
-    }
-
-    return [
-      { label: '30 Days', count: dueIn30 },
-      { label: '60 Days', count: dueIn60 },
-      { label: '90 Days', count: dueIn90 },
-    ];
-  });
-
-  protected readonly reasonsForInspectionMax = computed(() =>
-    Math.max(...this.reasonsForInspection().map((item) => item.value)),
+  protected readonly upcomingTotalPages = computed(() =>
+    Math.max(
+      1,
+      Math.ceil(
+        this.upcomingInspectionsInNext30Days().length / DashboardComponent.upcomingRowsPerPage,
+      ),
+    ),
   );
 
-  protected readonly collaboratorInitials = signal(['L', 'M', 'A', 'S']);
+  protected readonly recentTotalPages = computed(() =>
+    Math.max(
+      1,
+      Math.ceil(this.filteredSortedActivityRows().length / DashboardComponent.recentRowsPerPage),
+    ),
+  );
+
+  protected readonly pagedUpcomingInspections = computed(() => {
+    const allRows = this.upcomingInspectionsInNext30Days();
+    const totalPages = Math.max(
+      1,
+      Math.ceil(allRows.length / DashboardComponent.upcomingRowsPerPage),
+    );
+    const page = Math.min(this.upcomingCurrentPage(), totalPages);
+    const start = (page - 1) * DashboardComponent.upcomingRowsPerPage;
+    return allRows.slice(start, start + DashboardComponent.upcomingRowsPerPage);
+  });
+
+  protected readonly pagedRecentActivityRows = computed(() => {
+    const allRows = this.filteredSortedActivityRows();
+    const totalPages = Math.max(
+      1,
+      Math.ceil(allRows.length / DashboardComponent.recentRowsPerPage),
+    );
+    const page = Math.min(this.recentCurrentPage(), totalPages);
+    const start = (page - 1) * DashboardComponent.recentRowsPerPage;
+    return allRows.slice(start, start + DashboardComponent.recentRowsPerPage);
+  });
+
+  protected readonly upcomingPageNumbers = computed(() =>
+    Array.from({ length: this.upcomingTotalPages() }, (_, index) => index + 1),
+  );
+
+  protected readonly recentPageNumbers = computed(() =>
+    Array.from({ length: this.recentTotalPages() }, (_, index) => index + 1),
+  );
+
+  protected readonly shouldShowUpcomingPagination = computed(() => this.upcomingTotalPages() > 1);
+
+  protected readonly shouldShowRecentPagination = computed(() => this.recentTotalPages() > 1);
+
+  protected setVisibilityScope(scope: VisibilityScope): void {
+    this.visibilityScope.set(scope);
+  }
+
+  protected setUpcomingPage(page: number): void {
+    const safePage = Math.min(Math.max(1, page), this.upcomingTotalPages());
+    this.upcomingCurrentPage.set(safePage);
+  }
+
+  protected setRecentPage(page: number): void {
+    const safePage = Math.min(Math.max(1, page), this.recentTotalPages());
+    this.recentCurrentPage.set(safePage);
+  }
 
   protected setActivitySort(column: SortColumn): void {
     this.activitySort.update((current) => {
@@ -508,6 +748,26 @@ export class DashboardComponent {
     }).format(new Date(value));
   }
 
+  protected getStatusPillClass(status: InspectionStatus | ActivityStatus): string {
+    if (status === 'Escalated') {
+      return 'status-pill is-danger';
+    }
+
+    if (status === 'In Review') {
+      return 'status-pill is-info';
+    }
+
+    if (status === 'Planned' || status === 'Scheduled' || status === 'Pending') {
+      return 'status-pill is-warning';
+    }
+
+    if (status === 'Canceled') {
+      return 'status-pill is-neutral';
+    }
+
+    return 'status-pill is-success';
+  }
+
   private compareByColumn(
     a: ActivityRow,
     b: ActivityRow,
@@ -542,17 +802,6 @@ export class DashboardComponent {
     });
   }
 
-  private dayDifferenceFromToday(value: string): number {
-    const dueDate = new Date(value);
-    const today = new Date();
-    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const startOfDue = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
-
-    return Math.floor(
-      (startOfDue.getTime() - startOfToday.getTime()) / DashboardComponent.millisecondsPerDay,
-    );
-  }
-
   private isActiveCandidate(endDate: string | null): boolean {
     if (!endDate) {
       return true;
@@ -572,7 +821,88 @@ export class DashboardComponent {
   }
 
   private isPendingStatus(status: InspectionStatus): boolean {
-    return status === 'Planned';
+    return status === 'Planned' || status === 'Pending';
+  }
+
+  private toVisibilitySplitData(source: ChartDatum[]): VisibilitySplitDatum[] {
+    const [primaryWeight, secondaryWeight] = this.getVisibilityWeights(this.visibilityScope());
+    return source.map((item) => {
+      const primaryCount = Math.round(item.value * primaryWeight);
+      const secondaryCount = Math.max(0, item.value - primaryCount);
+      return {
+        label: item.label,
+        total: item.value,
+        primaryCount,
+        secondaryCount,
+      };
+    });
+  }
+
+  private getVisibilityWeights(scope: VisibilityScope): [number, number] {
+    if (scope === 'candidateMaturity') {
+      const rows = this.candidateMaturitySummaryRows().slice(1);
+      const total = rows.reduce((sum, row) => sum + row.value, 0);
+      if (total === 0) {
+        return [0.5, 0.5];
+      }
+
+      return [rows[0].value / total, rows[1].value / total];
+    }
+
+    const rows = this.candidateTypeSummaryRows();
+    const total = rows.reduce((sum, row) => sum + row.value, 0);
+    if (total === 0) {
+      return [0.5, 0.5];
+    }
+
+    return [rows[0].value / total, rows[1].value / total];
+  }
+
+  private parseFlexibleDate(value: string | null | undefined): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+
+    const parts = normalized.split(/[-/]/);
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const [first, second, third] = parts;
+    let year = 0;
+    let month = 0;
+    let day = 0;
+
+    if (first.length === 4) {
+      year = Number(first);
+      month = Number(second);
+      day = Number(third);
+    } else {
+      month = Number(first);
+      day = Number(second);
+      const rawYear = Number(third);
+      year = third.length === 2 ? 2000 + rawYear : rawYear;
+    }
+
+    if ([year, month, day].some((part) => Number.isNaN(part))) {
+      return null;
+    }
+
+    const parsedDate = new Date(year, month - 1, day);
+    if (
+      parsedDate.getFullYear() !== year ||
+      parsedDate.getMonth() !== month - 1 ||
+      parsedDate.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return parsedDate;
   }
 
   private parseInspectionDateTime(inspection: InspectionRecord): Date {

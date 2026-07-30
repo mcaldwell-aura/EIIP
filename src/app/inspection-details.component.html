@@ -616,111 +616,35 @@
 
           <section
             class="form-content-section cstims-section"
-            id="form-section-cstims-inspection-information"
+            id="form-section-cstims-appointment-information"
           >
-            <h3 class="form-section-heading">Inspection Information</h3>
+            <h3 class="form-section-heading">Appointment Information</h3>
             <div class="form-section-field-grid">
               <label
-                class="form-content-field"
-                [class.form-content-field-full]="true"
+                class="form-content-field form-content-field-full"
                 [class.form-content-field-error]="
-                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.candidate
+                  cstimsShowValidation() &&
+                  !!cstimsValidationState().fieldErrors.appointmentDateTime
                 "
               >
-                <span>Candidate</span>
-                <input type="text" [value]="cstimsInspectionInformation().candidate" readonly />
-                <p
-                  *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.candidate"
-                  class="form-field-error"
-                >
-                  {{ cstimsValidationState().fieldErrors.candidate }}
-                </p>
-              </label>
-
-              <label
-                class="form-content-field"
-                [class.form-content-field-error]="
-                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspector
-                "
-              >
-                <span>Inspector</span>
-                <input
-                  type="text"
-                  [value]="cstimsInspectionInformation().inspector"
-                  (input)="
-                    updateCstimsInspectionInformationField('inspector', $any($event.target).value)
-                  "
-                />
-                <p
-                  *ngIf="cstimsShowValidation() && cstimsValidationState().fieldErrors.inspector"
-                  class="form-field-error"
-                >
-                  {{ cstimsValidationState().fieldErrors.inspector }}
-                </p>
-              </label>
-
-              <label
-                class="form-content-field"
-                [class.form-content-field-error]="
-                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspectionReason
-                "
-              >
-                <span>Inspection Reason</span>
-                <select
-                  [value]="cstimsInspectionInformation().inspectionReason"
-                  (change)="
-                    updateCstimsInspectionInformationField(
-                      'inspectionReason',
-                      $any($event.target).value
-                    )
-                  "
-                >
-                  <option value="" disabled>Select reason</option>
-                  <option *ngFor="let reason of inspectionReasonOptions" [value]="reason">
-                    {{ reason }}
-                  </option>
-                </select>
+                <span>Appointment Date</span>
+                <p-select
+                  [options]="cstimsAppointmentOptions()"
+                  [ngModel]="currentDraft.appointmentDateTime || null"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select appointment"
+                  appendTo="body"
+                  (ngModelChange)="updateFormDraftField('appointmentDateTime', $event)"
+                ></p-select>
                 <p
                   *ngIf="
-                    cstimsShowValidation() && cstimsValidationState().fieldErrors.inspectionReason
+                    cstimsShowValidation() &&
+                    cstimsValidationState().fieldErrors.appointmentDateTime
                   "
                   class="form-field-error"
                 >
-                  {{ cstimsValidationState().fieldErrors.inspectionReason }}
-                </p>
-              </label>
-
-              <label
-                class="form-content-field"
-                [class.form-content-field-error]="
-                  cstimsShowValidation() && !!cstimsValidationState().fieldErrors.inspectionType
-                "
-              >
-                <span>Inspection Type</span>
-                <select
-                  [value]="cstimsInspectionInformation().inspectionType"
-                  (change)="
-                    updateCstimsInspectionInformationField(
-                      'inspectionType',
-                      $any($event.target).value
-                    )
-                  "
-                >
-                  <option value="" disabled>Select type</option>
-                  <option
-                    *ngFor="let inspectionType of inspectionTypeOptions"
-                    [value]="inspectionType"
-                  >
-                    {{ inspectionType }}
-                  </option>
-                </select>
-                <p
-                  *ngIf="
-                    cstimsShowValidation() && cstimsValidationState().fieldErrors.inspectionType
-                  "
-                  class="form-field-error"
-                >
-                  {{ cstimsValidationState().fieldErrors.inspectionType }}
+                  {{ cstimsValidationState().fieldErrors.appointmentDateTime }}
                 </p>
               </label>
             </div>
@@ -730,6 +654,7 @@
             class="form-content-section cstims-section"
             id="form-section-cstims-inspection-criteria"
           >
+            <div class="cstims-divider" aria-hidden="true"></div>
             <div class="cstims-criteria-header-row">
               <h3 class="form-section-heading">Inspection Criteria</h3>
               <div class="cstims-criteria-actions">
@@ -737,7 +662,7 @@
                   pButton
                   pRipple
                   type="button"
-                  class="secondary-btn"
+                  class="primary-btn"
                   (click)="passAllCstimsCriteria()"
                 >
                   Pass All
@@ -746,9 +671,17 @@
             </div>
 
             <section
-              *ngFor="let criteriaSection of cstimsCriteriaSections"
+              *ngFor="
+                let criteriaSection of cstimsCriteriaSections;
+                let criteriaSectionIndex = index
+              "
               class="cstims-subsection"
             >
+              <div
+                *ngIf="criteriaSectionIndex > 0"
+                class="cstims-divider cstims-subsection-divider"
+                aria-hidden="true"
+              ></div>
               <h4 class="cstims-subsection-title">{{ criteriaSection.title }}</h4>
 
               <div class="cstims-criteria-list">
@@ -765,12 +698,14 @@
                     (ngModelChange)="updateCstimsCriteriaField(criteriaField.id, $event)"
                   >
                     <ng-template pTemplate="item" let-option>
-                      <span
-                        class="cstims-option-label"
-                        [class.cstims-option-pass]="option.value === 'Pass'"
-                        [class.cstims-option-fail]="option.value === 'Fail'"
-                      >
-                        <i class="pi" [class]="option.icon" aria-hidden="true"></i>
+                      <span class="cstims-option-label">
+                        <i
+                          class="pi cstims-option-icon"
+                          [class]="option.icon"
+                          [class.cstims-option-pass-icon]="option.value === 'Pass'"
+                          [class.cstims-option-fail-icon]="option.value === 'Fail'"
+                          aria-hidden="true"
+                        ></i>
                         {{ option.label }}
                       </span>
                     </ng-template>
@@ -823,33 +758,20 @@
         </ng-template>
 
         <!-- Metadata section -->
-        <section class="form-content-section form-meta-section" id="form-section-details">
+        <section
+          *ngIf="!isCstimsActiveForm()"
+          class="form-content-section form-meta-section"
+          id="form-section-details"
+        >
           <h3 class="form-section-heading">Appointment details</h3>
           <div class="form-section-field-grid">
-            <label
-              class="form-content-field form-content-field-full"
-              [class.form-content-field-error]="
-                isCstimsActiveForm() &&
-                cstimsShowValidation() &&
-                !!cstimsValidationState().fieldErrors.appointmentDateTime
-              "
-            >
+            <label class="form-content-field form-content-field-full">
               <span>Appointment date</span>
               <input
                 type="datetime-local"
                 [value]="currentDraft.appointmentDateTime"
                 (input)="updateFormDraftField('appointmentDateTime', $any($event.target).value)"
               />
-              <p
-                *ngIf="
-                  isCstimsActiveForm() &&
-                  cstimsShowValidation() &&
-                  cstimsValidationState().fieldErrors.appointmentDateTime
-                "
-                class="form-field-error"
-              >
-                {{ cstimsValidationState().fieldErrors.appointmentDateTime }}
-              </p>
             </label>
             <label class="form-content-field">
               <span>Inspector</span>

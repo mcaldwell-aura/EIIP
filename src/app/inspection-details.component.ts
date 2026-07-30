@@ -78,12 +78,12 @@ type CstimsCriterionSelectOption = {
 
 type CstimsValidationState = {
   summary: string[];
-  fieldErrors: Partial<
-    Record<
-      'candidate' | 'inspector' | 'inspectionReason' | 'inspectionType' | 'appointmentDateTime',
-      string
-    >
-  >;
+  fieldErrors: Partial<Record<'appointmentDateTime', string>>;
+};
+
+type CstimsAppointmentOption = {
+  label: string;
+  value: string;
 };
 
 const CSTIMS_CRITERIA_SECTIONS: readonly CstimsCriteriaSectionDef[] = [
@@ -1012,8 +1012,38 @@ export class InspectionDetailsComponent implements OnInit {
       };
     }
 
-    return this.validateCstimsForm(this.cstimsInspectionInformation(), this.formDraft());
+    return this.validateCstimsForm(this.formDraft());
   });
+  protected readonly cstimsAppointmentOptions = computed<CstimsAppointmentOption[]>(() => {
+    const optionByDateTime = new Map<string, CstimsAppointmentOption>();
+
+    for (const row of this.appointmentRows()) {
+      optionByDateTime.set(row.dateTime, {
+        label: this.formatAppointmentDateTime(row.dateTime),
+        value: row.dateTime,
+      });
+    }
+
+    const mockAppointmentDateTimes = ['2026-09-05T14:15', '2026-08-29T10:30', '2026-08-14T08:45'];
+
+    for (const dateTime of mockAppointmentDateTimes) {
+      if (!optionByDateTime.has(dateTime)) {
+        optionByDateTime.set(dateTime, {
+          label: this.formatAppointmentDateTime(dateTime),
+          value: dateTime,
+        });
+      }
+    }
+
+    return [...optionByDateTime.values()].sort(
+      (leftOption, rightOption) =>
+        this.parseSortableTimestamp(rightOption.value) -
+        this.parseSortableTimestamp(leftOption.value),
+    );
+  });
+  protected readonly isCstimsSingleAppointment = computed(
+    () => this.cstimsAppointmentOptions().length === 1,
+  );
   protected readonly activeFormFieldValues = computed<Record<string, string>>(() => {
     const formId = this.activeFormId();
     if (!formId) return {};
@@ -1089,6 +1119,26 @@ export class InspectionDetailsComponent implements OnInit {
       [formId]: passAllValues,
     }));
   }
+  private readonly autoSelectSingleCstimsAppointmentEffect = effect(() => {
+    if (!this.isCstimsActiveForm()) {
+      return;
+    }
+
+    const draft = this.formDraft();
+    if (!draft) {
+      return;
+    }
+
+    const options = this.cstimsAppointmentOptions();
+    if (options.length !== 1) {
+      return;
+    }
+
+    const singleAppointment = options[0];
+    if (draft.appointmentDateTime !== singleAppointment.value) {
+      this.updateFormDraftField('appointmentDateTime', singleAppointment.value);
+    }
+  });
   private readonly activeTabFromQueryEffect = effect(() => {
     if (this.queryParamMap().get('tab') === 'forms') {
       this.activeTab.set('forms');
@@ -1202,38 +1252,11 @@ export class InspectionDetailsComponent implements OnInit {
 
     if (form.formType === 'CSTIMS') {
       this.cstimsShowValidation.set(true);
-      const validation = this.validateCstimsForm(this.cstimsInspectionInformation(), draft);
+      const validation = this.validateCstimsForm(draft);
 
       if (validation.summary.length > 0) {
         return;
       }
-
-      const cstimsInfo = this.cstimsInspectionInformation();
-      const normalizedInspector = cstimsInfo.inspector.trim() || 'Unassigned';
-
-      if (!cstimsInfo.inspectionReason || !cstimsInfo.inspectionType) {
-        return;
-      }
-
-      this.updateSummaryForm({
-        candidate: cstimsInfo.candidate.trim() || this.inspection().subjectName,
-        inspector: normalizedInspector,
-        inspectionReason: cstimsInfo.inspectionReason,
-        inspectionType: cstimsInfo.inspectionType,
-      });
-
-      this.assignedInspectorByInspection.update((existing) => ({
-        ...existing,
-        [inspectionId]: normalizedInspector,
-      }));
-
-      this.inspectionStore.updateInspectionDetails({
-        inspectionId,
-        changes: {
-          inspectionReason: cstimsInfo.inspectionReason,
-          inspectionType: cstimsInfo.inspectionType,
-        },
-      });
     }
 
     let persistedFormId = form.formId;
@@ -2335,7 +2358,6 @@ Generated on: ${new Date().toLocaleString()}
   }
 
   private validateCstimsForm(
-    info: CstimsInspectionInformationValue,
     draft: {
       appointmentDateTime: string;
       inspector: string;
@@ -2345,26 +2367,6 @@ Generated on: ${new Date().toLocaleString()}
   ): CstimsValidationState {
     const summary: string[] = [];
     const fieldErrors: CstimsValidationState['fieldErrors'] = {};
-
-    if (!info.candidate.trim()) {
-      fieldErrors.candidate = 'Candidate is required.';
-      summary.push('Candidate is required.');
-    }
-
-    if (!info.inspector.trim()) {
-      fieldErrors.inspector = 'Inspector is required.';
-      summary.push('Inspector is required.');
-    }
-
-    if (!info.inspectionReason) {
-      fieldErrors.inspectionReason = 'Inspection Reason is required.';
-      summary.push('Inspection Reason is required.');
-    }
-
-    if (!info.inspectionType) {
-      fieldErrors.inspectionType = 'Inspection Type is required.';
-      summary.push('Inspection Type is required.');
-    }
 
     const appointmentDateTime = draft?.appointmentDateTime.trim() ?? '';
 
@@ -2377,9 +2379,6 @@ Generated on: ${new Date().toLocaleString()}
       if (Number.isNaN(parsedDateTime)) {
         fieldErrors.appointmentDateTime = 'Appointment date must be valid.';
         summary.push('Appointment date must be valid.');
-      } else if (parsedDateTime > Date.now()) {
-        fieldErrors.appointmentDateTime = 'Appointment date cannot be in the future.';
-        summary.push('Appointment date cannot be in the future.');
       }
     }
 
