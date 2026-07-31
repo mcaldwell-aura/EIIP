@@ -468,17 +468,21 @@ h2 {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-/* Row 1: Candidate (full width) */
+/* Row 1: Candidate, Inspector (3+3 = 6) */
 .candidate-field {
-  grid-column: span 6;
+  grid-column: span 3;
 }
 
-/* Row 2: Inspector, Inspection Status (3+3 = 6) */
 .inspector-field {
   grid-column: span 3;
 }
 
+/* Row 2: Inspection Status, Inspection Status Reason (3+3 = 6) */
 .inspection-status-field {
+  grid-column: span 3;
+}
+
+.inspection-status-reason-field {
   grid-column: span 3;
 }
 

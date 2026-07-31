@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NavMenuService } from './nav-menu.service';
 import { ButtonModule } from 'primeng/button';
@@ -46,6 +47,10 @@ type NotificationTypeOption = {
 export class UserSettingsComponent {
   protected readonly menuService = inject(NavMenuService);
   private readonly messageService = inject(MessageService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly queryParamMap = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   protected readonly tabs: readonly UserSettingsTab[] = [
     { id: 'profile', label: 'Profile' },
@@ -59,8 +64,6 @@ export class UserSettingsComponent {
   protected readonly contactEmail = signal('mcaldwell@aurasolutionsllc.com');
   protected readonly contactPhone = signal('(555) 555-5555');
   protected readonly allowNotifications = signal(true);
-  protected readonly notificationEmail = signal(this.contactEmail());
-  protected readonly notificationEmailError = signal('');
   protected readonly notificationTypes: readonly NotificationTypeOption[] = [
     {
       id: 'assignment-changes',
@@ -84,6 +87,13 @@ export class UserSettingsComponent {
     'inspection-status-changes': true,
     'appointment-status-changes': true,
     'weekly-summaries': true,
+  });
+  private readonly applyRequestedTab = effect(() => {
+    const requestedTab = this.queryParamMap().get('tab');
+
+    if (requestedTab === 'profile' || requestedTab === 'notifications') {
+      this.activeTab.set(requestedTab);
+    }
   });
 
   protected setActiveTab(tabId: UserSettingsTabId): void {
@@ -142,26 +152,14 @@ export class UserSettingsComponent {
     this.setNotificationTypeEnabled(typeId, (event.target as HTMLInputElement).checked);
   }
 
-  protected updateNotificationEmail(event: Event): void {
-    this.notificationEmail.set((event.target as HTMLInputElement).value);
-    this.notificationEmailError.set('');
-  }
-
   protected saveNotifications(): void {
-    const email = this.notificationEmail().trim();
+    const email = this.contactEmail().trim();
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!email) {
-      this.notificationEmailError.set('Email address is required.');
+    if (!email || !emailPattern.test(email)) {
       return;
     }
 
-    if (!emailPattern.test(email)) {
-      this.notificationEmailError.set('Enter a valid email address.');
-      return;
-    }
-
-    this.notificationEmailError.set('');
     this.messageService.add({
       severity: 'success',
       summary: 'Saved',

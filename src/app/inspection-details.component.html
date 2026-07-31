@@ -141,7 +141,7 @@
                 <input pInputText type="text" [value]="summaryForm().candidate" readonly />
               </label>
 
-              <!-- Row 2: Inspector, Inspection Status -->
+              <!-- Row 2: Inspector (full width) -->
               <div class="summary-field inspector-field summary-field-with-action">
                 <span>Inspector (Optional)</span>
                 <div class="field-action-row">
@@ -156,6 +156,7 @@
                 </div>
               </div>
 
+              <!-- Row 3: Inspection Status, Inspection Status Reason -->
               <label class="summary-field inspection-status-field">
                 <span>Inspection Status</span>
                 <select
@@ -169,7 +170,18 @@
                 </select>
               </label>
 
-              <!-- Row 3: Inspection Reason, Inspection Type -->
+              <label class="summary-field inspection-status-reason-field">
+                <span>Inspection Status Reason</span>
+                <input
+                  pInputText
+                  type="text"
+                  [value]="summaryForm().inspectionStatusReason"
+                  (input)="updateSummaryInspectionStatusReason($event)"
+                  placeholder="Enter inspection status reason"
+                />
+              </label>
+
+              <!-- Row 4: Inspection Reason, Inspection Type -->
               <label class="summary-field inspection-reason-field">
                 <span>Inspection Reason</span>
                 <select
@@ -201,7 +213,7 @@
                 </select>
               </label>
 
-              <!-- Row 4: Inspection Result, Completion Date -->
+              <!-- Row 5: Inspection Result, Completion Date -->
               <label class="summary-field inspection-result-field">
                 <span>Inspection Result</span>
                 <select

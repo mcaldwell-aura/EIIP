@@ -138,13 +138,17 @@
             <input
               pInputText
               type="email"
-              [value]="notificationEmail()"
-              (input)="updateNotificationEmail($event)"
-              [class.field-invalid]="!!notificationEmailError()"
+              [value]="contactEmail()"
+              readonly
+              disabled
+              aria-describedby="notification-email-helper"
             />
-            @if (notificationEmailError()) {
-              <p class="validation-message">{{ notificationEmailError() }}</p>
-            }
+            <p id="notification-email-helper" class="notification-helper-text">
+              Notifications are sent to your Contact Email. To update this, go to
+              <a [routerLink]="['/user-settings']" [queryParams]="{ tab: 'profile' }"
+                >Profile Settings</a
+              >.
+            </p>
           </label>
 
           <div class="section-divider" aria-hidden="true"></div>

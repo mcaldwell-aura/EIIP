@@ -457,6 +457,7 @@ type SummaryFormValue = {
   candidate: string;
   inspector: string;
   inspectionStatus: SelectableInspectionStatus | '';
+  inspectionStatusReason: string;
   inspectionReason: InspectionReasonOption | '';
   inspectionType: InspectionTypeOption | '';
   inspectionResult: InspectionReasonOption | '';
@@ -621,6 +622,7 @@ export class InspectionDetailsComponent implements OnInit {
       candidate: inspection.subjectName,
       inspector: this.isAssigned(inspection.assignedInspector) ? inspection.assignedInspector : '',
       inspectionStatus: '',
+      inspectionStatusReason: '',
       inspectionReason: reason,
       inspectionType: type,
       inspectionResult: '',
@@ -1612,6 +1614,12 @@ Generated on: ${new Date().toLocaleString()}
       inspectionStatus: (event.target as HTMLSelectElement).value as
         | SelectableInspectionStatus
         | '',
+    });
+  }
+
+  protected updateSummaryInspectionStatusReason(event: Event): void {
+    this.updateSummaryForm({
+      inspectionStatusReason: (event.target as HTMLInputElement).value.trim(),
     });
   }
 
