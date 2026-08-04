@@ -6,7 +6,7 @@ import { NavMenuService } from './nav-menu.service';
 import { CandidateStoreService } from './candidate-store.service';
 import { type CandidateRecord, type CandidateType, type NameSuffix } from './candidates.data';
 import { InspectionStoreService } from './inspection-store.service';
-import { type InspectionStatus } from './inspection-data';
+import { type InspectionRecord, type InspectionStatus } from './inspection-data';
 
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
@@ -33,7 +33,15 @@ type CandidateDetailData = {
 };
 
 type CandidateDetailTab = 'summary' | 'inspection-history';
-type InspectionHistoryStatus = 'Scheduled' | 'Cancelled';
+type InspectionWorkflowStatus = 'New' | 'Pending' | 'Closed';
+type InspectionStatusReason =
+  | 'Created'
+  | 'Not Assigned'
+  | 'Not Scheduled'
+  | 'Scheduled'
+  | 'Appointment Complete'
+  | 'Completed'
+  | 'Canceled';
 type InspectionHistorySortField =
   | 'inspectionDate'
   | 'inspectionType'
@@ -46,7 +54,7 @@ type InspectionHistoryRow = {
   inspectionDate: string;
   inspectionDateTimestamp: number;
   inspectionType: 'Overt' | 'Covert';
-  inspectionStatus: InspectionHistoryStatus;
+  inspectionStatusDisplay: string;
   nextDueDate: string;
   nextDueDateTimestamp: number;
   comments: string;
@@ -120,7 +128,8 @@ export class CandidateDetailComponent {
           );
         case 'inspectionStatus':
           return (
-            leftRow.inspectionStatus.localeCompare(rightRow.inspectionStatus) * directionMultiplier
+            leftRow.inspectionStatusDisplay.localeCompare(rightRow.inspectionStatusDisplay) *
+            directionMultiplier
           );
         case 'nextDueDate':
           return (
@@ -199,13 +208,15 @@ export class CandidateDetailComponent {
       .map((inspection) => {
         const inspectionDateTimestamp = this.parseDateToTimestamp(inspection.appointmentDate);
         const nextDueDateTimestamp = this.parseDateToTimestamp(inspection.nextDue);
+        const inspectionWorkflowStatus = this.getInspectionWorkflowStatus(inspection);
+        const inspectionStatusReason = this.getInspectionStatusReason(inspection);
 
         return {
           inspectionId: inspection.inspectionId,
           inspectionDate: this.formatDateForDisplay(inspection.appointmentDate),
           inspectionDateTimestamp,
           inspectionType: inspection.inspectionType,
-          inspectionStatus: this.mapInspectionStatus(inspection.inspectionStatus),
+          inspectionStatusDisplay: `${inspectionWorkflowStatus} - ${inspectionStatusReason}`,
           nextDueDate: this.formatDateForDisplay(inspection.nextDue),
           nextDueDateTimestamp,
           comments: inspection.notes.join('\n').slice(0, 500),
@@ -220,8 +231,49 @@ export class CandidateDetailComponent {
     this.inspectionHistorySortDirection.set('desc');
   }
 
-  private mapInspectionStatus(status: InspectionStatus): InspectionHistoryStatus {
-    return status.toLowerCase().includes('cancel') ? 'Cancelled' : 'Scheduled';
+  private getInspectionWorkflowStatus(inspection: InspectionRecord): InspectionWorkflowStatus {
+    if (
+      inspection.inspectionStatus === 'Canceled' ||
+      inspection.inspectionStatus === 'Good' ||
+      inspection.inspectionStatus === 'Satisfactory' ||
+      inspection.inspectionStatus === 'Unsatisfactory'
+    ) {
+      return 'Closed';
+    }
+
+    const hasAssignedInspector = this.hasAssignedInspector(inspection);
+    const hasScheduledAppointment = this.hasScheduledAppointment(inspection);
+
+    if (!hasAssignedInspector && !hasScheduledAppointment) {
+      return 'New';
+    }
+
+    return 'Pending';
+  }
+
+  private getInspectionStatusReason(inspection: InspectionRecord): InspectionStatusReason {
+    const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+
+    if (workflowStatus === 'Closed') {
+      return inspection.inspectionStatus === 'Canceled' ? 'Canceled' : 'Completed';
+    }
+
+    const hasAssignedInspector = this.hasAssignedInspector(inspection);
+    const hasScheduledAppointment = this.hasScheduledAppointment(inspection);
+
+    if (workflowStatus === 'New') {
+      return 'Created';
+    }
+
+    if (!hasAssignedInspector) {
+      return 'Not Assigned';
+    }
+
+    if (!hasScheduledAppointment) {
+      return 'Not Scheduled';
+    }
+
+    return this.isAppointmentComplete(inspection) ? 'Appointment Complete' : 'Scheduled';
   }
 
   private parseDateToTimestamp(value: string): number {
@@ -250,6 +302,26 @@ export class CandidateDetailComponent {
 
     const year = parts[2].length === 2 ? 2000 + thirdPart : thirdPart;
     return new Date(year, firstPart - 1, secondPart).getTime();
+  }
+
+  private hasAssignedInspector(inspection: InspectionRecord): boolean {
+    return (
+      inspection.assignedInspector.trim().length > 0 &&
+      inspection.assignedInspector !== 'Unassigned'
+    );
+  }
+
+  private hasScheduledAppointment(inspection: InspectionRecord): boolean {
+    return inspection.appointmentDate.trim().length > 0;
+  }
+
+  private isAppointmentComplete(inspection: InspectionRecord): boolean {
+    if (!this.hasScheduledAppointment(inspection)) {
+      return false;
+    }
+
+    const appointmentDate = this.parseDateToTimestamp(inspection.appointmentDate);
+    return appointmentDate > 0 && appointmentDate < Date.now();
   }
 
   private formatDateForDisplay(value: string): string {

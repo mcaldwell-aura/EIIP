@@ -320,7 +320,7 @@
                         class="table-sort-btn"
                         (click)="setInspectionHistorySort('inspectionStatus')"
                       >
-                        Inspection Status {{ inspectionSortLabel('inspectionStatus') }}
+                        Status Reason {{ inspectionSortLabel('inspectionStatus') }}
                       </button>
                     </th>
                     <th scope="col">
@@ -341,7 +341,9 @@
                       <td>{{ row.inspectionDate }}</td>
                       <td>{{ row.inspectionType }}</td>
                       <td>
-                        <span class="inspection-status-text">{{ row.inspectionStatus }}</span>
+                        <span class="inspection-status-text">{{
+                          row.inspectionStatusDisplay
+                        }}</span>
                       </td>
                       <td>{{ row.nextDueDate }}</td>
                       <td class="inspection-history-comments-col">
