@@ -191,10 +191,9 @@
                   class="column-sort-btn"
                   (click)="setSort('inspectionStatus')"
                 >
-                  Inspection Status {{ sortIndicator('inspectionStatus') }}
+                  Status Reason {{ sortIndicator('inspectionStatus') }}
                 </button>
               </th>
-              <th>Inspection Status Reason</th>
               <th>
                 <button
                   pButton
@@ -257,17 +256,7 @@
                   </span>
                 </button>
               </td>
-              <td>
-                <a
-                  class="status-pill status-link"
-                  [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
-                  [class.warning]="requiresAttention(row.inspectionStatus)"
-                  (click)="closePriorityModal()"
-                >
-                  {{ row.inspectionWorkflowStatus }}
-                </a>
-              </td>
-              <td>{{ row.inspectionStatusReason }}</td>
+              <td>{{ row.inspectionStatusDisplay }}</td>
               <td>{{ row.inspectionReason }}</td>
               <td>{{ row.inspectionType }}</td>
               <td>
@@ -284,7 +273,7 @@
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td class="empty-results-cell" colspan="8">
+              <td class="empty-results-cell" colspan="7">
                 No inspection plans match the selected filters.
               </td>
             </tr>
