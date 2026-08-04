@@ -12,7 +12,6 @@
         <i class="pi pi-bars"></i>
       </button>
       <a class="brand" routerLink="/">
-        
         <span class="brand-text">EIIP</span>
       </a>
       <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
@@ -195,6 +194,7 @@
                   Inspection Status {{ sortIndicator('inspectionStatus') }}
                 </button>
               </th>
+              <th>Inspection Status Reason</th>
               <th>
                 <button
                   pButton
@@ -228,7 +228,6 @@
                   Appointment {{ sortIndicator('appointment') }}
                 </button>
               </th>
-              <th>Actions</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-row>
@@ -265,9 +264,10 @@
                   [class.warning]="requiresAttention(row.inspectionStatus)"
                   (click)="closePriorityModal()"
                 >
-                  {{ row.inspectionStatus }}
+                  {{ row.inspectionWorkflowStatus }}
                 </a>
               </td>
+              <td>{{ row.inspectionStatusReason }}</td>
               <td>{{ row.inspectionReason }}</td>
               <td>{{ row.inspectionType }}</td>
               <td>
@@ -278,24 +278,6 @@
                 </ng-container>
                 <ng-template #noAppointment>
                   <span class="appointment-empty">—</span>
-                </ng-template>
-              </td>
-              <td>
-                <ng-container *ngIf="row.canCreateInspection; else noAction">
-                  <button
-                    pButton
-                    pRipple
-                    type="button"
-                    class="action-btn icon-action-btn"
-                    [attr.aria-label]="'Create a new inspection for ' + row.subjectName"
-                    (click)="openNewInspectionModal(row)"
-                  >
-                    <span class="action-icon" aria-hidden="true">＋</span>
-                    New Inspection
-                  </button>
-                </ng-container>
-                <ng-template #noAction>
-                  <span class="action-placeholder">—</span>
                 </ng-template>
               </td>
             </tr>
@@ -504,39 +486,45 @@
             </datalist>
 
             <div class="appointment-slots-scroll">
-            <table class="appointment-slots-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Type</th>
-                  <th>Location</th>
-                  <th>Auditor</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let slot of availableAppointmentSlots"
-                  [class.appointment-slot-selected]="selectedAppointmentSlot() === slot"
-                >
-                  <td><strong>{{ slot.time }}</strong></td>
-                  <td>{{ slot.examType || 'CDL Exam' }}</td>
-                  <td>{{ slot.location }}</td>
-                  <td>{{ slot.auditorName }}</td>
-                  <td class="appointment-slot-action">
-                    <button
-                      pButton
-                      pRipple
-                      type="button"
-                      [class]="selectedAppointmentSlot() === slot ? 'action-btn appointment-select-btn appointment-select-btn-selected' : 'action-btn appointment-select-btn'"
-                      (click)="selectAppointment(slot)"
-                    >
-                      {{ selectedAppointmentSlot() === slot ? 'Selected' : 'Select Appointment' }}
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              <table class="appointment-slots-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Auditor</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let slot of availableAppointmentSlots"
+                    [class.appointment-slot-selected]="selectedAppointmentSlot() === slot"
+                  >
+                    <td>
+                      <strong>{{ slot.time }}</strong>
+                    </td>
+                    <td>{{ slot.examType || 'CDL Exam' }}</td>
+                    <td>{{ slot.location }}</td>
+                    <td>{{ slot.auditorName }}</td>
+                    <td class="appointment-slot-action">
+                      <button
+                        pButton
+                        pRipple
+                        type="button"
+                        [class]="
+                          selectedAppointmentSlot() === slot
+                            ? 'action-btn appointment-select-btn appointment-select-btn-selected'
+                            : 'action-btn appointment-select-btn'
+                        "
+                        (click)="selectAppointment(slot)"
+                      >
+                        {{ selectedAppointmentSlot() === slot ? 'Selected' : 'Select Appointment' }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
 
@@ -572,7 +560,3 @@
     </ng-template>
   </p-dialog>
 </div>
-
-
-
-

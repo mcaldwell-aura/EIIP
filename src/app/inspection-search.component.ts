@@ -19,8 +19,16 @@ type SelectOption<T extends string> = {
   value: T;
 };
 
-type InspectionStatusSelection = InspectionStatus | '';
-type InspectionStatusReason = 'New' | 'Pending' | 'Closed';
+type InspectionWorkflowStatus = 'New' | 'Pending' | 'Closed';
+type InspectionStatusSelection = InspectionWorkflowStatus | '';
+type InspectionStatusReason =
+  | 'Created'
+  | 'Not Assigned'
+  | 'Not Scheduled'
+  | 'Scheduled'
+  | 'Appointment Complete'
+  | 'Completed'
+  | 'Canceled';
 
 type SearchParams = {
   inspectionNumber: string;
@@ -40,6 +48,9 @@ type InspectionSearchRow = {
   inspectionNumberNumeric: number;
   subjectName: string;
   inspectionStatus: InspectionStatus;
+  workflowStatus: InspectionWorkflowStatus;
+  statusReason: InspectionStatusReason;
+  workflowStatusDisplay: string;
   inspectionType: InspectionType;
   inspectionReason: string;
   nextDue: string;
@@ -94,13 +105,9 @@ export class InspectionSearchComponent {
 
   protected readonly statusOptions: SelectOption<InspectionStatusSelection>[] = [
     { label: 'Select status', value: '' },
-    { label: 'Status: Scheduled', value: 'Scheduled' },
+    { label: 'Status: New', value: 'New' },
     { label: 'Status: Pending', value: 'Pending' },
-    { label: 'Status: Planned', value: 'Planned' },
-    { label: 'Status: Good', value: 'Good' },
-    { label: 'Status: Satisfactory', value: 'Satisfactory' },
-    { label: 'Status: Unsatisfactory', value: 'Unsatisfactory' },
-    { label: 'Status: Canceled', value: 'Canceled' },
+    { label: 'Status: Closed', value: 'Closed' },
   ];
 
   protected readonly inspectionTypeOptions: SelectOption<InspectionType | 'all'>[] = [
@@ -323,12 +330,17 @@ export class InspectionSearchComponent {
     const inspectionNumberNumeric = Number.parseInt(inspection.inspectionId, 10);
     const nextDueDate = this.parseDate(inspection.nextDue);
     const appointmentDate = this.parseDate(inspection.appointmentDate);
+    const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+    const statusReason = this.getInspectionStatusReason(inspection);
 
     return {
       inspectionNumber: inspection.inspectionId,
       inspectionNumberNumeric: Number.isNaN(inspectionNumberNumeric) ? 0 : inspectionNumberNumeric,
       subjectName: inspection.subjectName,
       inspectionStatus: inspection.inspectionStatus,
+      workflowStatus,
+      statusReason,
+      workflowStatusDisplay: `${workflowStatus} - ${statusReason}`,
       inspectionType: inspection.inspectionType,
       inspectionReason: inspection.inspectionReason,
       nextDue: inspection.nextDue,
@@ -353,8 +365,10 @@ export class InspectionSearchComponent {
       inspection.inspectionId.toLowerCase().includes(inspectionNumber);
     const matchesSubjectName =
       subjectName.length === 0 || inspection.subjectName.toLowerCase().includes(subjectName);
-    const matchesStatus =
-      searchParams.status === '' || inspection.inspectionStatus === searchParams.status;
+    const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+    const statusReason = this.getInspectionStatusReason(inspection);
+
+    const matchesStatus = searchParams.status === '' || workflowStatus === searchParams.status;
     const matchesType =
       searchParams.inspectionType === 'all' ||
       inspection.inspectionType === searchParams.inspectionType;
@@ -364,8 +378,7 @@ export class InspectionSearchComponent {
       inspectionReason.length === 0 ||
       inspection.inspectionReason.toLowerCase().includes(inspectionReason);
     const matchesStatusReason =
-      inspectionStatusReason.length === 0 ||
-      this.getInspectionStatusReason(inspection).toLowerCase().includes(inspectionStatusReason);
+      inspectionStatusReason.length === 0 || statusReason.toLowerCase() === inspectionStatusReason;
     const matchesResult =
       searchParams.inspectionResult === 'all' ||
       inspection.inspectionStatus === searchParams.inspectionResult;
@@ -395,7 +408,7 @@ export class InspectionSearchComponent {
     );
   }
 
-  private getInspectionStatusReason(inspection: InspectionRecord): string {
+  private getInspectionWorkflowStatus(inspection: InspectionRecord): InspectionWorkflowStatus {
     if (
       inspection.inspectionStatus === 'Canceled' ||
       inspection.inspectionStatus === 'Good' ||
@@ -405,23 +418,50 @@ export class InspectionSearchComponent {
       return 'Closed';
     }
 
-    if (inspection.assignedInspector === 'Unassigned') {
+    const hasAssignedInspector = this.hasAssignedInspector(inspection);
+    const hasScheduledAppointment = this.hasScheduledAppointment(inspection);
+
+    if (!hasAssignedInspector && !hasScheduledAppointment) {
       return 'New';
     }
 
     return 'Pending';
   }
 
-  private getStatusReasonOptions(status: InspectionStatus): SelectOption<InspectionStatusReason>[] {
-    const statusReasonOptionsByStatus: Record<InspectionStatus, InspectionStatusReason[]> = {
-      Scheduled: ['Pending'],
-      Pending: ['New', 'Pending'],
-      Planned: ['New'],
-      Good: ['Closed'],
-      Satisfactory: ['Closed'],
-      Unsatisfactory: ['Closed'],
-      Canceled: ['Closed'],
-    };
+  private getInspectionStatusReason(inspection: InspectionRecord): InspectionStatusReason {
+    const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+
+    if (workflowStatus === 'Closed') {
+      return inspection.inspectionStatus === 'Canceled' ? 'Canceled' : 'Completed';
+    }
+
+    const hasAssignedInspector = this.hasAssignedInspector(inspection);
+    const hasScheduledAppointment = this.hasScheduledAppointment(inspection);
+
+    if (workflowStatus === 'New') {
+      return 'Created';
+    }
+
+    if (!hasAssignedInspector) {
+      return 'Not Assigned';
+    }
+
+    if (!hasScheduledAppointment) {
+      return 'Not Scheduled';
+    }
+
+    return this.isAppointmentComplete(inspection) ? 'Appointment Complete' : 'Scheduled';
+  }
+
+  private getStatusReasonOptions(
+    status: InspectionWorkflowStatus,
+  ): SelectOption<InspectionStatusReason>[] {
+    const statusReasonOptionsByStatus: Record<InspectionWorkflowStatus, InspectionStatusReason[]> =
+      {
+        New: ['Created'],
+        Pending: ['Not Assigned', 'Not Scheduled', 'Scheduled', 'Appointment Complete'],
+        Closed: ['Completed', 'Canceled'],
+      };
 
     return (statusReasonOptionsByStatus[status] ?? []).map((reason) => ({
       label: reason,
@@ -473,5 +513,25 @@ export class InspectionSearchComponent {
     const year = yearText.length === 2 ? 2000 + Number(yearText) : Number(yearText);
 
     return new Date(year, month, day);
+  }
+
+  private hasAssignedInspector(inspection: InspectionRecord): boolean {
+    return (
+      inspection.assignedInspector.trim().length > 0 &&
+      inspection.assignedInspector !== 'Unassigned'
+    );
+  }
+
+  private hasScheduledAppointment(inspection: InspectionRecord): boolean {
+    return inspection.appointmentDate.trim().length > 0;
+  }
+
+  private isAppointmentComplete(inspection: InspectionRecord): boolean {
+    if (!this.hasScheduledAppointment(inspection)) {
+      return false;
+    }
+
+    const appointmentDate = this.parseDate(inspection.appointmentDate);
+    return !Number.isNaN(appointmentDate.getTime()) && appointmentDate.getTime() < Date.now();
   }
 }

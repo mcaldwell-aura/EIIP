@@ -336,28 +336,19 @@ h1 {
   white-space: nowrap;
 }
 
-.status-chip.status-pending,
-.status-chip.status-planned {
+.status-chip.status-new {
+  background: #eef7ff;
+  border-color: #c8def6;
+  color: #1754a8;
+}
+
+.status-chip.status-pending {
   background: #fff3e3;
   border-color: #f8d7a5;
   color: #a06000;
 }
 
-.status-chip.status-scheduled {
-  background: #e8f0ff;
-  border-color: #c7d8fd;
-  color: #1f56d8;
-}
-
-.status-chip.status-good,
-.status-chip.status-satisfactory {
-  background: #e8f8ee;
-  border-color: #bfe8cf;
-  color: #18794b;
-}
-
-.status-chip.status-unsatisfactory,
-.status-chip.status-canceled {
+.status-chip.status-closed {
   background: #fdecec;
   border-color: #f7c5c5;
   color: #b42318;

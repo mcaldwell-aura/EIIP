@@ -37,6 +37,16 @@ type SelectOption<T extends string> = {
   value: T;
 };
 
+type InspectionWorkflowStatus = 'New' | 'Pending' | 'Closed';
+type InspectionStatusReason =
+  | 'Created'
+  | 'Not Assigned'
+  | 'Not Scheduled'
+  | 'Scheduled'
+  | 'Appointment Complete'
+  | 'Completed'
+  | 'Canceled';
+
 type PriorityContext = {
   why: string;
   lastInspectionScore: string;
@@ -52,6 +62,9 @@ type InspectionPlanRow = {
   nextDue: string;
   priority: number;
   inspectionStatus: InspectionStatus;
+  inspectionWorkflowStatus: InspectionWorkflowStatus;
+  inspectionStatusReason: InspectionStatusReason;
+  inspectionStatusDisplay: string;
   inspectionReason: string;
   inspectionType: InspectionRecord['inspectionType'];
   appointmentDate: string;
@@ -166,7 +179,8 @@ export class InspectionOverviewComponent {
   protected readonly appointmentLocationInput = signal('');
   protected readonly stagedAppointments = signal<NewInspectionAppointmentDraft[]>([]);
   protected readonly selectedAppointmentSlot = signal<AppointmentSlot | null>(null);
-  protected readonly availableAppointmentSlots: readonly AppointmentSlot[] = AVAILABLE_APPOINTMENT_SLOTS;
+  protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
+    AVAILABLE_APPOINTMENT_SLOTS;
   protected readonly newInspectionValidationMessage = signal('');
   protected readonly inspectionReasonOptions: readonly InspectionReasonOption[] = [
     'Change',
@@ -701,6 +715,8 @@ export class InspectionOverviewComponent {
       const appointmentText = isScheduledInspection
         ? this.formatAppointmentText(displayInspection)
         : '—';
+      const inspectionWorkflowStatus = this.getInspectionWorkflowStatus(displayInspection);
+      const inspectionStatusReason = this.getInspectionStatusReason(displayInspection);
 
       return {
         inspectionId: displayInspection.inspectionId,
@@ -709,6 +725,9 @@ export class InspectionOverviewComponent {
         nextDue: displayInspection.nextDue,
         priority: displayInspection.priority,
         inspectionStatus: displayInspection.inspectionStatus,
+        inspectionWorkflowStatus,
+        inspectionStatusReason,
+        inspectionStatusDisplay: `${inspectionWorkflowStatus} - ${inspectionStatusReason}`,
         inspectionReason: displayInspection.inspectionReason,
         inspectionType: displayInspection.inspectionType,
         appointmentDate: displayInspection.appointmentDate,
@@ -766,6 +785,59 @@ export class InspectionOverviewComponent {
 
   private isOpenInspection(status: InspectionStatus): boolean {
     return status === 'Pending' || status === 'Planned' || status === 'Scheduled';
+  }
+
+  private getInspectionWorkflowStatus(inspection: InspectionRecord): InspectionWorkflowStatus {
+    if (
+      inspection.inspectionStatus === 'Canceled' ||
+      inspection.inspectionStatus === 'Good' ||
+      inspection.inspectionStatus === 'Satisfactory' ||
+      inspection.inspectionStatus === 'Unsatisfactory'
+    ) {
+      return 'Closed';
+    }
+
+    const hasAssignedInspector =
+      inspection.assignedInspector.trim().length > 0 &&
+      inspection.assignedInspector !== 'Unassigned';
+    const hasScheduledAppointment = inspection.appointmentDate.trim().length > 0;
+
+    if (!hasAssignedInspector && !hasScheduledAppointment) {
+      return 'New';
+    }
+
+    return 'Pending';
+  }
+
+  private getInspectionStatusReason(inspection: InspectionRecord): InspectionStatusReason {
+    const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+
+    if (workflowStatus === 'Closed') {
+      return inspection.inspectionStatus === 'Canceled' ? 'Canceled' : 'Completed';
+    }
+
+    const hasAssignedInspector =
+      inspection.assignedInspector.trim().length > 0 &&
+      inspection.assignedInspector !== 'Unassigned';
+    const hasScheduledAppointment = inspection.appointmentDate.trim().length > 0;
+
+    if (workflowStatus === 'New') {
+      return 'Created';
+    }
+
+    if (!hasAssignedInspector) {
+      return 'Not Assigned';
+    }
+
+    if (!hasScheduledAppointment) {
+      return 'Not Scheduled';
+    }
+
+    const appointmentDateTime = this.parseAppointmentDateTime(inspection);
+    return !Number.isNaN(appointmentDateTime.getTime()) &&
+      appointmentDateTime.getTime() < Date.now()
+      ? 'Appointment Complete'
+      : 'Scheduled';
   }
 
   private sortInspectionAppointments(
@@ -841,7 +913,9 @@ export class InspectionOverviewComponent {
 
   private resolveInspectorSelection(auditorName: string): string[] {
     const matchingInspector = USERS.find(
-      (user) => user.active && user.lastName.localeCompare(auditorName, undefined, { sensitivity: 'base' }) === 0,
+      (user) =>
+        user.active &&
+        user.lastName.localeCompare(auditorName, undefined, { sensitivity: 'base' }) === 0,
     );
 
     return matchingInspector

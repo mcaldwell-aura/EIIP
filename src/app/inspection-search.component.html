@@ -53,7 +53,7 @@
       <h2>Search Inspections</h2>
 
       <div class="search-grid">
-        <!-- Row 1: Inspection Number, Inspection Status, Inspection Status Reason -->
+        <!-- Row 1: Inspection Number, Inspection Status, Status Reason -->
         <label class="search-field">
           <span>Inspection Number</span>
           <input
@@ -80,7 +80,7 @@
         </label>
 
         <label class="search-field">
-          <span>Inspection Status Reason</span>
+          <span>Status Reason</span>
           <p-select
             [options]="inspectionStatusReasonOptions()"
             [ngModel]="searchParams().inspectionStatusReason"
@@ -216,8 +216,8 @@
                   <th pSortableColumn="subjectName">
                     Candidate Name <p-sortIcon field="subjectName"></p-sortIcon>
                   </th>
-                  <th pSortableColumn="inspectionStatus">
-                    Status <p-sortIcon field="inspectionStatus"></p-sortIcon>
+                  <th pSortableColumn="workflowStatusDisplay">
+                    Status <p-sortIcon field="workflowStatusDisplay"></p-sortIcon>
                   </th>
                   <th pSortableColumn="inspectionType">
                     Inspection Type <p-sortIcon field="inspectionType"></p-sortIcon>
@@ -241,7 +241,7 @@
                 <tr>
                   <td>{{ row.inspectionNumber }}</td>
                   <td>{{ row.subjectName }}</td>
-                  <td>{{ row.inspectionStatus }}</td>
+                  <td>{{ row.workflowStatusDisplay }}</td>
                   <td>{{ row.inspectionType }}</td>
                   <td>{{ row.inspectionReason }}</td>
                   <td>{{ row.nextDue }}</td>
@@ -260,15 +260,11 @@
                     <h3>Inspection #{{ row.inspectionNumber }}</h3>
                     <span
                       class="status-chip"
-                      [class.status-pending]="row.inspectionStatus === 'Pending'"
-                      [class.status-scheduled]="row.inspectionStatus === 'Scheduled'"
-                      [class.status-planned]="row.inspectionStatus === 'Planned'"
-                      [class.status-good]="row.inspectionStatus === 'Good'"
-                      [class.status-satisfactory]="row.inspectionStatus === 'Satisfactory'"
-                      [class.status-unsatisfactory]="row.inspectionStatus === 'Unsatisfactory'"
-                      [class.status-canceled]="row.inspectionStatus === 'Canceled'"
+                      [class.status-new]="row.workflowStatus === 'New'"
+                      [class.status-pending]="row.workflowStatus === 'Pending'"
+                      [class.status-closed]="row.workflowStatus === 'Closed'"
                     >
-                      {{ row.inspectionStatus }}
+                      {{ row.workflowStatusDisplay }}
                     </span>
                   </header>
 
