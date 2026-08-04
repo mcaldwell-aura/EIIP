@@ -19,10 +19,14 @@ type SelectOption<T extends string> = {
   value: T;
 };
 
+type InspectionStatusSelection = InspectionStatus | '';
+type InspectionStatusReason = 'New' | 'Pending' | 'Closed';
+
 type SearchParams = {
   inspectionNumber: string;
   subjectName: string;
-  status: InspectionStatus | 'all';
+  status: InspectionStatusSelection;
+  inspectionStatusReason: InspectionStatusReason | '';
   inspectionType: InspectionType | 'all';
   inspector: string;
   inspectionReason: string;
@@ -54,7 +58,8 @@ type TableSortEvent = {
 const DEFAULT_SEARCH_PARAMS: SearchParams = {
   inspectionNumber: '',
   subjectName: '',
-  status: 'all',
+  status: '',
+  inspectionStatusReason: '',
   inspectionType: 'all',
   inspector: '',
   inspectionReason: '',
@@ -87,8 +92,8 @@ export class InspectionSearchComponent {
 
   private readonly rows = this.inspectionStore.inspections;
 
-  protected readonly statusOptions: SelectOption<InspectionStatus | 'all'>[] = [
-    { label: 'Status: All', value: 'all' },
+  protected readonly statusOptions: SelectOption<InspectionStatusSelection>[] = [
+    { label: 'Select status', value: '' },
     { label: 'Status: Scheduled', value: 'Scheduled' },
     { label: 'Status: Pending', value: 'Pending' },
     { label: 'Status: Planned', value: 'Planned' },
@@ -103,6 +108,20 @@ export class InspectionSearchComponent {
     { label: 'Type: Overt', value: 'Overt' },
     { label: 'Type: Covert', value: 'Covert' },
   ];
+
+  protected readonly inspectionStatusReasonOptions = computed<
+    SelectOption<InspectionStatusReason | ''>[]
+  >(() => {
+    const selectedStatus = this.searchParams().status;
+    if (!selectedStatus) {
+      return [{ label: 'Status Reason: All', value: '' }];
+    }
+
+    const reasons = this.getStatusReasonOptions(selectedStatus);
+    return [{ label: 'Status Reason: All', value: '' }, ...reasons];
+  });
+
+  protected readonly isStatusReasonDisabled = computed(() => !this.searchParams().status);
 
   protected readonly inspectionReasonOptions: SelectOption<string>[] = [
     { label: 'Reason: All', value: '' },
@@ -171,12 +190,27 @@ export class InspectionSearchComponent {
     this.patchSearchParams({ inspector: (event.target as HTMLInputElement).value });
   }
 
-  protected updateStatus(value: InspectionStatus | 'all'): void {
-    this.patchSearchParams({ status: value });
+  protected updateStatus(value: InspectionStatusSelection): void {
+    const nextStatus = value;
+    const nextReasonOptions = nextStatus
+      ? this.getStatusReasonOptions(nextStatus).map((option) => option.value)
+      : [];
+    const currentReason = this.searchParams().inspectionStatusReason;
+    const shouldResetReason =
+      currentReason !== '' && (nextStatus === '' || !nextReasonOptions.includes(currentReason));
+
+    this.patchSearchParams({
+      status: nextStatus,
+      inspectionStatusReason: shouldResetReason ? '' : currentReason,
+    });
   }
 
   protected updateInspectionType(value: InspectionType | 'all'): void {
     this.patchSearchParams({ inspectionType: value });
+  }
+
+  protected updateInspectionStatusReason(value: InspectionStatusReason | ''): void {
+    this.patchSearchParams({ inspectionStatusReason: value });
   }
 
   protected updateInspectionReason(value: string): void {
@@ -312,6 +346,7 @@ export class InspectionSearchComponent {
     const subjectName = searchParams.subjectName.trim().toLowerCase();
     const inspector = searchParams.inspector.trim().toLowerCase();
     const inspectionReason = searchParams.inspectionReason.trim().toLowerCase();
+    const inspectionStatusReason = searchParams.inspectionStatusReason.trim().toLowerCase();
 
     const matchesInspectionNumber =
       inspectionNumber.length === 0 ||
@@ -319,7 +354,7 @@ export class InspectionSearchComponent {
     const matchesSubjectName =
       subjectName.length === 0 || inspection.subjectName.toLowerCase().includes(subjectName);
     const matchesStatus =
-      searchParams.status === 'all' || inspection.inspectionStatus === searchParams.status;
+      searchParams.status === '' || inspection.inspectionStatus === searchParams.status;
     const matchesType =
       searchParams.inspectionType === 'all' ||
       inspection.inspectionType === searchParams.inspectionType;
@@ -328,6 +363,9 @@ export class InspectionSearchComponent {
     const matchesReason =
       inspectionReason.length === 0 ||
       inspection.inspectionReason.toLowerCase().includes(inspectionReason);
+    const matchesStatusReason =
+      inspectionStatusReason.length === 0 ||
+      this.getInspectionStatusReason(inspection).toLowerCase().includes(inspectionStatusReason);
     const matchesResult =
       searchParams.inspectionResult === 'all' ||
       inspection.inspectionStatus === searchParams.inspectionResult;
@@ -350,10 +388,45 @@ export class InspectionSearchComponent {
       matchesType &&
       matchesInspector &&
       matchesReason &&
+      matchesStatusReason &&
       matchesResult &&
       matchesFrom &&
       matchesTo
     );
+  }
+
+  private getInspectionStatusReason(inspection: InspectionRecord): string {
+    if (
+      inspection.inspectionStatus === 'Canceled' ||
+      inspection.inspectionStatus === 'Good' ||
+      inspection.inspectionStatus === 'Satisfactory' ||
+      inspection.inspectionStatus === 'Unsatisfactory'
+    ) {
+      return 'Closed';
+    }
+
+    if (inspection.assignedInspector === 'Unassigned') {
+      return 'New';
+    }
+
+    return 'Pending';
+  }
+
+  private getStatusReasonOptions(status: InspectionStatus): SelectOption<InspectionStatusReason>[] {
+    const statusReasonOptionsByStatus: Record<InspectionStatus, InspectionStatusReason[]> = {
+      Scheduled: ['Pending'],
+      Pending: ['New', 'Pending'],
+      Planned: ['New'],
+      Good: ['Closed'],
+      Satisfactory: ['Closed'],
+      Unsatisfactory: ['Closed'],
+      Canceled: ['Closed'],
+    };
+
+    return (statusReasonOptionsByStatus[status] ?? []).map((reason) => ({
+      label: reason,
+      value: reason,
+    }));
   }
 
   private ensureMockupPageCount(rows: InspectionSearchRow[]): InspectionSearchRow[] {

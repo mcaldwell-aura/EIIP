@@ -652,6 +652,45 @@ export class InspectionDetailsComponent implements OnInit {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   });
+  protected readonly aiSummaryTimestamp = computed(() => this.lastEditedTimestamp());
+  protected readonly aiSummaryText = computed(() => {
+    const inspection = this.inspection();
+    const form = this.summaryForm();
+    const status = form.inspectionStatus || this.currentInspectionStatus();
+    const statusReason = form.inspectionStatusReason.trim();
+    const statusSentence = statusReason
+      ? `Current status is ${status} (${statusReason}).`
+      : `Current status is ${status}.`;
+
+    let appointmentSentence = 'Appointment details have not been scheduled yet.';
+    if (
+      inspection.appointmentDate ||
+      inspection.appointmentTime ||
+      inspection.appointmentLocation
+    ) {
+      const dateText = inspection.appointmentDate || 'date to be confirmed';
+      const timeText = inspection.appointmentTime ? ` at ${inspection.appointmentTime}` : '';
+      const locationText = inspection.appointmentLocation
+        ? ` at ${inspection.appointmentLocation}`
+        : '';
+
+      appointmentSentence = `Appointment is set for ${dateText}${timeText}${locationText}.`;
+    }
+
+    const completionDate = this.formatCompletionDateForSummary(form.completionDate);
+    const completionResult = form.inspectionResult;
+
+    let completionSentence = 'Completion information has not been recorded yet.';
+    if (completionDate && completionResult) {
+      completionSentence = `Completion is recorded for ${completionDate} with a ${completionResult} result.`;
+    } else if (completionDate) {
+      completionSentence = `Completion is recorded for ${completionDate}.`;
+    } else if (completionResult) {
+      completionSentence = `Completion result is ${completionResult}, and a completion date has not been recorded yet.`;
+    }
+
+    return `${statusSentence} ${appointmentSentence} ${completionSentence}`;
+  });
   protected readonly baseNoteRows = computed<NoteRow[]>(() => {
     const assignedInspector = this.isAssigned(this.assignedInspector())
       ? this.assignedInspector()
@@ -2425,6 +2464,19 @@ Generated on: ${new Date().toLocaleString()}
       ...existing,
       [inspectionId]: new Date().toISOString(),
     }));
+  }
+
+  private formatCompletionDateForSummary(value: string): string {
+    if (!value) {
+      return '';
+    }
+
+    const [yearText = '', monthText = '', dayText = ''] = value.split('-');
+    if (yearText.length !== 4 || monthText.length !== 2 || dayText.length !== 2) {
+      return value;
+    }
+
+    return `${monthText}/${dayText}/${yearText}`;
   }
 
   private parseSortableTimestamp(dateTime: string): number {

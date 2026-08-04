@@ -51,7 +51,7 @@
     </section>
 
     <section class="summary-cards" aria-label="Weekly summary cards" data-node-id="173:4752">
-      <article *ngFor="let card of summaryCards()" class="stat-card">
+      <article *ngFor="let card of atGlanceCards()" class="stat-card">
         <div class="card-top">
           <p>{{ card.label }}</p>
         </div>
@@ -59,35 +59,42 @@
       </article>
     </section>
 
+    <section class="summary-header-row items-needing-attention-header">
+      <h2>Items Needing Attention</h2>
+    </section>
+
+    <section
+      class="summary-cards summary-cards--attention"
+      aria-label="Items needing attention cards"
+    >
+      <button
+        *ngFor="let card of needingAttentionCards()"
+        pButton
+        pRipple
+        type="button"
+        class="stat-card stat-card-button"
+        (click)="openAttentionModal(card.key)"
+      >
+        <div class="card-top">
+          <p>{{ card.label }}</p>
+        </div>
+        <strong>{{ card.value }}</strong>
+      </button>
+    </section>
+
     <section class="section-heading-row operational-heading-row">
       <div class="operational-heading-main">
         <h2>Operational Visibility</h2>
 
-        <div class="visibility-toggle" role="radiogroup" aria-label="Operational visibility scope">
-          <button
-            pButton
-            pRipple
-            type="button"
-            role="radio"
-            class="scope-toggle-btn"
-            [class.is-active]="visibilityScope() === 'candidateMaturity'"
-            [attr.aria-checked]="visibilityScope() === 'candidateMaturity'"
-            (click)="setVisibilityScope('candidateMaturity')"
-          >
-            Candidate Maturity
-          </button>
-          <button
-            pButton
-            pRipple
-            type="button"
-            role="radio"
-            class="scope-toggle-btn"
-            [class.is-active]="visibilityScope() === 'candidateType'"
-            [attr.aria-checked]="visibilityScope() === 'candidateType'"
-            (click)="setVisibilityScope('candidateType')"
-          >
-            Candidate Type
-          </button>
+        <div class="visibility-toggle" aria-label="Candidate characteristic">
+          <p-selectbutton
+            [options]="visibilityScopeOptions"
+            [ngModel]="visibilityScope()"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="setVisibilityScope($event.value)"
+            ariaLabel="Candidate Characteristic"
+          ></p-selectbutton>
         </div>
       </div>
     </section>
@@ -114,7 +121,13 @@
           <h3>Total Active Candidates</h3>
 
           <div class="total-circle-wrap" aria-hidden="true">
-            <div class="total-circle" [style.background]="activeCandidateCircleGradient()">
+            <div class="total-circle chart-circle-wrap">
+              <p-chart
+                type="doughnut"
+                [data]="activeCandidatesDonutData()"
+                [options]="activeCandidatesDonutOptions()"
+                class="active-candidates-donut"
+              ></p-chart>
               <div class="total-circle-inner">
                 <p class="counter-value">{{ activeCandidateTotal() }}</p>
                 <span class="counter-caption">active</span>
@@ -141,27 +154,15 @@
             </div>
 
             <div
-              class="bar-chart"
+              class="bar-chart bar-chart-primeng"
               aria-label="Inspection result chart by selected visibility scope"
             >
-              <div *ngFor="let item of inspectionResultsChartData()" class="bar-group">
-                <div class="bar-rail">
-                  <div
-                    class="stacked-bar"
-                    [style.height.%]="(item.total / inspectionResultsChartMax()) * 100"
-                  >
-                    <div
-                      class="bar-segment secondary"
-                      [style.height.%]="(item.secondaryCount / item.total) * 100"
-                    ></div>
-                    <div
-                      class="bar-segment primary"
-                      [style.height.%]="(item.primaryCount / item.total) * 100"
-                    ></div>
-                  </div>
-                </div>
-                <span>{{ item.label }}</span>
-              </div>
+              <p-chart
+                type="bar"
+                [data]="inspectionResultsStackedChartData()"
+                [options]="stackedBarChartOptions()"
+                class="stacked-bar-chart"
+              ></p-chart>
             </div>
           </article>
 
@@ -171,31 +172,19 @@
             [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
           >
             <div class="panel-header">
-              <h3>Reasons for Inspection</h3>
+              <h3>Reasons for Inspections in Last 30 Days</h3>
             </div>
 
             <div
-              class="bar-chart"
+              class="bar-chart bar-chart-primeng"
               aria-label="Reasons for inspection chart by selected visibility scope"
             >
-              <div *ngFor="let item of reasonsForInspectionChartData()" class="bar-group">
-                <div class="bar-rail">
-                  <div
-                    class="stacked-bar"
-                    [style.height.%]="(item.total / reasonsForInspectionChartMax()) * 100"
-                  >
-                    <div
-                      class="bar-segment secondary"
-                      [style.height.%]="(item.secondaryCount / item.total) * 100"
-                    ></div>
-                    <div
-                      class="bar-segment primary"
-                      [style.height.%]="(item.primaryCount / item.total) * 100"
-                    ></div>
-                  </div>
-                </div>
-                <span>{{ item.label }}</span>
-              </div>
+              <p-chart
+                type="bar"
+                [data]="reasonsForInspectionStackedChartData()"
+                [options]="stackedBarChartOptions()"
+                class="stacked-bar-chart"
+              ></p-chart>
             </div>
           </article>
         </div>
@@ -206,17 +195,21 @@
       <section class="inspection-block">
         <h2>Inspections Due</h2>
         <div class="due-stat-cards">
-          <article
+          <button
             *ngFor="let bucket of dueBucketsForCards()"
-            class="stat-card due-stat-card"
+            pButton
+            pRipple
+            type="button"
+            class="stat-card due-stat-card due-stat-card-button"
             [class.is-overdue]="bucket.tone === 'overdue'"
             [class.is-date-unset]="bucket.tone === 'unset'"
+            (click)="openCandidatesDueModal(bucket.label)"
           >
             <div class="card-top">
               <p>{{ bucket.label }}</p>
             </div>
             <strong>{{ bucket.count }}</strong>
-          </article>
+          </button>
         </div>
       </section>
 
@@ -498,4 +491,210 @@
       </section>
     </section>
   </main>
+
+  <p-dialog
+    [(visible)]="itemsNeedingAttentionModalVisible"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="true"
+    [dismissableMask]="true"
+    [header]="attentionModalTitle()"
+    [style]="{ width: 'min(1080px, 96vw)' }"
+    (onHide)="closeAttentionModal()"
+  >
+    <div class="table-wrap attention-modal-table-wrap">
+      <table *ngIf="activeAttentionModal() === 'inspectionsToBeAssigned'">
+        <thead>
+          <tr>
+            <th>Inspection #</th>
+            <th>Candidate</th>
+            <th>Appointment Date</th>
+            <th>Location</th>
+            <th>Last Assigned To</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of inspectionsToBeAssignedRows()">
+            <td>
+              <a
+                class="candidate-link"
+                [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+              >
+                {{ row.inspectionId }}
+              </a>
+            </td>
+            <td>
+              <a class="candidate-link" [routerLink]="['/candidates', row.subjectId]">{{
+                row.candidateName
+              }}</a>
+            </td>
+            <td>{{ row.appointmentDate }}</td>
+            <td>{{ row.location }}</td>
+            <td>{{ row.lastAssignedTo || '' }}</td>
+          </tr>
+          <tr *ngIf="!inspectionsToBeAssignedRows().length">
+            <td class="empty-message" colspan="5">No inspections to be assigned.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table *ngIf="activeAttentionModal() === 'inspectionsToBeClosed'">
+        <thead>
+          <tr>
+            <th>Inspection #</th>
+            <th>Inspector</th>
+            <th>Appointment Completed</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of inspectionsToBeClosedRows()">
+            <td>
+              <a
+                class="candidate-link"
+                [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+              >
+                {{ row.inspectionId }}
+              </a>
+            </td>
+            <td>{{ row.inspector }}</td>
+            <td>{{ row.appointmentCompleted }}</td>
+            <td>{{ row.notes }}</td>
+          </tr>
+          <tr *ngIf="!inspectionsToBeClosedRows().length">
+            <td class="empty-message" colspan="4">No inspections to be closed.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table *ngIf="activeAttentionModal() === 'inspectionsToBeScheduled'">
+        <thead>
+          <tr>
+            <th>Inspection #</th>
+            <th>Candidate</th>
+            <th>Appointment Date</th>
+            <th>Location</th>
+            <th>Inspector</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of inspectionsToBeScheduledRows()">
+            <td>
+              <a
+                class="candidate-link"
+                [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+              >
+                {{ row.inspectionId }}
+              </a>
+            </td>
+            <td>
+              <a class="candidate-link" [routerLink]="['/candidates', row.subjectId]">{{
+                row.candidateName
+              }}</a>
+            </td>
+            <td>{{ row.appointmentDate }}</td>
+            <td>{{ row.location }}</td>
+            <td>{{ row.inspector }}</td>
+          </tr>
+          <tr *ngIf="!inspectionsToBeScheduledRows().length">
+            <td class="empty-message" colspan="5">No inspections to be scheduled.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table *ngIf="activeAttentionModal() === 'missedInspections'">
+        <thead>
+          <tr>
+            <th>Inspection #</th>
+            <th>Candidate</th>
+            <th>Appointment Date</th>
+            <th>Location</th>
+            <th>Inspector</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of missedInspectionsRows()">
+            <td>
+              <a
+                class="candidate-link"
+                [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+              >
+                {{ row.inspectionId }}
+              </a>
+            </td>
+            <td>
+              <a class="candidate-link" [routerLink]="['/candidates', row.subjectId]">{{
+                row.candidateName
+              }}</a>
+            </td>
+            <td>{{ row.appointmentDate }}</td>
+            <td>{{ row.location }}</td>
+            <td>{{ row.inspector }}</td>
+          </tr>
+          <tr *ngIf="!missedInspectionsRows().length">
+            <td class="empty-message" colspan="5">No missed inspections.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table *ngIf="activeAttentionModal() === 'candidatesMissingNextDue'">
+        <thead>
+          <tr>
+            <th>Candidate Name</th>
+            <th>Last Inspection Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of candidatesMissingNextDueRows()">
+            <td>
+              <a class="candidate-link" [routerLink]="['/candidates', row.candidateId]">{{
+                row.candidateName
+              }}</a>
+            </td>
+            <td>{{ row.lastInspectionResult }}</td>
+          </tr>
+          <tr *ngIf="!candidatesMissingNextDueRows().length">
+            <td class="empty-message" colspan="2">No candidates missing next due date.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </p-dialog>
+
+  <p-dialog
+    [(visible)]="candidatesDueModalVisible"
+    [modal]="true"
+    [draggable]="false"
+    [closable]="true"
+    [dismissableMask]="true"
+    [header]="dueModalTitle()"
+    [style]="{ width: 'min(900px, 96vw)' }"
+    (onHide)="closeCandidatesDueModal()"
+  >
+    <div class="table-wrap attention-modal-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate Name</th>
+            <th>Next Due Date</th>
+            <th>Due Bucket</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredCandidatesDueRows()">
+            <td>
+              <a class="candidate-link" [routerLink]="['/candidates', row.candidateId]">{{
+                row.candidateName
+              }}</a>
+            </td>
+            <td>{{ row.nextDueDate }}</td>
+            <td>{{ row.dueBucket }}</td>
+          </tr>
+          <tr *ngIf="!filteredCandidatesDueRows().length">
+            <td class="empty-message" colspan="3">No candidates due in this range.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </p-dialog>
 </div>

@@ -8,14 +8,68 @@ import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './ins
 import { NavMenuService } from './nav-menu.service';
 
 import { ButtonModule } from 'primeng/button';
+import { ChartModule } from 'primeng/chart';
+import { DialogModule } from 'primeng/dialog';
 import { RippleModule } from 'primeng/ripple';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
 
 type SummaryCard = {
   label: string;
   value: number;
+};
+
+type AttentionModalKey =
+  | 'inspectionsToBeAssigned'
+  | 'inspectionsToBeClosed'
+  | 'inspectionsToBeScheduled'
+  | 'missedInspections'
+  | 'candidatesMissingNextDue';
+
+type AttentionCard = SummaryCard & {
+  key: AttentionModalKey;
+};
+
+type DueModalFilter = Exclude<DueBucketLabel, 'Date not set'>;
+
+type InspectionToBeAssignedRow = {
+  inspectionId: string;
+  subjectId: string;
+  candidateName: string;
+  appointmentDate: string;
+  location: string;
+  lastAssignedTo: string;
+};
+
+type InspectionToBeClosedRow = {
+  inspectionId: string;
+  inspector: string;
+  appointmentCompleted: string;
+  notes: string;
+};
+
+type InspectionScheduleAttentionRow = {
+  inspectionId: string;
+  subjectId: string;
+  candidateName: string;
+  appointmentDate: string;
+  location: string;
+  inspector: string;
+};
+
+type CandidateMissingNextDueRow = {
+  candidateId: string;
+  candidateName: string;
+  lastInspectionResult: string;
+};
+
+type CandidateDueRow = {
+  candidateId: string;
+  candidateName: string;
+  nextDueDate: string;
+  dueBucket: DueBucketLabel;
 };
 
 type ChartDatum = {
@@ -35,6 +89,11 @@ type VisibilitySplitDatum = {
   total: number;
   primaryCount: number;
   secondaryCount: number;
+};
+
+type VisibilityScopeOption = {
+  label: string;
+  value: VisibilityScope;
 };
 
 type CandidateMaturity = 'New' | 'Established';
@@ -126,9 +185,12 @@ type SelectOption<T extends string> = {
     FormsModule,
     RouterLink,
     ButtonModule,
+    ChartModule,
+    DialogModule,
     RippleModule,
     InputTextModule,
     SelectModule,
+    SelectButtonModule,
     TextareaModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -151,6 +213,16 @@ export class DashboardComponent {
   private readonly excludedStatuses = new Set<ActivityStatus>(['Planned', 'Scheduled', 'Canceled']);
 
   protected readonly visibilityScope = signal<VisibilityScope>('candidateMaturity');
+  protected readonly visibilityScopeOptions: VisibilityScopeOption[] = [
+    { label: 'Candidate Maturity', value: 'candidateMaturity' },
+    { label: 'Candidate Type', value: 'candidateType' },
+  ];
+
+  protected readonly itemsNeedingAttentionModalVisible = signal(false);
+  protected readonly activeAttentionModal = signal<AttentionModalKey | null>(null);
+
+  protected readonly candidatesDueModalVisible = signal(false);
+  protected readonly activeDueModalFilter = signal<DueModalFilter | null>(null);
 
   protected readonly candidateMaturitySummaryRows = computed<CandidateMaturitySummaryRow[]>(() => {
     const activeCandidates = this.candidateStore
@@ -253,7 +325,7 @@ export class DashboardComponent {
     { label: 'Unsatisfactory', newCount: 7, establishedCount: 11 },
   ]);
 
-  protected readonly summaryCards = computed<SummaryCard[]>(() => {
+  private readonly dashboardCounts = computed(() => {
     const today = this.startOfDay(new Date());
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -268,7 +340,7 @@ export class DashboardComponent {
     let completedThisWeek = 0;
     let missedInspections = 0;
     let inspectionsToBeAssigned = 0;
-    let inspectionsToBeCompleted = 0;
+    let inspectionsToBeClosed = 0;
 
     for (const inspection of INSPECTIONS) {
       const inspectionDateTime = this.parseInspectionDateTime(inspection);
@@ -311,21 +383,312 @@ export class DashboardComponent {
       }
 
       if (inspection.assignedInspector !== 'Unassigned' && (isPending || isScheduled)) {
-        inspectionsToBeCompleted += 1;
+        inspectionsToBeClosed += 1;
       }
     }
 
+    const candidatesMissingNextDue =
+      this.dueBuckets().find((bucket) => bucket.label === 'Date not set')?.count ?? 0;
+
+    return {
+      assignedToMe,
+      dueToday,
+      pendingInspections,
+      scheduledInspections,
+      completedThisWeek,
+      missedInspections,
+      inspectionsToBeAssigned,
+      inspectionsToBeClosed,
+      candidatesMissingNextDue,
+    };
+  });
+
+  protected readonly atGlanceCards = computed<SummaryCard[]>(() => {
+    const counts = this.dashboardCounts();
+
     return [
-      { label: 'Assigned to Me', value: assignedToMe },
-      { label: 'Due Today', value: dueToday },
-      { label: 'Pending Inspections', value: pendingInspections },
-      { label: 'Scheduled Inspections', value: scheduledInspections },
-      { label: 'Completed this week', value: completedThisWeek },
-      { label: 'Missed Inspections', value: missedInspections },
-      { label: 'Inspections to be Assigned', value: inspectionsToBeAssigned },
-      { label: 'Inspections to be Completed', value: inspectionsToBeCompleted },
+      { label: 'Assigned to Me', value: counts.assignedToMe },
+      { label: 'Due Today', value: counts.dueToday },
+      { label: 'Scheduled Inspections', value: counts.scheduledInspections },
+      { label: 'Completed This Week', value: counts.completedThisWeek },
     ];
   });
+
+  protected readonly needingAttentionCards = computed<AttentionCard[]>(() => {
+    const counts = this.dashboardCounts();
+
+    return [
+      {
+        key: 'inspectionsToBeAssigned',
+        label: 'Inspections to be Assigned',
+        value: counts.inspectionsToBeAssigned,
+      },
+      {
+        key: 'inspectionsToBeClosed',
+        label: 'Inspections to be Closed',
+        value: counts.inspectionsToBeClosed,
+      },
+      {
+        key: 'inspectionsToBeScheduled',
+        label: 'Inspections to be Scheduled',
+        value: counts.pendingInspections,
+      },
+      {
+        key: 'missedInspections',
+        label: 'Missed Inspections',
+        value: counts.missedInspections,
+      },
+      {
+        key: 'candidatesMissingNextDue',
+        label: 'Candidates Missing Next Due',
+        value: counts.candidatesMissingNextDue,
+      },
+    ];
+  });
+
+  protected readonly dueBuckets = computed<DueBucketRow[]>(() => {
+    const rows = this.candidatesDueRows();
+
+    const getCount = (label: DueBucketLabel): number =>
+      rows.filter((row) => row.dueBucket === label).length;
+
+    return [
+      { label: 'Overdue', count: getCount('Overdue'), tone: 'overdue' },
+      { label: '0-30 Days', count: getCount('0-30 Days'), tone: 'soon' },
+      { label: '31-60 Days', count: getCount('31-60 Days'), tone: 'upcoming' },
+      { label: '61-90 Days', count: getCount('61-90 Days'), tone: 'later' },
+      { label: 'Date not set', count: getCount('Date not set'), tone: 'unset' },
+    ];
+  });
+
+  protected readonly dueBucketsForCards = computed<Array<DueBucketRow & { label: DueModalFilter }>>(
+    () =>
+      this.dueBuckets().filter(
+        (bucket): bucket is DueBucketRow & { label: DueModalFilter } =>
+          bucket.label !== 'Date not set',
+      ),
+  );
+
+  protected readonly candidatesDueRows = computed<CandidateDueRow[]>(() => {
+    const today = this.startOfDay(new Date());
+
+    return this.candidateStore
+      .candidates()
+      .filter((candidate) => this.isActiveCandidate(candidate.endDate))
+      .map((candidate) => {
+        const candidateName = this.getCandidateDisplayName(
+          candidate.firstMiddleLast,
+          candidate.organizationName,
+        );
+        if (!candidate.nextDueDate) {
+          return {
+            candidateId: candidate.candidateId,
+            candidateName,
+            nextDueDate: '',
+            dueBucket: 'Date not set',
+          } satisfies CandidateDueRow;
+        }
+
+        const nextDueDate = this.parseFlexibleDate(candidate.nextDueDate);
+        if (!nextDueDate) {
+          return {
+            candidateId: candidate.candidateId,
+            candidateName,
+            nextDueDate: '',
+            dueBucket: 'Date not set',
+          } satisfies CandidateDueRow;
+        }
+
+        const dayDelta = this.dayDifference(today, this.startOfDay(nextDueDate));
+
+        return {
+          candidateId: candidate.candidateId,
+          candidateName,
+          nextDueDate: this.formatDate(candidate.nextDueDate),
+          dueBucket: this.resolveDueBucketByDayDelta(dayDelta),
+        } satisfies CandidateDueRow;
+      });
+  });
+
+  protected readonly filteredCandidatesDueRows = computed(() => {
+    const filter = this.activeDueModalFilter();
+    if (!filter) {
+      return [];
+    }
+
+    return this.candidatesDueRows().filter((row) => row.dueBucket === filter);
+  });
+
+  protected readonly dueModalTitle = computed(() => {
+    const filter = this.activeDueModalFilter();
+    return filter ? `Candidates Due: ${filter}` : 'Candidates Due';
+  });
+
+  protected readonly attentionModalTitle = computed(() => {
+    const activeModal = this.activeAttentionModal();
+
+    if (activeModal === 'inspectionsToBeAssigned') {
+      return 'Inspections to be Assigned';
+    }
+
+    if (activeModal === 'inspectionsToBeClosed') {
+      return 'Inspections to be Closed';
+    }
+
+    if (activeModal === 'inspectionsToBeScheduled') {
+      return 'Inspections to be Scheduled';
+    }
+
+    if (activeModal === 'missedInspections') {
+      return 'Missed Inspections';
+    }
+
+    if (activeModal === 'candidatesMissingNextDue') {
+      return 'Candidates Missing Next Due';
+    }
+
+    return 'Items Needing Attention';
+  });
+
+  protected readonly inspectionsToBeAssignedRows = computed<InspectionToBeAssignedRow[]>(() =>
+    [...INSPECTIONS]
+      .filter(
+        (inspection) =>
+          this.isPendingStatus(inspection.inspectionStatus) &&
+          inspection.assignedInspector === 'Unassigned',
+      )
+      .sort((a, b) =>
+        a.subjectName.localeCompare(b.subjectName, undefined, { sensitivity: 'base' }),
+      )
+      .map((inspection) => ({
+        inspectionId: inspection.inspectionId,
+        subjectId: inspection.subjectId,
+        candidateName: inspection.subjectName,
+        appointmentDate: this.formatInspectionDateTime(this.parseInspectionDateTime(inspection)),
+        location: inspection.appointmentLocation || '',
+        lastAssignedTo: this.getLastAssignedInspectorForCandidate(inspection.subjectId),
+      })),
+  );
+
+  protected readonly inspectionsToBeClosedRows = computed<InspectionToBeClosedRow[]>(() =>
+    [...INSPECTIONS]
+      .filter(
+        (inspection) =>
+          this.isPendingStatus(inspection.inspectionStatus) &&
+          inspection.assignedInspector !== 'Unassigned',
+      )
+      .sort(
+        (a, b) =>
+          this.parseInspectionDateTime(b).getTime() - this.parseInspectionDateTime(a).getTime(),
+      )
+      .map((inspection) => ({
+        inspectionId: inspection.inspectionId,
+        inspector: inspection.assignedInspector,
+        appointmentCompleted: this.formatInspectionDateTime(
+          this.parseInspectionDateTime(inspection),
+        ),
+        notes: inspection.notes.at(-1) ?? '',
+      })),
+  );
+
+  protected readonly inspectionsToBeScheduledRows = computed<InspectionScheduleAttentionRow[]>(() =>
+    [...INSPECTIONS]
+      .filter((inspection) => this.isPendingStatus(inspection.inspectionStatus))
+      .sort(
+        (a, b) =>
+          this.parseInspectionDateTime(a).getTime() - this.parseInspectionDateTime(b).getTime(),
+      )
+      .map((inspection) => ({
+        inspectionId: inspection.inspectionId,
+        subjectId: inspection.subjectId,
+        candidateName: inspection.subjectName,
+        appointmentDate: this.formatInspectionDateTime(this.parseInspectionDateTime(inspection)),
+        location: inspection.appointmentLocation || '',
+        inspector: inspection.assignedInspector,
+      })),
+  );
+
+  protected readonly missedInspectionsRows = computed<InspectionScheduleAttentionRow[]>(() =>
+    [...INSPECTIONS]
+      .filter((inspection) => {
+        const inspectionDateTime = this.parseInspectionDateTime(inspection);
+        return (
+          inspection.inspectionStatus === 'Scheduled' && inspectionDateTime.getTime() < Date.now()
+        );
+      })
+      .sort(
+        (a, b) =>
+          this.parseInspectionDateTime(a).getTime() - this.parseInspectionDateTime(b).getTime(),
+      )
+      .map((inspection) => ({
+        inspectionId: inspection.inspectionId,
+        subjectId: inspection.subjectId,
+        candidateName: inspection.subjectName,
+        appointmentDate: this.formatInspectionDateTime(this.parseInspectionDateTime(inspection)),
+        location: inspection.appointmentLocation || '',
+        inspector: inspection.assignedInspector,
+      })),
+  );
+
+  protected readonly candidatesMissingNextDueRows = computed<CandidateMissingNextDueRow[]>(() =>
+    [...this.candidateStore.candidates()]
+      .filter((candidate) => this.isActiveCandidate(candidate.endDate) && !candidate.nextDueDate)
+      .sort((a, b) => {
+        const aName = this.getCandidateDisplayName(a.firstMiddleLast, a.organizationName);
+        const bName = this.getCandidateDisplayName(b.firstMiddleLast, b.organizationName);
+        return aName.localeCompare(bName, undefined, { sensitivity: 'base' });
+      })
+      .map((candidate) => ({
+        candidateId: candidate.candidateId,
+        candidateName: this.getCandidateDisplayName(
+          candidate.firstMiddleLast,
+          candidate.organizationName,
+        ),
+        lastInspectionResult: this.getLastInspectionResultForCandidate(candidate.candidateId),
+      })),
+  );
+
+  protected readonly activeCandidatesDonutData = computed(() => {
+    const labels = this.visibilityLegendLabels();
+    const rows = this.activeCandidateBreakdownRows();
+
+    const primaryCount = rows[0]?.value ?? 0;
+    const secondaryCount = rows[1]?.value ?? 0;
+    const scope = this.visibilityScope();
+
+    const backgroundColor =
+      scope === 'candidateMaturity' ? ['#3f83f8', '#1d4ed8'] : ['#4f79b3', '#2f5d93'];
+
+    return {
+      labels: [labels.primary, labels.secondary],
+      datasets: [
+        {
+          data: [primaryCount, secondaryCount],
+          backgroundColor,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverOffset: 4,
+        },
+      ],
+    };
+  });
+
+  protected readonly activeCandidatesDonutOptions = computed(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '72%',
+    animation: {
+      duration: 180,
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: { label: string; raw: number }) => `${context.label}: ${context.raw}`,
+        },
+      },
+    },
+  }));
 
   protected readonly inspectionResultTotals = signal<ChartDatum[]>([
     { label: 'Excellent', value: 23 },
@@ -359,17 +722,80 @@ export class DashboardComponent {
     Math.max(1, ...this.reasonsForInspectionChartData().map((item) => item.total)),
   );
 
-  protected readonly dueBuckets = signal<DueBucketRow[]>([
-    { label: 'Overdue', count: 12, tone: 'overdue' },
-    { label: '0-30 Days', count: 4, tone: 'soon' },
-    { label: '31-60 Days', count: 21, tone: 'upcoming' },
-    { label: '61-90 Days', count: 6, tone: 'later' },
-    { label: 'Date not set', count: 15, tone: 'unset' },
-  ]);
-
-  protected readonly dueBucketsForCards = computed(() =>
-    this.dueBuckets().filter((bucket) => bucket.label !== 'Date not set'),
+  protected readonly inspectionResultsStackedChartData = computed(() =>
+    this.toStackedBarChartData(this.inspectionResultsChartData()),
   );
+
+  protected readonly reasonsForInspectionStackedChartData = computed(() =>
+    this.toStackedBarChartData(this.reasonsForInspectionChartData()),
+  );
+
+  protected readonly stackedBarChartOptions = computed(() => {
+    const legend = this.visibilityLegendLabels();
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: { dataset: { label?: string }; parsed: { y: number } }) => {
+              const groupName = context.dataset.label ?? '';
+              const count = context.parsed.y ?? 0;
+              return `${groupName}: ${count}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: {
+            display: false,
+          },
+          ticks: {
+            color: '#5e677d',
+            font: {
+              size: 11,
+              weight: '600',
+            },
+          },
+        },
+        y: {
+          beginAtZero: true,
+          stacked: true,
+          ticks: {
+            color: '#5e677d',
+            precision: 0,
+            stepSize: 1,
+          },
+          grid: {
+            color: '#e8edf8',
+          },
+        },
+      },
+      datasets: {
+        bar: {
+          borderRadius: 4,
+          maxBarThickness: 58,
+          barPercentage: 0.58,
+          categoryPercentage: 0.82,
+        },
+      },
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      parsing: true,
+      animation: {
+        duration: 180,
+      },
+      customLegendLabels: legend,
+    };
+  });
 
   protected readonly upcomingInspectionsInNext30Days = signal<InspectionTableRow[]>([
     {
@@ -649,8 +1075,32 @@ export class DashboardComponent {
 
   protected readonly shouldShowRecentPagination = computed(() => this.recentTotalPages() > 1);
 
-  protected setVisibilityScope(scope: VisibilityScope): void {
+  protected setVisibilityScope(scope: VisibilityScope | null | undefined): void {
+    if (scope !== 'candidateMaturity' && scope !== 'candidateType') {
+      return;
+    }
+
     this.visibilityScope.set(scope);
+  }
+
+  protected openAttentionModal(key: AttentionModalKey): void {
+    this.activeAttentionModal.set(key);
+    this.itemsNeedingAttentionModalVisible.set(true);
+  }
+
+  protected closeAttentionModal(): void {
+    this.itemsNeedingAttentionModalVisible.set(false);
+    this.activeAttentionModal.set(null);
+  }
+
+  protected openCandidatesDueModal(filter: DueModalFilter): void {
+    this.activeDueModalFilter.set(filter);
+    this.candidatesDueModalVisible.set(true);
+  }
+
+  protected closeCandidatesDueModal(): void {
+    this.candidatesDueModalVisible.set(false);
+    this.activeDueModalFilter.set(null);
   }
 
   protected setUpcomingPage(page: number): void {
@@ -733,7 +1183,7 @@ export class DashboardComponent {
     return new Intl.DateTimeFormat('en-US', {
       month: '2-digit',
       day: '2-digit',
-      year: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
@@ -836,6 +1286,100 @@ export class DashboardComponent {
         secondaryCount,
       };
     });
+  }
+
+  private toStackedBarChartData(source: VisibilitySplitDatum[]) {
+    const labels = source.map((item) => item.label);
+    const legend = this.visibilityLegendLabels();
+    const scope = this.visibilityScope();
+
+    const colors = scope === 'candidateMaturity' ? ['#3f83f8', '#1d4ed8'] : ['#4f79b3', '#2f5d93'];
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: legend.primary,
+          data: source.map((item) => item.primaryCount),
+          backgroundColor: colors[0],
+          stack: 'stack-0',
+        },
+        {
+          label: legend.secondary,
+          data: source.map((item) => item.secondaryCount),
+          backgroundColor: colors[1],
+          stack: 'stack-0',
+        },
+      ],
+    };
+  }
+
+  private resolveDueBucketByDayDelta(dayDelta: number): DueBucketLabel {
+    if (dayDelta < 0) {
+      return 'Overdue';
+    }
+
+    if (dayDelta <= 30) {
+      return '0-30 Days';
+    }
+
+    if (dayDelta <= 60) {
+      return '31-60 Days';
+    }
+
+    return '61-90 Days';
+  }
+
+  private getCandidateDisplayName(
+    firstMiddleLast: string | null,
+    organizationName: string | null,
+  ): string {
+    return firstMiddleLast || organizationName || 'Unknown Candidate';
+  }
+
+  private getLastAssignedInspectorForCandidate(subjectId: string): string {
+    const lastCompletedInspection = [...INSPECTIONS]
+      .filter(
+        (inspection) =>
+          inspection.subjectId === subjectId &&
+          !this.isPendingStatus(inspection.inspectionStatus) &&
+          inspection.inspectionStatus !== 'Scheduled' &&
+          inspection.inspectionStatus !== 'Canceled',
+      )
+      .sort(
+        (a, b) =>
+          this.parseInspectionDateTime(b).getTime() - this.parseInspectionDateTime(a).getTime(),
+      )[0];
+
+    return lastCompletedInspection?.assignedInspector ?? '';
+  }
+
+  private getLastInspectionResultForCandidate(candidateId: string): string {
+    const lastCompletedInspection = [...INSPECTIONS]
+      .filter(
+        (inspection) =>
+          inspection.subjectId === candidateId &&
+          !this.isPendingStatus(inspection.inspectionStatus) &&
+          inspection.inspectionStatus !== 'Scheduled' &&
+          inspection.inspectionStatus !== 'Canceled',
+      )
+      .sort(
+        (a, b) =>
+          this.parseInspectionDateTime(b).getTime() - this.parseInspectionDateTime(a).getTime(),
+      )[0];
+
+    return lastCompletedInspection?.inspectionStatus ?? '';
+  }
+
+  private formatInspectionDateTime(value: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(value);
   }
 
   private getVisibilityWeights(scope: VisibilityScope): [number, number] {

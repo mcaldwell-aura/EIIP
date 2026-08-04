@@ -53,7 +53,7 @@
       <h2>Search Inspections</h2>
 
       <div class="search-grid">
-        <!-- Row 1: Inspection Number, Inspection Status -->
+        <!-- Row 1: Inspection Number, Inspection Status, Inspection Status Reason -->
         <label class="search-field">
           <span>Inspection Number</span>
           <input
@@ -72,10 +72,25 @@
             [ngModel]="searchParams().status"
             optionLabel="label"
             optionValue="value"
-            placeholder="Status: All"
+            placeholder="Select status"
             appendTo="body"
             panelStyleClass="toolbar-select-panel"
             (ngModelChange)="updateStatus($event)"
+          ></p-select>
+        </label>
+
+        <label class="search-field">
+          <span>Inspection Status Reason</span>
+          <p-select
+            [options]="inspectionStatusReasonOptions()"
+            [ngModel]="searchParams().inspectionStatusReason"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Status Reason: All"
+            [disabled]="isStatusReasonDisabled()"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateInspectionStatusReason($event)"
           ></p-select>
         </label>
 
