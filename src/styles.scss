@@ -210,27 +210,29 @@ select:disabled,
 /* Enforce a consistent darker-blue hover state for all button-like actions. */
 button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
     .table-sort-btn
-  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.table-action-btn),
+  ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.table-action-btn):not(
+    .priority-factor-trigger
+  ):not(.priority-factors-toggle),
 button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
     .table-sort-btn
   ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
     .note-delete-confirm-btn
-  ):not(.document-delete-confirm-btn),
+  ):not(.document-delete-confirm-btn):not(.priority-factor-trigger):not(.priority-factors-toggle),
 button:active:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
     .table-sort-btn
   ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
     .note-delete-confirm-btn
-  ):not(.document-delete-confirm-btn),
+  ):not(.document-delete-confirm-btn):not(.priority-factor-trigger):not(.priority-factors-toggle),
 .p-button:hover:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
     .table-sort-btn
   ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
     .note-delete-confirm-btn
-  ):not(.document-delete-confirm-btn),
+  ):not(.document-delete-confirm-btn):not(.priority-factor-trigger):not(.priority-factors-toggle),
 .p-button:active:not(:disabled):not(.tab-btn):not(.column-sort-btn):not(.sort-btn):not(
     .table-sort-btn
   ):not(.priority-trigger):not(.action-btn):not(.icon-action-btn):not(.delete-action-btn):not(
     .note-delete-confirm-btn
-  ):not(.document-delete-confirm-btn),
+  ):not(.document-delete-confirm-btn):not(.priority-factor-trigger):not(.priority-factors-toggle),
 a.edit-btn:hover,
 a.edit-btn:active {
   background: var(--app-btn-hover-bg) !important;

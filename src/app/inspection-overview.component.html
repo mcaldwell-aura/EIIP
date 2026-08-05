@@ -247,12 +247,13 @@
                   pRipple
                   type="button"
                   class="priority-trigger"
-                  (click)="openPriorityModal(row)"
+                  #priorityTrigger
+                  (click)="openPriorityModal(row, priorityTrigger)"
                   [attr.aria-label]="'View priority score details for ' + row.subjectName"
                 >
                   <span class="priority-cell">
-                    {{ row.priority }}
-                    <span class="priority-info" aria-hidden="true">?</span>
+                    <span class="priority-cell-value">{{ row.priority }}</span>
+                    <i class="pi pi-info-circle priority-cell-icon" aria-hidden="true"></i>
                   </span>
                 </button>
               </td>
@@ -266,7 +267,7 @@
                   </span>
                 </ng-container>
                 <ng-template #noAppointment>
-                  <span class="appointment-empty">—</span>
+                  <span class="appointment-empty">-</span>
                 </ng-template>
               </td>
             </tr>
@@ -287,57 +288,235 @@
     [(visible)]="priorityDialogVisible"
     [modal]="true"
     [draggable]="false"
-    [closable]="true"
+    [closable]="false"
+    [showHeader]="false"
+    [focusTrap]="true"
+    [closeOnEscape]="true"
     [dismissableMask]="true"
-    [header]="'Priority Score'"
-    [style]="{ width: 'min(420px, 95vw)' }"
+    styleClass="priority-details-dialog"
+    [style]="{ width: 'min(680px, 96vw)' }"
     (onHide)="closePriorityModal()"
   >
-    <ng-container *ngIf="selectedPriorityContext() as context">
-      <div class="priority-modal">
+    <ng-container *ngIf="selectedPriorityDetail() as detail">
+      <div
+        class="priority-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="priority-modal-title"
+      >
         <div class="priority-modal-header">
-          <div>
-            <p class="priority-modal-kicker">Priority Score</p>
-            <div class="priority-score-row">
-              <h2 id="priority-modal-title" class="priority-score-value">{{ context.score }}</h2>
-              <span
-                class="priority-chip"
-                [class.medium]="context.level === 'Medium'"
-                [class.low]="context.level === 'Low'"
-              >
-                <span class="priority-chip-dot" aria-hidden="true"></span>
-                {{ context.level }}
-              </span>
+          <div class="priority-modal-title-wrap">
+            <p class="priority-modal-kicker">Priority score</p>
+            <h2 id="priority-modal-title" class="priority-modal-title">
+              {{ detail.candidateName }}
+            </h2>
+          </div>
+          <button
+            type="button"
+            class="modal-close-icon-btn"
+            (click)="closePriorityModal()"
+            aria-label="Close priority score details"
+          >
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <section class="priority-summary-block" aria-label="Priority score summary">
+          <div class="priority-ring-wrap">
+            <svg class="priority-ring" viewBox="0 0 88 88" aria-hidden="true" focusable="false">
+              <circle class="priority-ring-track" cx="44" cy="44" r="38"></circle>
+              <circle
+                class="priority-ring-progress"
+                [class.reduced-motion]="respectsReducedMotion()"
+                cx="44"
+                cy="44"
+                r="38"
+                [attr.stroke]="selectedPriorityTierColor()"
+                [attr.stroke-dasharray]="priorityRingCircumference"
+                [attr.stroke-dashoffset]="priorityRingDashOffset()"
+              ></circle>
+            </svg>
+            <div class="priority-ring-text">
+              <p class="priority-ring-score">{{ detail.score }}</p>
+              <p class="priority-ring-total">/ 100</p>
             </div>
           </div>
-        </div>
+
+          <div class="priority-summary-text">
+            <span
+              class="priority-chip"
+              [class.priority-chip-high]="selectedPriorityTier() === 'high'"
+              [class.priority-chip-medium]="selectedPriorityTier() === 'medium'"
+              [class.priority-chip-low]="selectedPriorityTier() === 'low'"
+            >
+              {{ selectedPriorityTierLabel() }}
+            </span>
+            <p>{{ detail.plainEnglishSummary }}</p>
+          </div>
+        </section>
 
         <div class="priority-modal-divider"></div>
 
         <div class="priority-modal-body">
-          <div class="priority-section">
-            <h3>Why This Is Prioritized</h3>
-            <p>{{ context.why }}</p>
-          </div>
+          <section class="priority-factors-section" aria-label="Score factors">
+            <div class="priority-factors-header">
+              <h3>Why this score</h3>
+              @if (canTogglePriorityFactorsView()) {
+                <button
+                  type="button"
+                  class="priority-factors-toggle"
+                  (click)="togglePriorityFactorsView()"
+                >
+                  {{
+                    showAllPriorityFactors() ? 'Show impactful only' : 'Show all evaluated factors'
+                  }}
+                </button>
+              }
+            </div>
 
-          <div class="priority-metrics-grid">
-            <div class="metric-block">
-              <h4>Last Inspection Score</h4>
-              <p>{{ context.lastInspectionScore }}</p>
+            @if (!hasPriorityFactors()) {
+              <p class="priority-empty-state">
+                Score breakdown isn't available for this candidate yet.
+              </p>
+            } @else {
+              <div class="priority-factor-list">
+                @for (factor of visiblePriorityFactors(); track factor.name) {
+                  <article class="priority-factor-item">
+                    <button
+                      type="button"
+                      class="priority-factor-trigger"
+                      [attr.aria-expanded]="isPriorityFactorExpanded(factor.name)"
+                      [attr.aria-controls]="'priority-factor-panel-' + $index"
+                      (click)="togglePriorityFactor(factor.name)"
+                    >
+                      <span
+                        class="priority-factor-chevron"
+                        [class.is-expanded]="isPriorityFactorExpanded(factor.name)"
+                        aria-hidden="true"
+                      >
+                        ▸
+                      </span>
+                      <span class="priority-factor-name">{{ factor.name }}</span>
+                      <span class="priority-factor-value">{{ factor.candidateValue }}</span>
+                      <span
+                        class="priority-factor-points"
+                        [class.is-impactful]="factor.points > 0"
+                        [class.is-neutral]="factor.points <= 0"
+                      >
+                        {{ formatPriorityPoints(factor.points) }}
+                      </span>
+                    </button>
+
+                    @if (isPriorityFactorExpanded(factor.name)) {
+                      <div class="priority-factor-panel" [id]="'priority-factor-panel-' + $index">
+                        <ul>
+                          @for (tier of factor.tiers; track tier.rangeLabel + '-' + tier.points) {
+                            <li [class.active-tier]="tier.isActive">
+                              <span>{{ tier.rangeLabel }}</span>
+                              <strong>{{ formatPriorityPoints(tier.points) }}</strong>
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="priority-history-section" aria-label="Score history">
+            <h3>Score history</h3>
+
+            <div class="priority-history-plot">
+              <div class="priority-history-y-axis" aria-hidden="true">
+                <div>100</div>
+                <div>75</div>
+                <div>50</div>
+                <div>25</div>
+                <div>0</div>
+              </div>
+
+              <div
+                class="priority-history-chart-wrap"
+                #historyChartWrap
+                (mouseleave)="hidePriorityHistoryTooltip()"
+              >
+                <svg
+                  class="priority-history-chart"
+                  [attr.viewBox]="'0 0 ' + historyChartWidth + ' ' + historyChartHeight"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  @for (guide of priorityHistoryGuideLines(); track guide.score) {
+                    <line
+                      class="priority-history-grid-line"
+                      x1="0"
+                      [attr.y1]="guide.y"
+                      [attr.x2]="historyChartWidth"
+                      [attr.y2]="guide.y"
+                    ></line>
+                  }
+
+                  @for (zone of priorityHistoryHoverZones(); track $index) {
+                    <rect
+                      class="priority-history-hover-zone"
+                      [attr.x]="zone.x"
+                      y="0"
+                      [attr.width]="zone.width"
+                      [attr.height]="historyChartHeight"
+                      fill="transparent"
+                      (mouseenter)="
+                        showPriorityHistoryTooltip($event, zone.tooltip, historyChartWrap)
+                      "
+                      (mousemove)="movePriorityHistoryTooltip($event, historyChartWrap)"
+                      (mouseleave)="hidePriorityHistoryTooltip()"
+                    ></rect>
+                  }
+
+                  <path
+                    class="priority-history-line"
+                    [class.reduced-motion]="respectsReducedMotion()"
+                    [attr.stroke]="selectedPriorityTierColor()"
+                    [attr.d]="priorityHistoryPath()"
+                  ></path>
+
+                  @for (point of priorityHistoryPoints(); track $index) {
+                    <circle
+                      class="priority-history-point"
+                      [attr.cx]="point.x"
+                      [attr.cy]="point.y"
+                      [attr.fill]="selectedPriorityTierColor()"
+                      r="4"
+                      (mouseenter)="
+                        showPriorityHistoryTooltip($event, point.tooltip, historyChartWrap)
+                      "
+                      (mousemove)="movePriorityHistoryTooltip($event, historyChartWrap)"
+                      (mouseleave)="hidePriorityHistoryTooltip()"
+                    ></circle>
+                  }
+                </svg>
+
+                @if (priorityHistoryTooltip(); as tooltip) {
+                  <div
+                    class="priority-history-tooltip"
+                    [style.left.px]="tooltip.left"
+                    [style.top.px]="tooltip.top"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {{ tooltip.label }}
+                  </div>
+                }
+
+                <div class="priority-history-labels" aria-hidden="true">
+                  @for (monthLabel of priorityHistoryMonthLabels(); track monthLabel) {
+                    <span>{{ monthLabel }}</span>
+                  }
+                </div>
+              </div>
             </div>
-            <div class="metric-block">
-              <h4>Planning Cycle</h4>
-              <p>{{ context.planningCycle }}</p>
-            </div>
-            <div class="metric-block">
-              <h4>Last Inspected</h4>
-              <p>{{ context.lastInspected }}</p>
-            </div>
-            <div class="metric-block">
-              <h4>Entity Type</h4>
-              <p>{{ context.entityType }}</p>
-            </div>
-          </div>
+          </section>
         </div>
       </div>
     </ng-container>
@@ -349,6 +528,7 @@
     [draggable]="false"
     [closable]="true"
     [dismissableMask]="true"
+    styleClass="new-inspection-dialog"
     [header]="'New Inspection'"
     [style]="{ width: 'min(980px, 96vw)' }"
     (onHide)="closeNewInspectionModal()"
