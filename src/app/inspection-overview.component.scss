@@ -611,6 +611,8 @@ td a.subject-link:hover {
   display: grid;
   gap: 1.5rem;
   padding: 1.25rem 1.5rem 1.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 400px);
 }
 
 .priority-factors-section {
