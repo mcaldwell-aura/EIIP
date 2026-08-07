@@ -581,7 +581,7 @@ td a.subject-link:hover {
 
 .priority-ring-score {
   color: #1d263c;
-  font-size: 1.8rem;
+  font-size: 2.3rem;
   font-weight: 700;
   line-height: 1;
   margin: 0;
@@ -589,7 +589,7 @@ td a.subject-link:hover {
 
 .priority-ring-total {
   color: var(--text-soft);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin: 0.05rem 0 0;
 }
@@ -611,13 +611,16 @@ td a.subject-link:hover {
   display: grid;
   gap: 1.5rem;
   padding: 1.25rem 1.5rem 1.5rem;
-  overflow-y: auto;
-  max-height: calc(100vh - 400px);
 }
 
 .priority-factors-section {
   display: grid;
   gap: 0.9rem;
+}
+
+.priority-history-section {
+  display: grid;
+  gap: 0.45rem;
 }
 
 .priority-factors-header {
@@ -627,7 +630,8 @@ td a.subject-link:hover {
   gap: 0.8rem;
 }
 
-.priority-factors-header h3 {
+.priority-factors-header h3,
+.priority-history-section h3 {
   color: #41516f;
   font-size: 1.01rem;
   font-weight: 700;
@@ -875,6 +879,97 @@ td a.subject-link:hover {
 .priority-modal-divider {
   border-top: 1px solid #d8e0f1;
   margin: 0;
+  width: 100%;
+}
+
+.priority-history-plot {
+  align-items: start;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.priority-history-y-axis {
+  color: #60708f;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.76rem;
+  font-weight: 700;
+  height: 6.8rem;
+  justify-content: space-between;
+  line-height: 1;
+  padding: 0.15rem 0 0.15rem 0.1rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.priority-history-y-axis > div {
+  display: block;
+}
+
+.priority-history-chart-wrap {
+  display: grid;
+  gap: 0.2rem;
+  position: relative;
+}
+
+.priority-history-chart {
+  background: transparent;
+  height: 6.8rem;
+  width: 100%;
+}
+
+.priority-history-grid-line {
+  stroke: #e5ebf7;
+  stroke-width: 1;
+}
+
+.priority-history-hover-zone {
+  cursor: pointer;
+  fill: transparent;
+  pointer-events: all;
+}
+
+.priority-history-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  transition: stroke-dashoffset 600ms ease;
+}
+
+.priority-history-point {
+  cursor: pointer;
+}
+
+.priority-history-tooltip {
+  background: #ffffff;
+  border: 1px solid #d8e0f1;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(21, 39, 82, 0.14);
+  color: #2a3652;
+  font-size: 0.82rem;
+  font-weight: 600;
+  left: 0;
+  max-width: 220px;
+  padding: 0.38rem 0.52rem;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.priority-history-line.reduced-motion {
+  transition: none;
+}
+
+.priority-history-labels {
+  color: var(--text-soft);
+  display: flex;
+  font-size: 0.85rem;
+  justify-content: space-between;
+  margin-top: 0;
   width: 100%;
 }
 
@@ -1216,6 +1311,21 @@ td a.subject-link:hover {
   font-weight: 600;
 }
 
+.status-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
 .appointment-empty,
 .action-placeholder {
   color: #60708f;
@@ -1320,6 +1430,14 @@ a:focus-visible {
   .priority-factor-points {
     grid-column: 3;
     grid-row: 1 / span 2;
+  }
+
+  .priority-history-chart {
+    height: 7rem;
+  }
+
+  .priority-history-y-axis {
+    height: 7rem;
   }
 
   .new-inspection-modal-body,

@@ -502,6 +502,7 @@ export class InspectionDetailsComponent implements OnInit {
   });
 
   protected readonly activeTab = signal<DetailsTab>('summary');
+  protected readonly aiSummaryGenerated = signal(false);
   protected readonly isAppointmentModalOpen = signal(false);
   protected readonly isAssignInspectorModalOpen = signal(false);
   protected readonly isNoteModalOpen = signal(false);
@@ -1209,6 +1210,10 @@ export class InspectionDetailsComponent implements OnInit {
 
   protected selectTab(tab: DetailsTab): void {
     this.activeTab.set(tab);
+  }
+
+  protected generateAiSummary(): void {
+    this.aiSummaryGenerated.set(true);
   }
 
   protected openFormModal(form: InspectionFormRecord): void {

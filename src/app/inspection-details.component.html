@@ -69,6 +69,35 @@
       </div>
     </section>
 
+    <article class="details-card ai-summary-card" aria-label="AI-generated inspection summary">
+      <div class="ai-summary-header">
+        <div class="ai-summary-title-row">
+          <span class="ai-summary-title">AI Summary</span>
+          <span class="ai-summary-info" aria-hidden="true">
+            <i class="pi pi-info-circle"></i>
+          </span>
+          <span class="ai-summary-beta">Beta</span>
+        </div>
+        <div class="ai-summary-timestamp" *ngIf="aiSummaryGenerated() && aiSummaryTimestamp()">
+          {{ aiSummaryTimestamp() }}
+        </div>
+      </div>
+
+      <div class="ai-summary-body">
+        @if (aiSummaryGenerated()) {
+          <p>{{ aiSummaryText() }}</p>
+        } @else {
+          <p class="ai-summary-description">
+            Generate an AI summary of this inspection to quickly understand key details and
+            findings.
+          </p>
+          <button pButton type="button" class="ai-generate-btn" (click)="generateAiSummary()">
+            Generate summary
+          </button>
+        }
+      </div>
+    </article>
+
     <section class="tabs" aria-label="Inspection details tabs">
       <button
         pButton
@@ -124,28 +153,6 @@
     <ng-container [ngSwitch]="activeTab()">
       <ng-container *ngSwitchCase="'summary'">
         <section class="content-grid">
-          <article
-            class="details-card ai-summary-card"
-            aria-label="AI-generated inspection summary"
-          >
-            <div class="ai-summary-header">
-              <div class="ai-summary-title-row">
-                <span class="ai-summary-title">AI Summary</span>
-                <span class="ai-summary-info" aria-hidden="true">
-                  <i class="pi pi-info-circle"></i>
-                </span>
-                <span class="ai-summary-beta">Beta</span>
-              </div>
-              <div class="ai-summary-timestamp" *ngIf="aiSummaryTimestamp()">
-                {{ aiSummaryTimestamp() }}
-              </div>
-            </div>
-
-            <div class="ai-summary-body">
-              <p>{{ aiSummaryText() }}</p>
-            </div>
-          </article>
-
           <article class="details-card summary-form-card" aria-label="Inspection summary form">
             <div class="card-header solo-header">
               <div>
@@ -165,7 +172,7 @@
 
               <!-- Row 2: Inspector (full width) -->
               <div class="summary-field inspector-field summary-field-with-action">
-                <span>Inspector (Optional)</span>
+                <span>Inspector</span>
                 <div class="field-action-row">
                   <input
                     pInputText

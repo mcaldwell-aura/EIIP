@@ -124,6 +124,28 @@ const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
 
 const PRIORITY_RING_RADIUS = 38;
 const PRIORITY_RING_CIRCUMFERENCE = 2 * Math.PI * PRIORITY_RING_RADIUS;
+const HISTORY_CHART_WIDTH = 760;
+const HISTORY_CHART_HEIGHT = 96;
+const HISTORY_CHART_AXIS_TICKS = [100, 75, 50, 25, 0] as const;
+
+type HistoryChartPoint = {
+  x: number;
+  y: number;
+  score: number;
+  tooltip: string;
+};
+
+type HistoryHoverZone = {
+  x: number;
+  width: number;
+  tooltip: string;
+};
+
+type HistoryTooltipState = {
+  label: string;
+  left: number;
+  top: number;
+};
 
 @Component({
   selector: 'app-inspection-overview',
@@ -162,6 +184,7 @@ export class InspectionOverviewComponent {
   protected readonly showAllPriorityFactors = signal(false);
   protected readonly expandedPriorityFactors = signal<string[]>([]);
   protected readonly animatedPriorityScore = signal(0);
+  protected readonly priorityHistoryTooltip = signal<HistoryTooltipState | null>(null);
   protected readonly respectsReducedMotion = signal(this.detectReducedMotionPreference());
   protected readonly isNewInspectionModalOpen = signal(false);
   protected readonly newInspectionCandidate = signal<InspectionPlanRow | null>(null);
@@ -362,6 +385,8 @@ export class InspectionOverviewComponent {
 
     return 'var(--text-soft)';
   });
+  protected readonly historyChartWidth = HISTORY_CHART_WIDTH;
+  protected readonly historyChartHeight = HISTORY_CHART_HEIGHT;
   protected readonly priorityRingCircumference = PRIORITY_RING_CIRCUMFERENCE;
   protected readonly priorityRingDashOffset = computed(() => {
     const boundedScore = Math.max(0, Math.min(100, this.animatedPriorityScore()));
@@ -408,7 +433,79 @@ export class InspectionOverviewComponent {
 
     return detail.factors.some((factor) => factor.points <= 0);
   });
+  protected readonly priorityHistoryPath = computed(() => {
+    const detail = this.selectedPriorityDetail();
+    if (!detail || detail.scoreHistory.length === 0) {
+      return '';
+    }
 
+    return this.buildHistoryPath(detail.scoreHistory.map((entry) => entry.score));
+  });
+  protected readonly priorityHistoryPoints = computed<HistoryChartPoint[]>(() => {
+    const detail = this.selectedPriorityDetail();
+    if (!detail || detail.scoreHistory.length === 0) {
+      return [];
+    }
+
+    const scores = detail.scoreHistory.map((entry) => entry.score);
+    const points = this.buildHistoryPoints(scores);
+
+    return points.map((point, index) => {
+      const rawScore = scores[index] ?? 0;
+      const boundedScore = Math.max(0, Math.min(100, rawScore));
+      const entry = detail.scoreHistory[index];
+      const label = entry ? this.formatHistoryDate(entry.date) : 'Unknown date';
+      return {
+        ...point,
+        score: boundedScore,
+        tooltip: `${label}: ${boundedScore}`,
+      };
+    });
+  });
+  protected readonly priorityHistoryGuideLines = computed(() =>
+    HISTORY_CHART_AXIS_TICKS.map((score) => ({
+      score,
+      y: this.scoreToHistoryY(score),
+    })),
+  );
+  protected readonly priorityHistoryHoverZones = computed<HistoryHoverZone[]>(() => {
+    const points = this.priorityHistoryPoints();
+    if (points.length === 0) {
+      return [];
+    }
+
+    return points.map((point, index) => {
+      const previousPointX = index > 0 ? points[index - 1].x : point.x;
+      const nextPointX = index < points.length - 1 ? points[index + 1].x : point.x;
+      const leftBoundary = index === 0 ? 0 : (previousPointX + point.x) / 2;
+      const rightBoundary =
+        index === points.length - 1 ? HISTORY_CHART_WIDTH : (point.x + nextPointX) / 2;
+      const width = Math.max(8, rightBoundary - leftBoundary);
+
+      return {
+        x: leftBoundary,
+        width,
+        tooltip: point.tooltip,
+      };
+    });
+  });
+  protected readonly priorityHistoryMonthLabels = computed(() => {
+    const detail = this.selectedPriorityDetail();
+    if (!detail || detail.scoreHistory.length === 0) {
+      return [] as string[];
+    }
+
+    const uniqueMonths = new Set<string>();
+
+    for (const entry of detail.scoreHistory) {
+      const monthLabel = this.formatHistoryMonth(entry.date);
+      if (monthLabel) {
+        uniqueMonths.add(monthLabel);
+      }
+    }
+
+    return Array.from(uniqueMonths);
+  });
   protected readonly canSaveNewInspection = computed(
     () =>
       this.newInspectionCandidate() !== null &&
@@ -526,6 +623,7 @@ export class InspectionOverviewComponent {
     this.showAllPriorityFactors.set(false);
     this.expandedPriorityFactors.set([]);
     this.animatedPriorityScore.set(0);
+    this.priorityHistoryTooltip.set(null);
 
     if (this.priorityAnimationTimer) {
       clearTimeout(this.priorityAnimationTimer);
@@ -727,6 +825,29 @@ export class InspectionOverviewComponent {
     return points > 0 ? `+${points}` : `${points}`;
   }
 
+  protected showPriorityHistoryTooltip(
+    event: MouseEvent,
+    label: string,
+    chartWrap: HTMLElement,
+  ): void {
+    this.priorityHistoryTooltip.set(this.buildPriorityHistoryTooltipState(event, label, chartWrap));
+  }
+
+  protected movePriorityHistoryTooltip(event: MouseEvent, chartWrap: HTMLElement): void {
+    const tooltip = this.priorityHistoryTooltip();
+    if (!tooltip) {
+      return;
+    }
+
+    this.priorityHistoryTooltip.set(
+      this.buildPriorityHistoryTooltipState(event, tooltip.label, chartWrap),
+    );
+  }
+
+  protected hidePriorityHistoryTooltip(): void {
+    this.priorityHistoryTooltip.set(null);
+  }
+
   private startPriorityRingAnimation(score: number): void {
     if (this.priorityAnimationTimer) {
       clearTimeout(this.priorityAnimationTimer);
@@ -751,6 +872,92 @@ export class InspectionOverviewComponent {
       !!window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     );
+  }
+
+  private buildHistoryPath(scores: number[]): string {
+    const points = this.buildHistoryPoints(scores);
+    if (points.length === 0) {
+      return '';
+    }
+
+    return points
+      .map(
+        (point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+      )
+      .join(' ');
+  }
+
+  private buildHistoryPoints(scores: number[]): Array<{ x: number; y: number }> {
+    if (scores.length === 0) {
+      return [];
+    }
+
+    if (scores.length === 1) {
+      const singleY =
+        HISTORY_CHART_HEIGHT - (Math.max(0, Math.min(100, scores[0])) / 100) * HISTORY_CHART_HEIGHT;
+      return [{ x: 0, y: singleY }];
+    }
+
+    return scores.map((score, index) => {
+      const x = (index / (scores.length - 1)) * HISTORY_CHART_WIDTH;
+      const y = this.scoreToHistoryY(score);
+      return { x, y };
+    });
+  }
+
+  private scoreToHistoryY(score: number): number {
+    const boundedScore = Math.max(0, Math.min(100, score));
+    return HISTORY_CHART_HEIGHT - (boundedScore / 100) * HISTORY_CHART_HEIGHT;
+  }
+
+  private formatHistoryDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return 'Unknown date';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(date);
+  }
+
+  private formatHistoryMonth(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
+  }
+
+  private buildPriorityHistoryTooltipState(
+    event: MouseEvent,
+    label: string,
+    chartWrap: HTMLElement,
+  ): HistoryTooltipState {
+    const wrapRect = chartWrap.getBoundingClientRect();
+    const horizontalPadding = 10;
+    const verticalOffset = 10;
+    const maxTooltipWidth = 220;
+    const tooltipLeft = Math.max(
+      horizontalPadding,
+      Math.min(
+        wrapRect.width - maxTooltipWidth,
+        event.clientX - wrapRect.left - maxTooltipWidth / 2,
+      ),
+    );
+    const tooltipTop = Math.max(
+      2,
+      Math.min(wrapRect.height - 28, event.clientY - wrapRect.top - verticalOffset - 28),
+    );
+
+    return {
+      label,
+      left: tooltipLeft,
+      top: tooltipTop,
+    };
   }
 
   private applyToolbarSort(field: SortField, selection: ToolbarSortSelection): void {

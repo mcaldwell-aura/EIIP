@@ -257,7 +257,14 @@
                   </span>
                 </button>
               </td>
-              <td>{{ row.inspectionStatusDisplay }}</td>
+              <td>
+                <a
+                  [routerLink]="['/inspection-overview/inspection', row.inspectionId]"
+                  class="status-link"
+                >
+                  {{ row.inspectionStatusDisplay }}
+                </a>
+              </td>
               <td>{{ row.inspectionReason }}</td>
               <td>{{ row.inspectionType }}</td>
               <td>
@@ -294,7 +301,7 @@
     [closeOnEscape]="true"
     [dismissableMask]="true"
     styleClass="priority-details-dialog"
-    [style]="{ width: 'min(680px, 96vw)' }"
+    [style]="{ width: 'min(860px, 96vw)' }"
     (onHide)="closePriorityModal()"
   >
     <ng-container *ngIf="selectedPriorityDetail() as detail">
@@ -360,7 +367,7 @@
         <div class="priority-modal-body">
           <section class="priority-factors-section" aria-label="Score factors">
             <div class="priority-factors-header">
-              <h3>Why This Score?</h3>
+              <h3>Why this score</h3>
               @if (canTogglePriorityFactorsView()) {
                 <button
                   type="button"
@@ -423,6 +430,99 @@
                 }
               </div>
             }
+          </section>
+
+          <section class="priority-history-section" aria-label="Score history">
+            <h3>Score history</h3>
+
+            <div class="priority-history-plot">
+              <div class="priority-history-y-axis" aria-hidden="true">
+                <div>100</div>
+                <div>75</div>
+                <div>50</div>
+                <div>25</div>
+                <div>0</div>
+              </div>
+
+              <div
+                class="priority-history-chart-wrap"
+                #historyChartWrap
+                (mouseleave)="hidePriorityHistoryTooltip()"
+              >
+                <svg
+                  class="priority-history-chart"
+                  [attr.viewBox]="'0 0 ' + historyChartWidth + ' ' + historyChartHeight"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  @for (guide of priorityHistoryGuideLines(); track guide.score) {
+                    <line
+                      class="priority-history-grid-line"
+                      x1="0"
+                      [attr.y1]="guide.y"
+                      [attr.x2]="historyChartWidth"
+                      [attr.y2]="guide.y"
+                    ></line>
+                  }
+
+                  @for (zone of priorityHistoryHoverZones(); track $index) {
+                    <rect
+                      class="priority-history-hover-zone"
+                      [attr.x]="zone.x"
+                      y="0"
+                      [attr.width]="zone.width"
+                      [attr.height]="historyChartHeight"
+                      fill="transparent"
+                      (mouseenter)="
+                        showPriorityHistoryTooltip($event, zone.tooltip, historyChartWrap)
+                      "
+                      (mousemove)="movePriorityHistoryTooltip($event, historyChartWrap)"
+                      (mouseleave)="hidePriorityHistoryTooltip()"
+                    ></rect>
+                  }
+
+                  <path
+                    class="priority-history-line"
+                    [class.reduced-motion]="respectsReducedMotion()"
+                    [attr.stroke]="selectedPriorityTierColor()"
+                    [attr.d]="priorityHistoryPath()"
+                  ></path>
+
+                  @for (point of priorityHistoryPoints(); track $index) {
+                    <circle
+                      class="priority-history-point"
+                      [attr.cx]="point.x"
+                      [attr.cy]="point.y"
+                      [attr.fill]="selectedPriorityTierColor()"
+                      r="4"
+                      (mouseenter)="
+                        showPriorityHistoryTooltip($event, point.tooltip, historyChartWrap)
+                      "
+                      (mousemove)="movePriorityHistoryTooltip($event, historyChartWrap)"
+                      (mouseleave)="hidePriorityHistoryTooltip()"
+                    ></circle>
+                  }
+                </svg>
+
+                @if (priorityHistoryTooltip(); as tooltip) {
+                  <div
+                    class="priority-history-tooltip"
+                    [style.left.px]="tooltip.left"
+                    [style.top.px]="tooltip.top"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {{ tooltip.label }}
+                  </div>
+                }
+
+                <div class="priority-history-labels" aria-hidden="true">
+                  @for (monthLabel of priorityHistoryMonthLabels(); track monthLabel) {
+                    <span>{{ monthLabel }}</span>
+                  }
+                </div>
+              </div>
+            </div>
           </section>
         </div>
       </div>
