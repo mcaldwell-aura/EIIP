@@ -990,10 +990,6 @@ td a.subject-link:hover {
   color: var(--warning);
 }
 
-.status-link {
-  text-decoration: none;
-}
-
 .new-inspection-modal {
   display: flex;
   flex-direction: column;
@@ -1300,10 +1296,6 @@ td a.subject-link:hover {
   padding: 0.8rem 0.9rem;
 }
 
-.status-link:hover {
-  filter: brightness(0.96);
-}
-
 .appointment-chip {
   color: var(--accent);
   cursor: help;
@@ -1312,7 +1304,7 @@ td a.subject-link:hover {
 }
 
 .status-link {
-  color: var(--accent);
+  color: #1f56d8;
   cursor: pointer;
   text-decoration: none;
   transition: opacity 150ms ease;
@@ -1324,6 +1316,10 @@ td a.subject-link:hover {
   &:active {
     opacity: 0.6;
   }
+}
+
+td a.status-link {
+  color: #1f56d8;
 }
 
 .appointment-empty,
