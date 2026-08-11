@@ -29,8 +29,10 @@ export type TimelineEventRecord = {
   metadata?: Record<string, string>;
 };
 
-// Generate mock timeline events for multiple candidates
-function generateMockEvents(): TimelineEventRecord[] {
+// Pre-generated static mock data with fixed timestamps
+// This avoids build-time execution issues and ensures consistency across deployments
+function buildTimelineEvents(): TimelineEventRecord[] {
+  const baseDate = new Date('2025-01-01');
   const events: TimelineEventRecord[] = [];
   let eventId = 0;
 
@@ -44,77 +46,34 @@ function generateMockEvents(): TimelineEventRecord[] {
     'status-changed',
   ];
 
-  const eventDescriptions: Record<TimelineEventType, string[]> = {
-    'appointment-scheduled': [
-      'Appointment scheduled for inspection',
-      'Initial consultation scheduled',
-      'Follow-up appointment scheduled',
-      'Re-inspection appointment scheduled',
-    ],
-    'appointment-completed': [
-      'Appointment completed successfully',
-      'Consultation completed',
-      'Follow-up appointment completed',
-    ],
-    'appointment-cancelled': ['Appointment cancelled by candidate', 'Appointment rescheduled'],
-    'inspection-started': [
-      'Inspection workflow initiated',
-      'Routine inspection started',
-      'Special inspection started',
-    ],
-    'inspection-completed': [
-      'Inspection completed - No violations found',
-      'Inspection completed - Minor violations noted',
-      'Inspection completed - Corrective action required',
-    ],
-    'inspection-cancelled': ['Inspection cancelled', 'Inspection rescheduled'],
-    'finding-added': [
-      'Critical finding identified',
-      'Non-compliance finding added',
-      'Observation noted during inspection',
-    ],
-    'note-added': [
-      'Inspector notes documented',
-      'Follow-up notes added',
-      'Administrative notes recorded',
-    ],
-    'attachment-added': [
-      'Inspection report uploaded',
-      'Corrective action plan received',
-      'Supporting documentation attached',
-    ],
-    'status-changed': [
-      'Status changed to Active',
-      'Status changed to Pending',
-      'Status changed to Closed',
-    ],
-    'source-update': ['Record updated from source system', 'External system synchronization'],
+  // Static event count per candidate for consistency
+  const eventCountPerCandidate = {
+    individual: [4, 5, 3, 6, 4, 5, 3, 4, 5, 3, 6, 4, 5, 3, 4, 5, 3, 4, 5, 3],
+    organization: [3, 2, 4, 3, 2, 4, 3, 2, 4, 3],
   };
 
-  // Generate events for the first 20 candidates
+  // Generate events for the first 20 individuals
   for (let candidateIndex = 1; candidateIndex <= 20; candidateIndex++) {
     const candidateId = `individual-${candidateIndex}`;
-    const candidateEventCount = 3 + Math.floor(Math.random() * 4); // 3-6 events per candidate
+    const eventCount = eventCountPerCandidate.individual[candidateIndex - 1] || 4;
 
-    for (let i = 0; i < candidateEventCount; i++) {
+    for (let i = 0; i < eventCount; i++) {
       eventId++;
-      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-      const descriptions = eventDescriptions[eventType];
-      const description = descriptions[Math.floor(Math.random() * descriptions.length)];
-
-      // Create dates spread across the past year
-      const daysAgo = Math.floor(Math.random() * 365);
-      const eventDate = new Date();
-      eventDate.setDate(eventDate.getDate() - daysAgo);
-      eventDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), 0, 0);
+      const eventType = eventTypes[eventId % eventTypes.length];
+      const daysOffset = (eventId * 7) % 365;
+      const eventDate = new Date(baseDate);
+      eventDate.setDate(eventDate.getDate() + daysOffset);
 
       events.push({
         eventId: `evt-${eventId}`,
         candidateId,
         eventType,
-        eventSource: Math.random() > 0.5 ? 'EIIP' : 'CSTIMS',
-        title: eventType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-        description,
+        eventSource: eventId % 2 === 0 ? 'EIIP' : 'CSTIMS',
+        title: eventType
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' '),
+        description: `${eventType.split('-').join(' ')} for candidate ${candidateId}`,
         timestamp: eventDate.toISOString(),
         timestampMs: eventDate.getTime(),
       });
@@ -124,27 +83,25 @@ function generateMockEvents(): TimelineEventRecord[] {
   // Generate events for the first 10 organizations
   for (let orgIndex = 1; orgIndex <= 10; orgIndex++) {
     const candidateId = `organization-${orgIndex}`;
-    const candidateEventCount = 2 + Math.floor(Math.random() * 3); // 2-4 events per organization
+    const eventCount = eventCountPerCandidate.organization[orgIndex - 1] || 3;
 
-    for (let i = 0; i < candidateEventCount; i++) {
+    for (let i = 0; i < eventCount; i++) {
       eventId++;
-      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-      const descriptions = eventDescriptions[eventType];
-      const description = descriptions[Math.floor(Math.random() * descriptions.length)];
-
-      // Create dates spread across the past year
-      const daysAgo = Math.floor(Math.random() * 365);
-      const eventDate = new Date();
-      eventDate.setDate(eventDate.getDate() - daysAgo);
-      eventDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), 0, 0);
+      const eventType = eventTypes[eventId % eventTypes.length];
+      const daysOffset = (eventId * 7) % 365;
+      const eventDate = new Date(baseDate);
+      eventDate.setDate(eventDate.getDate() + daysOffset);
 
       events.push({
         eventId: `evt-${eventId}`,
         candidateId,
         eventType,
-        eventSource: Math.random() > 0.5 ? 'EIIP' : 'CSTIMS',
-        title: eventType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-        description,
+        eventSource: eventId % 2 === 0 ? 'EIIP' : 'CSTIMS',
+        title: eventType
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' '),
+        description: `${eventType.split('-').join(' ')} for organization ${candidateId}`,
         timestamp: eventDate.toISOString(),
         timestampMs: eventDate.getTime(),
       });
@@ -154,7 +111,7 @@ function generateMockEvents(): TimelineEventRecord[] {
   return events;
 }
 
-export const TIMELINE_EVENTS: TimelineEventRecord[] = generateMockEvents();
+export const TIMELINE_EVENTS: TimelineEventRecord[] = buildTimelineEvents();
 
 export const TIMELINE_EVENT_TYPE_LABELS: Record<TimelineEventType, string> = {
   'appointment-scheduled': 'Appointment scheduled',
