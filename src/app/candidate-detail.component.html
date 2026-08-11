@@ -47,7 +47,12 @@
             <div class="heading-section">
               <p class="eyebrow">CANDIDATE NAME</p>
               <h1>{{ candidateName() || 'Candidate Detail' }}</h1>
-              <p-tag [value]="candidateStatusLabel()" [severity]="candidateStatusSeverity()" [ngClass]="getCandidateStatusClass()" class="status-tag"></p-tag>
+              <p-tag
+                [value]="candidateStatusLabel()"
+                [severity]="candidateStatusSeverity()"
+                [ngClass]="getCandidateStatusClass()"
+                class="status-tag"
+              ></p-tag>
             </div>
           </div>
           <div class="candidate-header-info">
@@ -61,7 +66,7 @@
             </div>
             <div class="header-info-item">
               <span class="header-label">Next Due</span>
-              <p class="header-value">{{ nextDueDate() || '--' }}</p>
+              <p class="header-value">{{ formatHeaderDate(nextDueDate()) }}</p>
             </div>
           </div>
         </div>

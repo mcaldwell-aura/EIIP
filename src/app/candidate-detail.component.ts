@@ -691,6 +691,21 @@ export class CandidateDetailComponent {
     this.testVolume.set(input.value);
   }
 
+  protected formatHeaderDate(value: string): string {
+    if (!value || !value.trim()) {
+      return '--';
+    }
+    const timestamp = this.parseDateToTimestamp(value);
+    if (timestamp === 0) {
+      return value;
+    }
+    const parsedDate = new Date(timestamp);
+    const month = `${parsedDate.getMonth() + 1}`.padStart(2, '0');
+    const day = `${parsedDate.getDate()}`.padStart(2, '0');
+    const year = `${parsedDate.getFullYear()}`;
+    return `${month}/${day}/${year}`;
+  }
+
   private todayIsoDate(): string {
     const today = new Date();
     const year = `${today.getFullYear()}`;

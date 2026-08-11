@@ -1,3 +1,6 @@
+import { CANDIDATES, type CandidateRecord } from './candidates.data';
+import { INSPECTIONS } from './inspection-data';
+
 export type TimelineEventType =
   | 'appointment-scheduled'
   | 'appointment-completed'
@@ -46,44 +49,17 @@ function buildTimelineEvents(): TimelineEventRecord[] {
     'status-changed',
   ];
 
-  // Static event count per candidate for consistency
-  const eventCountPerCandidate = {
-    individual: [4, 5, 3, 6, 4, 5, 3, 4, 5, 3, 6, 4, 5, 3, 4, 5, 3, 4, 5, 3],
-    organization: [3, 2, 4, 3, 2, 4, 3, 2, 4, 3],
-  };
+  // Iterate over all real candidates from CANDIDATES array
+  CANDIDATES.forEach((candidate: CandidateRecord, candidateIndex: number) => {
+    // Generate deterministic event count for this candidate (3-6 events)
+    // Based on candidate index to ensure consistency
+    const eventCount = 3 + (candidateIndex % 4);
 
-  // Generate events for the first 20 individuals
-  for (let candidateIndex = 1; candidateIndex <= 20; candidateIndex++) {
-    const candidateId = `individual-${candidateIndex}`;
-    const eventCount = eventCountPerCandidate.individual[candidateIndex - 1] || 4;
-
-    for (let i = 0; i < eventCount; i++) {
-      eventId++;
-      const eventType = eventTypes[eventId % eventTypes.length];
-      const daysOffset = (eventId * 7) % 365;
-      const eventDate = new Date(baseDate);
-      eventDate.setDate(eventDate.getDate() + daysOffset);
-
-      events.push({
-        eventId: `evt-${eventId}`,
-        candidateId,
-        eventType,
-        eventSource: eventId % 2 === 0 ? 'EIIP' : 'CSTIMS',
-        title: eventType
-          .split('-')
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' '),
-        description: `${eventType.split('-').join(' ')} for candidate ${candidateId}`,
-        timestamp: eventDate.toISOString(),
-        timestampMs: eventDate.getTime(),
-      });
-    }
-  }
-
-  // Generate events for the first 10 organizations
-  for (let orgIndex = 1; orgIndex <= 10; orgIndex++) {
-    const candidateId = `organization-${orgIndex}`;
-    const eventCount = eventCountPerCandidate.organization[orgIndex - 1] || 3;
+    // Get candidate's display name for use in event descriptions
+    const candidateDisplayName =
+      candidate.candidateType === 'Individual'
+        ? candidate.firstMiddleLast || candidate.candidateId
+        : candidate.organizationName || candidate.candidateId;
 
     for (let i = 0; i < eventCount; i++) {
       eventId++;
@@ -94,19 +70,60 @@ function buildTimelineEvents(): TimelineEventRecord[] {
 
       events.push({
         eventId: `evt-${eventId}`,
-        candidateId,
+        candidateId: candidate.candidateId,
         eventType,
         eventSource: eventId % 2 === 0 ? 'EIIP' : 'CSTIMS',
         title: eventType
           .split('-')
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(' '),
-        description: `${eventType.split('-').join(' ')} for organization ${candidateId}`,
+        description: `${eventType.split('-').join(' ')} for ${candidateDisplayName}`,
         timestamp: eventDate.toISOString(),
         timestampMs: eventDate.getTime(),
       });
     }
-  }
+  });
+
+  // Generate events for fallback subjects (candidates in inspection data but not in CANDIDATES array)
+  // Get unique subjectIds from INSPECTIONS that aren't in CANDIDATES
+  const candidateIds = new Set(CANDIDATES.map((c) => c.candidateId));
+  const fallbackSubjects = new Map<string, string>(); // subjectId -> subjectName
+
+  INSPECTIONS.forEach((inspection) => {
+    if (!candidateIds.has(inspection.subjectId) && !fallbackSubjects.has(inspection.subjectId)) {
+      fallbackSubjects.set(inspection.subjectId, inspection.subjectName);
+    }
+  });
+
+  // Generate events for fallback subjects with consistent determinism
+  // Start fallbackIndex from CANDIDATES.length to maintain consistent eventId offsets
+  const fallbackArray = Array.from(fallbackSubjects.entries());
+  fallbackArray.forEach(([subjectId, subjectName], arrayIndex) => {
+    const fallbackCandidateIndex = CANDIDATES.length + arrayIndex;
+    const eventCount = 3 + (fallbackCandidateIndex % 4);
+
+    for (let i = 0; i < eventCount; i++) {
+      eventId++;
+      const eventType = eventTypes[eventId % eventTypes.length];
+      const daysOffset = (eventId * 7) % 365;
+      const eventDate = new Date(baseDate);
+      eventDate.setDate(eventDate.getDate() + daysOffset);
+
+      events.push({
+        eventId: `evt-${eventId}`,
+        candidateId: subjectId,
+        eventType,
+        eventSource: eventId % 2 === 0 ? 'EIIP' : 'CSTIMS',
+        title: eventType
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' '),
+        description: `${eventType.split('-').join(' ')} for ${subjectName}`,
+        timestamp: eventDate.toISOString(),
+        timestampMs: eventDate.getTime(),
+      });
+    }
+  });
 
   return events;
 }

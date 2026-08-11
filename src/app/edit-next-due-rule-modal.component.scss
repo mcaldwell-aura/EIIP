@@ -89,10 +89,10 @@
 }
 
 .form-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
   align-items: flex-start;
 }
 
@@ -106,8 +106,34 @@
 
 .form-group-inline {
   margin-bottom: 0;
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  p-select {
+    width: 100%;
+  }
+
+  // Force PrimeNG's p-select wrapper to fill column width
+  :deep(.p-select) {
+    width: 100% !important;
+  }
+}
+
+// Secondary Rule styling
+.secondary-rule-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  p-select {
+    flex: 1;
+    width: 100%;
+  }
+
+  :deep(.p-select) {
+    width: 100% !important;
+  }
 }
 
 .form-label {
@@ -116,6 +142,7 @@
   font-size: 0.88rem;
   font-weight: 500;
   color: #18223a;
+  min-height: 1.2rem;
 
   &.required::after {
     content: ' *';
