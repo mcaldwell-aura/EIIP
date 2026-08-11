@@ -47,7 +47,7 @@
             <div class="heading-section">
               <p class="eyebrow">CANDIDATE NAME</p>
               <h1>{{ candidateName() || 'Candidate Detail' }}</h1>
-              <p-tag [value]="inspectionStatusLabel()" [severity]="inspectionStatusSeverity()" class="inspection-status-tag"></p-tag>
+              <p-tag [value]="candidateStatusLabel()" [severity]="candidateStatusSeverity()" [ngClass]="getCandidateStatusClass()" class="status-tag"></p-tag>
             </div>
           </div>
           <div class="candidate-header-info">

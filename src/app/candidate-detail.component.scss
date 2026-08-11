@@ -228,7 +228,7 @@ h1 {
   align-self: center;
 }
 
-.inspection-status-tag {
+.status-tag {
   display: inline-flex !important;
   white-space: nowrap;
   border: 1px solid #ccd4e0;
@@ -239,6 +239,18 @@ h1 {
   color: #60708f;
   background: #f8fafc;
   justify-self: start;
+
+  &.inspection-open-status {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    color: #2e7d32;
+  }
+
+  &.deactivated-status {
+    background: #ffebee;
+    border-color: #d32f2f;
+    color: #c62828;
+  }
 }
 
 .candidate-header-info {

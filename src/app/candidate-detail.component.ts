@@ -168,6 +168,31 @@ export class CandidateDetailComponent {
       });
   });
 
+  protected readonly isDeactivated = computed(() => {
+    return this.endDate().trim() !== '';
+  });
+
+  protected readonly candidateStatusLabel = computed(() => {
+    if (this.isDeactivated()) {
+      return 'Deactivated';
+    }
+    return this.hasOpenInspection() ? 'Inspection Open' : 'No Current Inspections';
+  });
+
+  protected readonly candidateStatusSeverity = computed(() => {
+    if (this.isDeactivated()) {
+      return 'danger';
+    }
+    return this.hasOpenInspection() ? 'info' : 'secondary';
+  });
+
+  protected getCandidateStatusClass(): string {
+    if (this.isDeactivated()) {
+      return 'deactivated-status';
+    }
+    return this.hasOpenInspection() ? 'inspection-open-status' : '';
+  }
+
   protected readonly inspectionStatusLabel = computed(() => {
     return this.hasOpenInspection() ? 'Inspection Open' : 'No Current Inspections';
   });
