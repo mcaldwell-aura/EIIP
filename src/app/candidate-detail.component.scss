@@ -169,15 +169,20 @@
 }
 
 .page-header {
-  display: grid;
-  gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
 }
 
 .title-wrap {
-  align-items: flex-start;
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.title-wrap > div:first-child {
+  flex: 1;
 }
 
 h1 {
@@ -187,11 +192,60 @@ h1 {
   margin: 0;
 }
 
-.candidate-header-info {
+.title-row {
+  display: flex !important;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.heading-section {
+  flex: 1;
   display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 0.8rem;
+  grid-template-columns: max-content max-content;
+  grid-auto-rows: auto;
+  position: relative;
+  align-items: center;
+  justify-content: start;
+}
+
+.heading-section > p.eyebrow {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+
+.heading-section > h1 {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0;
+  letter-spacing: 0.01em;
+  margin-right: 15px;
+}
+
+.heading-section > p-tag {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+}
+
+.inspection-status-tag {
+  display: inline-flex !important;
+  white-space: nowrap;
+  border: 1px solid #ccd4e0;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #60708f;
+  background: #f8fafc;
+  justify-self: start;
+}
+
+.candidate-header-info {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+  flex-wrap: nowrap;
 }
 
 .header-info-item {

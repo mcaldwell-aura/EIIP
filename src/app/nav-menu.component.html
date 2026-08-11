@@ -80,5 +80,39 @@
         </li>
       </ul>
     </div>
+
+    <div class="menu-section">
+      <p class="menu-section-label">Admin</p>
+      <ul class="menu-list">
+        <li class="menu-submenu">
+          <div class="menu-item menu-parent-item" role="button" tabindex="0" aria-haspopup="true">
+            <span class="menu-item-icon" aria-hidden="true">⚙</span>
+            <span class="menu-parent-label">Configuration</span>
+            <span class="menu-submenu-caret" aria-hidden="true">▸</span>
+          </div>
+
+          <ul class="menu-submenu-list" aria-label="Configuration options">
+            <li>
+              <a
+                class="menu-item menu-submenu-item"
+                routerLink="/admin/configuration/next-due"
+                (click)="close()"
+              >
+                Candidate's Next Due
+              </a>
+            </li>
+            <li>
+              <a
+                class="menu-item menu-submenu-item"
+                routerLink="/admin/configuration/weekly-digest-time"
+                (click)="close()"
+              >
+                Weekly Digest Time
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
   </nav>
 }

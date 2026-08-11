@@ -7,11 +7,13 @@ import { CandidateStoreService } from './candidate-store.service';
 import { type CandidateRecord, type CandidateType, type NameSuffix } from './candidates.data';
 import { InspectionStoreService } from './inspection-store.service';
 import { type InspectionRecord, type InspectionStatus } from './inspection-data';
+import { CandidateActivityTimelineComponent } from './candidate-activity-timeline.component';
 
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { TagModule } from 'primeng/tag';
 
 type CandidateDetailData = {
   candidateId: string;
@@ -32,7 +34,7 @@ type CandidateDetailData = {
   testVolume: string | null;
 };
 
-type CandidateDetailTab = 'summary' | 'inspection-history';
+type CandidateDetailTab = 'summary' | 'inspection-history' | 'timeline';
 type InspectionWorkflowStatus = 'New' | 'Pending' | 'Closed';
 type InspectionStatusReason =
   | 'Created'
@@ -72,6 +74,8 @@ const NAME_SUFFIXES: NameSuffix[] = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
     RippleModule,
     InputTextModule,
     SelectModule,
+    TagModule,
+    CandidateActivityTimelineComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './candidate-detail.component.html',
@@ -152,6 +156,38 @@ export class CandidateDetailComponent {
 
   protected readonly isIndividual = computed(() => this.candidateType() === 'Individual');
   protected readonly isOrganization = computed(() => this.candidateType() === 'Organization');
+
+  protected readonly hasOpenInspection = computed(() => {
+    const candidateIdValue = this.candidateId();
+    return this.inspectionStore
+      .inspections()
+      .filter((inspection) => inspection.subjectId === candidateIdValue)
+      .some((inspection) => {
+        const workflowStatus = this.getInspectionWorkflowStatus(inspection);
+        return workflowStatus === 'New' || workflowStatus === 'Pending';
+      });
+  });
+
+  protected readonly inspectionStatusLabel = computed(() => {
+    return this.hasOpenInspection() ? 'Inspection Open' : 'No Current Inspections';
+  });
+
+  protected readonly inspectionStatusSeverity = computed(() => {
+    return this.hasOpenInspection() ? 'info' : 'secondary';
+  });
+
+  protected readonly candidateMaturity = computed(() => {
+    const startDateStr = this.startDate();
+    if (!startDateStr) return 'Unknown';
+
+    const startDate = new Date(startDateStr);
+    const now = new Date();
+    const diffTime = now.getTime() - startDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffYears = diffDays / 365.25;
+
+    return diffYears >= 1 ? 'Established' : 'New';
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -414,6 +450,10 @@ export class CandidateDetailComponent {
 
   protected showInspectionHistoryTab(): void {
     this.activeTab.set('inspection-history');
+  }
+
+  protected showTimelineTab(): void {
+    this.activeTab.set('timeline');
   }
 
   protected setInspectionHistorySort(field: InspectionHistorySortField): void {

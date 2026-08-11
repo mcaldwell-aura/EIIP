@@ -43,18 +43,25 @@
     <section class="page-header">
       <div class="title-wrap">
         <div>
-          <p class="eyebrow">Candidate Detail</p>
           <div class="title-row">
-            <h1>{{ candidateName() || 'Candidate Detail' }}</h1>
+            <div class="heading-section">
+              <p class="eyebrow">CANDIDATE NAME</p>
+              <h1>{{ candidateName() || 'Candidate Detail' }}</h1>
+              <p-tag [value]="inspectionStatusLabel()" [severity]="inspectionStatusSeverity()" class="inspection-status-tag"></p-tag>
+            </div>
           </div>
           <div class="candidate-header-info">
             <div class="header-info-item">
-              <span class="header-label">Candidate Name</span>
-              <p class="header-value">{{ candidateName() }}</p>
-            </div>
-            <div class="header-info-item">
               <span class="header-label">Candidate Id</span>
               <p class="header-value">{{ candidateId() }}</p>
+            </div>
+            <div class="header-info-item">
+              <span class="header-label">Candidate Maturity</span>
+              <p class="header-value">{{ candidateMaturity() }}</p>
+            </div>
+            <div class="header-info-item">
+              <span class="header-label">Next Due</span>
+              <p class="header-value">{{ nextDueDate() || '--' }}</p>
             </div>
           </div>
         </div>
@@ -87,6 +94,17 @@
         (click)="showInspectionHistoryTab()"
       >
         Inspection History
+      </button>
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'timeline'"
+        [attr.aria-selected]="activeTab() === 'timeline'"
+        (click)="showTimelineTab()"
+      >
+        Timeline
       </button>
     </section>
 
@@ -285,7 +303,7 @@
             </button>
           </div>
         }
-      } @else {
+      } @else if (activeTab() === 'inspection-history') {
         <article class="details-card">
           <div class="card-header solo-header">
             <h2>Inspection History</h2>
@@ -362,6 +380,12 @@
             </p>
           }
         </article>
+      }
+
+      @if (activeTab() === 'timeline') {
+        <app-candidate-activity-timeline
+          [candidateId]="candidateId()"
+        ></app-candidate-activity-timeline>
       }
     </section>
 

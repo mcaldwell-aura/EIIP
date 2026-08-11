@@ -16,6 +16,8 @@ import { InspectionSearchComponent } from './inspection-search.component';
 import { FormsMockupAccordionComponent } from './forms-mockup-accordion.component';
 import { FormsMockupModalComponent } from './forms-mockup-modal.component';
 import { UserSettingsComponent } from './user-settings.component';
+import { CandidateNextDueConfigComponent } from './candidate-next-due-config.component';
+import { WeeklyDigestTimeConfigComponent } from './weekly-digest-time-config.component';
 
 export const routes: Routes = [
   {
@@ -85,5 +87,13 @@ export const routes: Routes = [
   {
     path: 'forms-mockups/modal',
     component: FormsMockupModalComponent,
+  },
+  {
+    path: 'admin/configuration/next-due',
+    component: CandidateNextDueConfigComponent,
+  },
+  {
+    path: 'admin/configuration/weekly-digest-time',
+    component: WeeklyDigestTimeConfigComponent,
   },
 ];

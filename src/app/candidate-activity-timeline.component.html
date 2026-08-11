@@ -1,0 +1,90 @@
+<article class="timeline-card">
+  <div class="card-header">
+    <h2>Candidate Activity Timeline</h2>
+
+    <!-- Filter Button with Tooltip -->
+    <div class="filter-button-container">
+      <button
+        type="button"
+        class="filter-chip"
+        (click)="toggleFilterTooltip()"
+        aria-label="Open event filters"
+        [attr.aria-expanded]="filterTooltipOpen()"
+      >
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filter by:
+      </button>
+
+      <!-- Filter Tooltip -->
+      @if (filterTooltipOpen()) {
+        <div class="filter-tooltip">
+          @for (filter of eventFilters(); track filter.eventType) {
+            <div class="filter-tooltip-item">
+              <input
+                type="checkbox"
+                [checked]="filter.checked"
+                [id]="'filter-' + filter.eventType"
+                (change)="onFilterChange(filter.eventType, $event)"
+                class="filter-checkbox"
+              />
+              <label [for]="'filter-' + filter.eventType" class="filter-tooltip-label">
+                <i [class]="'pi ' + filter.icon" aria-hidden="true"></i>
+                <span class="filter-tooltip-text">{{ filter.label }}</span>
+                <span class="filter-tooltip-count">({{ filter.count }})</span>
+              </label>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Timeline Section -->
+  <div class="timeline-content">
+    @if (displayedEvents().length > 0) {
+      <div class="timeline-list">
+        @for (event of displayedEvents(); track event.eventId) {
+          <div class="timeline-item">
+            <div class="timeline-marker">
+              <div class="timeline-dot">
+                <i [class]="'pi ' + getEventIcon(event.eventType)" aria-hidden="true"></i>
+              </div>
+              @if (!$last) {
+                <div class="timeline-line"></div>
+              }
+            </div>
+
+            <div class="timeline-card-content">
+              <div class="card-top-row">
+                <h3 class="event-title">{{ event.title }}</h3>
+                <span class="event-datetime">{{ formatDateTime(event.timestamp) }}</span>
+              </div>
+
+              <p class="event-description">{{ event.description }}</p>
+
+              @if (event.actionLink) {
+                <a class="event-link" [routerLink]="event.actionLink.path">
+                  {{ event.actionLink.label }}
+                  <i class="pi pi-arrow-right" aria-hidden="true"></i>
+                </a>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Load More Button -->
+      @if (hasMoreEvents()) {
+        <div class="load-more-container">
+          <button pButton pRipple type="button" class="load-more-btn" (click)="loadMoreEvents()">
+            Load more events
+          </button>
+        </div>
+      }
+    } @else {
+      <div class="empty-message">
+        <p>No events match the selected filters.</p>
+      </div>
+    }
+  </div>
+</article>

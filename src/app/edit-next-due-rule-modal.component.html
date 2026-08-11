@@ -1,0 +1,123 @@
+<div class="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <!-- Sticky Header -->
+    <div class="modal-header">
+      <h2>Edit Candidate Next Due Rule</h2>
+      <button type="button" class="modal-close-btn" (click)="onCancel()" aria-label="Close modal">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Inspection Result (Read-only) -->
+      <div class="form-group">
+        <label for="inspectionResult" class="form-label">Inspection Result</label>
+        <input
+          id="inspectionResult"
+          type="text"
+          pInputText
+          [value]="rule.inspectionResult"
+          readonly
+          class="form-control"
+        />
+      </div>
+
+      <!-- Primary Rule, Set Next Due Date & Secondary Rule (All Inline) -->
+      <div class="form-row">
+        <div class="form-group form-group-inline">
+          <label for="primaryRule" class="form-label required">Primary Rule</label>
+          <p-select
+            id="primaryRule"
+            [(ngModel)]="primaryRule"
+            [options]="primaryRuleOptions"
+            [showClear]="false"
+            class="w-full"
+            placeholder="Select a primary rule"
+          ></p-select>
+        </div>
+
+        @if (showSetNextDueDate()) {
+          <div class="form-group form-group-inline">
+            <label class="form-label">Set Next Due Date</label>
+            <div class="due-date-inputs">
+              <div class="due-date-unit">
+                <p-select
+                  [(ngModel)]="unit"
+                  [options]="unitOptions"
+                  [showClear]="false"
+                  placeholder="Select unit"
+                ></p-select>
+              </div>
+              <div class="due-date-value">
+                <input
+                  type="number"
+                  pInputText
+                  [(ngModel)]="dueValue"
+                  min="1"
+                  max="9999"
+                  class="form-control"
+                  placeholder="Enter value"
+                />
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="form-group form-group-inline">
+          <label for="secondaryRule" class="form-label">Secondary Rule</label>
+          <div class="secondary-rule-container">
+            <p-select
+              id="secondaryRule"
+              [(ngModel)]="secondaryRule"
+              [options]="secondaryRuleOptions"
+              [showClear]="false"
+              class="w-full"
+              placeholder="None"
+            ></p-select>
+            @if (secondaryRule() !== null) {
+              <button
+                type="button"
+                class="clear-secondary-btn"
+                (click)="clearSecondaryRule()"
+                aria-label="Clear secondary rule"
+                title="Clear selection"
+              >
+                ✕
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Toggle -->
+      <div class="form-group">
+        <label for="activeToggle" class="form-label">Active</label>
+        <div class="active-toggle">
+          <input id="activeToggle" type="checkbox" [(ngModel)]="isActive" class="active-checkbox" />
+          <span class="active-status">{{ isActive() ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky Footer -->
+    <div class="modal-footer">
+      <button
+        type="button"
+        pButton
+        pRipple
+        label="Cancel"
+        (click)="onCancel()"
+        class="btn-cancel"
+      ></button>
+      <button
+        type="button"
+        pButton
+        pRipple
+        label="Save"
+        (click)="onSave()"
+        class="btn-save"
+      ></button>
+    </div>
+  </div>
+</div>

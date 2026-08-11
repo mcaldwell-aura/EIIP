@@ -1,0 +1,110 @@
+<div class="config-page">
+  <!-- Top Navigation Header -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <details class="profile-menu">
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </summary>
+        <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
+          <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="config-main">
+    <!-- Page Header Section -->
+    <section class="config-header">
+      <div>
+        <h1>Candidate's Next Due Configuration</h1>
+      </div>
+    </section>
+
+    <!-- Configuration Table Card -->
+    <article class="table-card">
+      <div class="table-wrap">
+        <table class="config-table">
+          <thead>
+            <tr>
+              <th class="col-inspection-result">Inspection Result</th>
+              <th class="col-primary-rule">Primary Rule</th>
+              <th class="col-set-due">Set Next Due Date</th>
+              <th class="col-secondary-rule">Secondary Rule</th>
+              <th class="col-active">Active</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rule of rules(); track rule.ruleId) {
+              <tr [class.inactive]="!rule.active">
+                <td class="col-inspection-result">{{ rule.inspectionResult }}</td>
+                <td class="col-primary-rule">{{ rule.primaryRule }}</td>
+                <td class="col-set-due">
+                  {{ formatSetNextDueDate(rule.setNextDueDate) || '—' }}
+                </td>
+                <td class="col-secondary-rule">
+                  {{ rule.secondaryRule || '—' }}
+                </td>
+                <td class="col-active">
+                  <span class="status-badge" [class.active]="rule.active">
+                    {{ rule.active ? 'Yes' : 'No' }}
+                  </span>
+                </td>
+                <td class="col-actions">
+                  <button
+                    type="button"
+                    pButton
+                    pRipple
+                    icon="pi pi-pencil"
+                    class="p-button-sm p-button-primary edit-btn"
+                    (click)="openEditModal(rule)"
+                    [attr.aria-label]="'Edit ' + rule.inspectionResult + ' rule'"
+                    title="Edit rule"
+                  ></button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </main>
+</div>
+
+<!-- Edit Modal -->
+@if (editingRule()) {
+  <app-edit-next-due-rule-modal
+    [rule]="editingRule()!"
+    (save)="onSaveRule($event)"
+    (cancel)="onCancelEdit()"
+  ></app-edit-next-due-rule-modal>
+}
