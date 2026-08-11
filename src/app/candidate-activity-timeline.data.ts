@@ -29,165 +29,132 @@ export type TimelineEventRecord = {
   metadata?: Record<string, string>;
 };
 
-export const TIMELINE_EVENTS: TimelineEventRecord[] = [
-  // Alyssa A. Foster (individual-27) - example timeline
-  {
-    eventId: 'evt-001',
-    candidateId: 'individual-27',
-    eventType: 'appointment-scheduled',
-    eventSource: 'CSTIMS',
-    title: 'Appointment scheduled',
-    description: 'Appointment on 05/20/2025 updated from 10:00 AM to 1:00 PM.',
-    timestamp: '2025-05-14T21:41:00Z',
-    timestampMs: new Date('2025-05-14T21:41:00Z').getTime(),
-    actionLink: {
-      label: 'View appointment',
-      path: '/candidates/fred-johnson/appointments',
-    },
-  },
-  {
-    eventId: 'evt-002',
-    candidateId: 'individual-27',
-    eventType: 'inspection-completed',
-    eventSource: 'EIIP',
-    title: 'Inspection completed',
-    description: 'Routine inspection completed by John Smith. Result: No violations.',
-    timestamp: '2025-05-12T19:15:00Z',
-    timestampMs: new Date('2025-05-12T19:15:00Z').getTime(),
-    actionLink: {
-      label: 'View inspection',
-      path: '/inspections/892749',
-    },
-  },
-  {
-    eventId: 'evt-003',
-    candidateId: 'individual-27',
-    eventType: 'note-added',
-    eventSource: 'EIIP',
-    title: 'Note added',
-    description: 'Inspector contacted facility to confirm corrective action.',
-    timestamp: '2025-05-12T17:10:00Z',
-    timestampMs: new Date('2025-05-12T17:10:00Z').getTime(),
-    actionLink: {
-      label: 'View note',
-      path: '/candidates/fred-johnson/notes',
-    },
-  },
-  {
-    eventId: 'evt-004',
-    candidateId: 'individual-27',
-    eventType: 'attachment-added',
-    eventSource: 'EIIP',
-    title: 'Attachment added',
-    description: 'Corrective action plan received from facility — CAP_ABC_Supply_051225.pdf',
-    timestamp: '2025-05-12T15:58:00Z',
-    timestampMs: new Date('2025-05-12T15:58:00Z').getTime(),
-    actionLink: {
-      label: 'View attachment',
-      path: '/candidates/fred-johnson/attachments',
-    },
-  },
-  {
-    eventId: 'evt-005',
-    candidateId: 'individual-27',
-    eventType: 'status-changed',
-    eventSource: 'EIIP',
-    title: 'Status changed',
-    description: 'Status changed from Scheduled to Active.',
-    timestamp: '2025-05-10T08:30:00Z',
-    timestampMs: new Date('2025-05-10T08:30:00Z').getTime(),
-  },
-  {
-    eventId: 'evt-006',
-    candidateId: 'individual-27',
-    eventType: 'finding-added',
-    eventSource: 'EIIP',
-    title: 'Finding added',
-    description: 'Critical finding identified during routine inspection.',
-    timestamp: '2025-05-09T14:22:00Z',
-    timestampMs: new Date('2025-05-09T14:22:00Z').getTime(),
-    actionLink: {
-      label: 'View finding',
-      path: '/candidates/fred-johnson/findings',
-    },
-  },
-  {
-    eventId: 'evt-007',
-    candidateId: 'individual-27',
-    eventType: 'appointment-scheduled',
-    eventSource: 'EIIP',
-    title: 'Appointment scheduled',
-    description: 'Initial inspection appointment scheduled with inspector.',
-    timestamp: '2025-05-08T11:45:00Z',
-    timestampMs: new Date('2025-05-08T11:45:00Z').getTime(),
-    actionLink: {
-      label: 'View appointment',
-      path: '/candidates/fred-johnson/appointments',
-    },
-  },
-  {
-    eventId: 'evt-008',
-    candidateId: 'individual-27',
-    eventType: 'source-update',
-    eventSource: 'CSTIMS',
-    title: 'Source system updated',
-    description: 'Candidate record updated in source system.',
-    timestamp: '2025-05-05T09:00:00Z',
-    timestampMs: new Date('2025-05-05T09:00:00Z').getTime(),
-  },
-  {
-    eventId: 'evt-009',
-    candidateId: 'individual-27',
-    eventType: 'inspection-started',
-    eventSource: 'EIIP',
-    title: 'Inspection started',
-    description: 'Inspection workflow initiated.',
-    timestamp: '2025-05-01T08:00:00Z',
-    timestampMs: new Date('2025-05-01T08:00:00Z').getTime(),
-    actionLink: {
-      label: 'View inspection',
-      path: '/inspections/892749',
-    },
-  },
-  {
-    eventId: 'evt-010',
-    candidateId: 'individual-27',
-    eventType: 'status-changed',
-    eventSource: 'EIIP',
-    title: 'Status changed',
-    description: 'Status changed from New to Pending.',
-    timestamp: '2025-04-28T10:30:00Z',
-    timestampMs: new Date('2025-04-28T10:30:00Z').getTime(),
-  },
-  {
-    eventId: 'evt-011',
-    candidateId: 'individual-27',
-    eventType: 'appointment-scheduled',
-    eventSource: 'EIIP',
-    title: 'Appointment scheduled',
-    description: 'Follow-up appointment scheduled.',
-    timestamp: '2025-04-25T13:15:00Z',
-    timestampMs: new Date('2025-04-25T13:15:00Z').getTime(),
-    actionLink: {
-      label: 'View appointment',
-      path: '/candidates/fred-johnson/appointments',
-    },
-  },
-  {
-    eventId: 'evt-012',
-    candidateId: 'individual-27',
-    eventType: 'note-added',
-    eventSource: 'EIIP',
-    title: 'Note added',
-    description: 'Preliminary review notes documented.',
-    timestamp: '2025-04-20T16:45:00Z',
-    timestampMs: new Date('2025-04-20T16:45:00Z').getTime(),
-    actionLink: {
-      label: 'View note',
-      path: '/candidates/fred-johnson/notes',
-    },
-  },
-];
+// Generate mock timeline events for multiple candidates
+function generateMockEvents(): TimelineEventRecord[] {
+  const events: TimelineEventRecord[] = [];
+  let eventId = 0;
+
+  const eventTypes: TimelineEventType[] = [
+    'appointment-scheduled',
+    'appointment-completed',
+    'inspection-completed',
+    'finding-added',
+    'note-added',
+    'attachment-added',
+    'status-changed',
+  ];
+
+  const eventDescriptions: Record<TimelineEventType, string[]> = {
+    'appointment-scheduled': [
+      'Appointment scheduled for inspection',
+      'Initial consultation scheduled',
+      'Follow-up appointment scheduled',
+      'Re-inspection appointment scheduled',
+    ],
+    'appointment-completed': [
+      'Appointment completed successfully',
+      'Consultation completed',
+      'Follow-up appointment completed',
+    ],
+    'appointment-cancelled': ['Appointment cancelled by candidate', 'Appointment rescheduled'],
+    'inspection-started': [
+      'Inspection workflow initiated',
+      'Routine inspection started',
+      'Special inspection started',
+    ],
+    'inspection-completed': [
+      'Inspection completed - No violations found',
+      'Inspection completed - Minor violations noted',
+      'Inspection completed - Corrective action required',
+    ],
+    'inspection-cancelled': ['Inspection cancelled', 'Inspection rescheduled'],
+    'finding-added': [
+      'Critical finding identified',
+      'Non-compliance finding added',
+      'Observation noted during inspection',
+    ],
+    'note-added': [
+      'Inspector notes documented',
+      'Follow-up notes added',
+      'Administrative notes recorded',
+    ],
+    'attachment-added': [
+      'Inspection report uploaded',
+      'Corrective action plan received',
+      'Supporting documentation attached',
+    ],
+    'status-changed': [
+      'Status changed to Active',
+      'Status changed to Pending',
+      'Status changed to Closed',
+    ],
+    'source-update': ['Record updated from source system', 'External system synchronization'],
+  };
+
+  // Generate events for the first 20 candidates
+  for (let candidateIndex = 1; candidateIndex <= 20; candidateIndex++) {
+    const candidateId = `individual-${candidateIndex}`;
+    const candidateEventCount = 3 + Math.floor(Math.random() * 4); // 3-6 events per candidate
+
+    for (let i = 0; i < candidateEventCount; i++) {
+      eventId++;
+      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      const descriptions = eventDescriptions[eventType];
+      const description = descriptions[Math.floor(Math.random() * descriptions.length)];
+
+      // Create dates spread across the past year
+      const daysAgo = Math.floor(Math.random() * 365);
+      const eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() - daysAgo);
+      eventDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), 0, 0);
+
+      events.push({
+        eventId: `evt-${eventId}`,
+        candidateId,
+        eventType,
+        eventSource: Math.random() > 0.5 ? 'EIIP' : 'CSTIMS',
+        title: eventType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        description,
+        timestamp: eventDate.toISOString(),
+        timestampMs: eventDate.getTime(),
+      });
+    }
+  }
+
+  // Generate events for the first 10 organizations
+  for (let orgIndex = 1; orgIndex <= 10; orgIndex++) {
+    const candidateId = `organization-${orgIndex}`;
+    const candidateEventCount = 2 + Math.floor(Math.random() * 3); // 2-4 events per organization
+
+    for (let i = 0; i < candidateEventCount; i++) {
+      eventId++;
+      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      const descriptions = eventDescriptions[eventType];
+      const description = descriptions[Math.floor(Math.random() * descriptions.length)];
+
+      // Create dates spread across the past year
+      const daysAgo = Math.floor(Math.random() * 365);
+      const eventDate = new Date();
+      eventDate.setDate(eventDate.getDate() - daysAgo);
+      eventDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), 0, 0);
+
+      events.push({
+        eventId: `evt-${eventId}`,
+        candidateId,
+        eventType,
+        eventSource: Math.random() > 0.5 ? 'EIIP' : 'CSTIMS',
+        title: eventType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        description,
+        timestamp: eventDate.toISOString(),
+        timestampMs: eventDate.getTime(),
+      });
+    }
+  }
+
+  return events;
+}
+
+export const TIMELINE_EVENTS: TimelineEventRecord[] = generateMockEvents();
 
 export const TIMELINE_EVENT_TYPE_LABELS: Record<TimelineEventType, string> = {
   'appointment-scheduled': 'Appointment scheduled',
