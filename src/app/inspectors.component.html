@@ -1,0 +1,130 @@
+<div class="inspectors-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link active-nav-link" routerLink="/inspectors">Inspectors</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <details class="profile-menu">
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </summary>
+        <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
+          <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="inspectors-main">
+    <section class="inspectors-header">
+      <div>
+        <p class="eyebrow">Inspector Directory</p>
+        <h1>Inspectors</h1>
+      </div>
+      <div class="header-actions">
+        <a class="back-link" routerLink="/">Back</a>
+      </div>
+    </section>
+
+    <section class="search-card" aria-label="Inspector search parameters">
+      <h2>Search Inspectors</h2>
+
+      <div class="search-grid">
+        <label class="search-field">
+          <span>Inspector Name</span>
+          <input
+            pInputText
+            type="search"
+            [value]="searchParams().inspectorName"
+            (input)="updateInspectorName($event)"
+            placeholder="Enter inspector name"
+          />
+        </label>
+
+        <label class="search-field">
+          <span>Region</span>
+          <p-select
+            [options]="regionOptions()"
+            [ngModel]="searchParams().region"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            panelStyleClass="toolbar-select-panel"
+            (ngModelChange)="updateRegion($event)"
+          ></p-select>
+        </label>
+
+        <div class="search-field active-toggle-field">
+          <span>Active</span>
+          <div class="active-toggle-row">
+            <p-toggleswitch
+              [ngModel]="searchParams().active"
+              (ngModelChange)="updateActive($event)"
+            ></p-toggleswitch>
+            <span class="active-toggle-label">{{ activeLabel(searchParams().active) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-actions">
+        <button pButton pRipple type="button" class="reset-btn" (click)="reset()">Reset</button>
+        <button pButton pRipple type="button" class="search-btn" (click)="search()">Search</button>
+      </div>
+    </section>
+
+    <section class="table-card" aria-label="Inspectors table">
+      <p-table [value]="filteredRows()" tableStyleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Region</th>
+            <th>Last Inspection Date</th>
+            <th>Active</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td>
+              <a class="inspector-name-link" [routerLink]="['/inspectors', row.inspectorId]">
+                {{ row.name }}
+              </a>
+            </td>
+            <td>{{ row.region }}</td>
+            <td>{{ formatLastInspectionDate(row.lastInspectionDate) }}</td>
+            <td>{{ activeLabel(row.active) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4">No inspectors match the selected filters.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  </main>
+</div>

@@ -26,58 +26,6 @@
             Users
           </a>
         </li>
-        <li>
-          <a class="menu-item" routerLink="/inspection-overview" (click)="close()">
-            <span class="menu-item-icon" aria-hidden="true">◦</span>
-            Inspection Plan
-          </a>
-        </li>
-        <li>
-          <a class="menu-item" routerLink="/inspection-search" (click)="close()">
-            <span class="menu-item-icon" aria-hidden="true">◦</span>
-            Inspection Search
-          </a>
-        </li>
-        <li>
-          <a class="menu-item" routerLink="/candidates" (click)="close()">
-            <span class="menu-item-icon" aria-hidden="true">◦</span>
-            Candidates
-          </a>
-        </li>
-        <li>
-          <a class="menu-item" routerLink="/locations" (click)="close()">
-            <span class="menu-item-icon" aria-hidden="true">◦</span>
-            Locations
-          </a>
-        </li>
-        <li class="menu-submenu">
-          <div class="menu-item menu-parent-item" role="button" tabindex="0" aria-haspopup="true">
-            <span class="menu-item-icon" aria-hidden="true">◦</span>
-            <span class="menu-parent-label">Forms Mockups</span>
-            <span class="menu-submenu-caret" aria-hidden="true">▸</span>
-          </div>
-
-          <ul class="menu-submenu-list" aria-label="Forms mockup layouts">
-            <li>
-              <a
-                class="menu-item menu-submenu-item"
-                routerLink="/forms-mockups/accordion"
-                (click)="close()"
-              >
-                Accordion Layout
-              </a>
-            </li>
-            <li>
-              <a
-                class="menu-item menu-submenu-item"
-                routerLink="/forms-mockups/modal"
-                (click)="close()"
-              >
-                Modal Layout
-              </a>
-            </li>
-          </ul>
-        </li>
       </ul>
     </div>
 
@@ -108,6 +56,15 @@
                 (click)="close()"
               >
                 Weekly Digest Time
+              </a>
+            </li>
+            <li>
+              <a
+                class="menu-item menu-submenu-item"
+                routerLink="/admin/configuration/settings"
+                (click)="close()"
+              >
+                Configuration Settings
               </a>
             </li>
           </ul>

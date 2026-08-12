@@ -18,6 +18,7 @@
       <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
       <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
       <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/inspectors">Inspectors</a>
       <a class="nav-text-link" routerLink="/locations">Locations</a>
     </div>
 
@@ -45,28 +46,25 @@
         <div>
           <div class="title-row">
             <div class="heading-section">
-              <p class="eyebrow">CANDIDATE NAME</p>
               <h1>{{ candidateName() || 'Candidate Detail' }}</h1>
               <p-tag
-                [value]="candidateStatusLabel()"
-                [severity]="candidateStatusSeverity()"
-                [ngClass]="getCandidateStatusClass()"
-                class="status-tag"
+                [value]="inspectionStatusLabel()"
+                [styleClass]="inspectionStatusStyleClass()"
               ></p-tag>
             </div>
           </div>
           <div class="candidate-header-info">
             <div class="header-info-item">
-              <span class="header-label">Candidate Id</span>
-              <p class="header-value">{{ candidateId() }}</p>
-            </div>
-            <div class="header-info-item">
               <span class="header-label">Candidate Maturity</span>
               <p class="header-value">{{ candidateMaturity() }}</p>
             </div>
             <div class="header-info-item">
+              <span class="header-label">Active</span>
+              <p class="header-value">{{ activeStatusLabel() }}</p>
+            </div>
+            <div class="header-info-item">
               <span class="header-label">Next Due</span>
-              <p class="header-value">{{ formatHeaderDate(nextDueDate()) }}</p>
+              <p class="header-value">{{ formattedHeaderNextDueDate() }}</p>
             </div>
           </div>
         </div>
@@ -399,3 +397,4 @@
     }
   </main>
 </div>
+

@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
+import { TagModule } from 'primeng/tag';
 
 type LocationDetailForm = {
   locationName: string;
@@ -31,6 +32,7 @@ type LocationDetailForm = {
     RippleModule,
     InputTextModule,
     TextareaModule,
+    TagModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './location-detail.component.html',
@@ -65,6 +67,23 @@ export class LocationDetailComponent {
   protected readonly hasManageLocationsPermission = signal(true);
   protected readonly canEdit = computed(() => this.hasManageLocationsPermission());
   protected readonly locationName = computed(() => this.form().locationName || 'Location');
+  protected readonly headerStatusLabel = computed(() =>
+    this.form().active ? 'Active' : 'Not Active',
+  );
+  protected readonly headerStatusClass = computed(() =>
+    this.form().active ? 'location-status-active' : 'location-status-inactive',
+  );
+  protected readonly headerAddressLine1 = computed(() => this.form().addressLine1.trim());
+  protected readonly headerAddressLine2 = computed(() => this.form().addressLine2.trim());
+  protected readonly headerAddressFinalLine = computed(() => {
+    const values = this.form();
+    const cityCounty = [values.city.trim(), values.county.trim()]
+      .filter((part) => part.length > 0)
+      .join(', ');
+    const stateZip = `${values.state.trim()} ${values.zip.trim()}`.trim();
+
+    return [cityCounty, stateZip].filter((part) => part.length > 0).join(', ');
+  });
 
   constructor() {
     const navState = this.router.getCurrentNavigation()?.extras.state;

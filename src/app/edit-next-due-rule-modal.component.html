@@ -23,9 +23,8 @@
         />
       </div>
 
-      <!-- Primary Rule & Set Next Due Date (3 direct grid children) -->
+      <!-- Primary Rule, Set Next Due Date & Secondary Rule (All Inline) -->
       <div class="form-row">
-        <!-- Direct Child 1: Primary Rule -->
         <div class="form-group form-group-inline">
           <label for="primaryRule" class="form-label required">Primary Rule</label>
           <p-select
@@ -39,57 +38,55 @@
         </div>
 
         @if (showSetNextDueDate()) {
-          <!-- Direct Child 2: Set Next Due Date / Unit Dropdown -->
           <div class="form-group form-group-inline">
             <label class="form-label">Set Next Due Date</label>
-            <p-select
-              [(ngModel)]="unit"
-              [options]="unitOptions"
-              [showClear]="false"
-              class="w-full"
-              placeholder="Select unit"
-            ></p-select>
-          </div>
-
-          <!-- Direct Child 3: Number Input -->
-          <div class="form-group form-group-inline">
-            <label class="form-label">&nbsp;</label>
-            <input
-              type="number"
-              pInputText
-              [(ngModel)]="dueValue"
-              min="1"
-              max="9999"
-              class="form-control"
-              placeholder="Enter value"
-            />
+            <div class="due-date-inputs">
+              <div class="due-date-unit">
+                <p-select
+                  [(ngModel)]="unit"
+                  [options]="unitOptions"
+                  [showClear]="false"
+                  placeholder="Select unit"
+                ></p-select>
+              </div>
+              <div class="due-date-value">
+                <input
+                  type="number"
+                  pInputText
+                  [(ngModel)]="dueValue"
+                  min="1"
+                  max="9999"
+                  class="form-control"
+                  placeholder="Enter value"
+                />
+              </div>
+            </div>
           </div>
         }
-      </div>
 
-      <!-- Secondary Rule -->
-      <div class="form-group">
-        <label for="secondaryRule" class="form-label">Secondary Rule</label>
-        <div class="secondary-rule-container">
-          <p-select
-            id="secondaryRule"
-            [(ngModel)]="secondaryRule"
-            [options]="secondaryRuleOptions"
-            [showClear]="false"
-            class="w-full"
-            placeholder="None"
-          ></p-select>
-          @if (secondaryRule() !== null) {
-            <button
-              type="button"
-              class="clear-secondary-btn"
-              (click)="clearSecondaryRule()"
-              aria-label="Clear secondary rule"
-              title="Clear selection"
-            >
-              ✕
-            </button>
-          }
+        <div class="form-group form-group-inline">
+          <label for="secondaryRule" class="form-label">Secondary Rule</label>
+          <div class="secondary-rule-container">
+            <p-select
+              id="secondaryRule"
+              [(ngModel)]="secondaryRule"
+              [options]="secondaryRuleOptions"
+              [showClear]="false"
+              class="w-full"
+              placeholder="None"
+            ></p-select>
+            @if (secondaryRule() !== null) {
+              <button
+                type="button"
+                class="clear-secondary-btn"
+                (click)="clearSecondaryRule()"
+                aria-label="Clear secondary rule"
+                title="Clear selection"
+              >
+                ✕
+              </button>
+            }
+          </div>
         </div>
       </div>
 

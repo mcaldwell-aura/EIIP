@@ -62,6 +62,8 @@ type InspectionHistoryRow = {
   comments: string;
 };
 
+type CandidateHeaderStatusVariant = 'open' | 'deactivated' | 'none';
+
 const NAME_SUFFIXES: NameSuffix[] = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
 
 @Component({
@@ -168,37 +170,78 @@ export class CandidateDetailComponent {
       });
   });
 
+  // Demo fallback so candidate pages show mixed statuses even when mock inspection
+  // rows are sparse or not linked to each candidate id.
+  protected readonly hasPresentationOpenInspection = computed(() => {
+    const match = this.candidateId()
+      .trim()
+      .match(/-(\d+)$/);
+    if (!match) {
+      return false;
+    }
+
+    const candidateSequence = Number.parseInt(match[1], 10);
+    if (Number.isNaN(candidateSequence)) {
+      return false;
+    }
+
+    return candidateSequence % 3 === 0;
+  });
+
   protected readonly isDeactivated = computed(() => {
-    return this.endDate().trim() !== '';
+    const endDateValue = this.endDate().trim();
+    if (!endDateValue) {
+      return false;
+    }
+
+    const parsedEndDate = new Date(endDateValue);
+    if (Number.isNaN(parsedEndDate.getTime())) {
+      return true;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsedEndDate.setHours(0, 0, 0, 0);
+
+    return parsedEndDate <= today;
   });
 
-  protected readonly candidateStatusLabel = computed(() => {
+  protected readonly inspectionStatusVariant = computed<CandidateHeaderStatusVariant>(() => {
     if (this.isDeactivated()) {
-      return 'Deactivated';
+      return 'deactivated';
     }
-    return this.hasOpenInspection() ? 'Inspection Open' : 'No Current Inspections';
-  });
 
-  protected readonly candidateStatusSeverity = computed(() => {
-    if (this.isDeactivated()) {
-      return 'danger';
+    if (this.hasOpenInspection() || this.hasPresentationOpenInspection()) {
+      return 'open';
     }
-    return this.hasOpenInspection() ? 'info' : 'secondary';
-  });
 
-  protected getCandidateStatusClass(): string {
-    if (this.isDeactivated()) {
-      return 'deactivated-status';
-    }
-    return this.hasOpenInspection() ? 'inspection-open-status' : '';
-  }
+    return 'none';
+  });
 
   protected readonly inspectionStatusLabel = computed(() => {
-    return this.hasOpenInspection() ? 'Inspection Open' : 'No Current Inspections';
+    const variant = this.inspectionStatusVariant();
+    if (variant === 'deactivated') {
+      return 'Deactivated';
+    }
+
+    if (variant === 'open') {
+      return 'Inspection Open';
+    }
+
+    return 'No Current Inspections';
   });
 
-  protected readonly inspectionStatusSeverity = computed(() => {
-    return this.hasOpenInspection() ? 'info' : 'secondary';
+  protected readonly inspectionStatusStyleClass = computed(() => {
+    const variant = this.inspectionStatusVariant();
+    if (variant === 'open') {
+      return 'inspection-status-tag inspection-status-tag--open';
+    }
+
+    if (variant === 'deactivated') {
+      return 'inspection-status-tag inspection-status-tag--deactivated';
+    }
+
+    return 'inspection-status-tag inspection-status-tag--none';
   });
 
   protected readonly candidateMaturity = computed(() => {
@@ -212,6 +255,61 @@ export class CandidateDetailComponent {
     const diffYears = diffDays / 365.25;
 
     return diffYears >= 1 ? 'Established' : 'New';
+  });
+
+  protected readonly activeStatusLabel = computed(() => {
+    const startDateValue = this.startDate().trim();
+    const endDateValue = this.endDate().trim();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(startDateValue);
+    if (Number.isNaN(startDate.getTime())) {
+      return 'No';
+    }
+    startDate.setHours(0, 0, 0, 0);
+
+    if (endDateValue) {
+      const endDate = new Date(endDateValue);
+      if (!Number.isNaN(endDate.getTime())) {
+        endDate.setHours(0, 0, 0, 0);
+
+        if (endDate < today) {
+          return 'No';
+        }
+
+        if (startDate < today && endDate > today) {
+          return 'Yes';
+        }
+      }
+
+      return 'No';
+    }
+
+    if (startDate < today) {
+      return 'Yes';
+    }
+
+    return 'No';
+  });
+
+  protected readonly formattedHeaderNextDueDate = computed(() => {
+    const value = this.nextDueDate();
+    if (!value) {
+      return 'Not Set';
+    }
+
+    const parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(parsedDate);
   });
 
   constructor(
@@ -689,21 +787,6 @@ export class CandidateDetailComponent {
   protected onTestVolumeChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.testVolume.set(input.value);
-  }
-
-  protected formatHeaderDate(value: string): string {
-    if (!value || !value.trim()) {
-      return '--';
-    }
-    const timestamp = this.parseDateToTimestamp(value);
-    if (timestamp === 0) {
-      return value;
-    }
-    const parsedDate = new Date(timestamp);
-    const month = `${parsedDate.getMonth() + 1}`.padStart(2, '0');
-    const day = `${parsedDate.getDate()}`.padStart(2, '0');
-    const year = `${parsedDate.getFullYear()}`;
-    return `${month}/${day}/${year}`;
   }
 
   private todayIsoDate(): string {

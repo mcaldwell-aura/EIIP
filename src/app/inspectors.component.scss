@@ -1,0 +1,362 @@
+:host {
+  --text: #18223a;
+  --text-soft: #60708f;
+  --line: #d8e0f2;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --accent: #1f56d8;
+  --accent-soft: #eef3ff;
+
+  display: block;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: var(--text);
+  font-family: var(--app-font-family);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.inspectors-page {
+  min-height: 100dvh;
+}
+
+.top-nav {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: #1848b8;
+  border-bottom: 1px solid #123992;
+  color: #ffffff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0.6rem 1.2rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nav-left,
+.nav-right,
+.brand {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.nav-left,
+.nav-right {
+  flex-wrap: wrap;
+}
+
+.nav-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nav-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.brand {
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.icon-btn,
+.profile-btn,
+.tab-link,
+.back-link {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  transition: all 180ms ease;
+}
+
+.icon-btn,
+.profile-btn {
+  align-items: center;
+  background: #fff;
+  border-color: var(--line);
+  color: var(--text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.25rem;
+  justify-content: center;
+  width: 2.25rem;
+  box-shadow: 0 2px 8px rgba(17, 29, 56, 0.06);
+}
+
+.profile-btn {
+  border-radius: 50%;
+}
+
+.tab-link {
+  background: var(--accent-soft);
+  border-color: #d2dcf8;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-text-link {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nav-text-link:hover {
+  text-decoration: underline;
+}
+
+.nav-text-link.active-nav-link {
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .tab-link,
+  .nav-text-link {
+    display: none;
+  }
+}
+
+.inspectors-main {
+  margin: 0 auto;
+  max-width: 1360px;
+  padding: 1.6rem 1.25rem 2.8rem;
+}
+
+.inspectors-header {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(1.85rem, 2.2vw, 2.5rem);
+  letter-spacing: 0.01em;
+  margin: 0.25rem 0 0;
+}
+
+.back-link {
+  background: #fff;
+  border-color: #d5def2;
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+}
+
+.search-card,
+.table-card {
+  background: var(--card-bg);
+  border: 1px solid #d6e0f2;
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(21, 39, 82, 0.08);
+  margin-top: 1rem;
+  padding: 1.2rem 1.35rem;
+}
+
+.table-card {
+  min-height: 38rem;
+  padding: 0.35rem 0.9rem 0.85rem;
+}
+
+.search-card h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.search-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+
+  @media (max-width: 940px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.search-field span {
+  color: #2a3652;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.search-field input {
+  width: 100%;
+}
+
+:host ::ng-deep .search-field .p-select {
+  width: 100%;
+}
+
+:host ::ng-deep .search-field .p-inputtext,
+:host ::ng-deep .search-field .p-select {
+  border-radius: 10px;
+  min-height: 2.5rem;
+}
+
+.active-toggle-field {
+  justify-content: flex-end;
+}
+
+.active-toggle-row {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  min-height: 2.5rem;
+}
+
+.active-toggle-label {
+  color: #2a3652;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #1f56d8 !important;
+  border-color: #1f56d8 !important;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch {
+  --p-toggleswitch-checked-background: #1f56d8;
+  --p-toggleswitch-checked-border-color: #1f56d8;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
+  background: #ffffff !important;
+}
+
+:host
+  ::ng-deep
+  .active-toggle-row
+  .p-toggleswitch:not(.p-toggleswitch-checked)
+  .p-toggleswitch-slider {
+  background: #dfe6f5;
+  border-color: #d0d9ee;
+}
+
+.search-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.reset-btn,
+.search-btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.6rem 0.9rem;
+}
+
+.reset-btn {
+  background: #fff;
+  border-color: #d2dcf2;
+  color: #355087;
+}
+
+.search-btn {
+  background: linear-gradient(90deg, #1f56d8, #1660f4);
+  border-color: transparent;
+  color: #fff;
+}
+
+:host ::ng-deep .table-card .p-datatable table {
+  min-width: 760px;
+}
+
+:host ::ng-deep .table-card .p-datatable-thead > tr > th {
+  background: transparent;
+  border-bottom: 1px solid #d8e0f1;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.72rem 0.45rem;
+  text-transform: none;
+}
+
+:host ::ng-deep .table-card .p-datatable-table > .p-datatable-thead > tr > th {
+  background: transparent !important;
+  border-bottom: 1px solid #d8e0f1 !important;
+  color: var(--text-soft) !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  padding: 0.72rem 0.45rem !important;
+  text-transform: none !important;
+}
+
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #d8e0f1;
+  color: #2d3650;
+  font-size: 0.88rem;
+  min-height: 3.15rem;
+  padding: 0.72rem 0.45rem;
+}
+
+:host ::ng-deep .table-card .p-datatable-table > .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #d8e0f1 !important;
+  color: #2d3650 !important;
+  font-size: 0.88rem !important;
+  min-height: 3.15rem;
+  padding: 0.72rem 0.45rem !important;
+}
+
+.inspector-name-link {
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 180ms ease;
+}
+
+.inspector-name-link:hover {
+  text-decoration: underline;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #2f61d2;
+  outline-offset: 2px;
+}

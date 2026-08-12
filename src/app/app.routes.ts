@@ -13,11 +13,13 @@ import { LocationsComponent } from './locations.component';
 import { LocationDetailComponent } from './location-detail.component';
 import { InspectorDashboardComponent } from './inspector-dashboard.component';
 import { InspectionSearchComponent } from './inspection-search.component';
-import { FormsMockupAccordionComponent } from './forms-mockup-accordion.component';
-import { FormsMockupModalComponent } from './forms-mockup-modal.component';
 import { UserSettingsComponent } from './user-settings.component';
 import { CandidateNextDueConfigComponent } from './candidate-next-due-config.component';
 import { WeeklyDigestTimeConfigComponent } from './weekly-digest-time-config.component';
+import { InspectorsComponent } from './inspectors.component';
+import { InspectorDetailComponent } from './inspector-detail.component';
+import { ConfigurationSettingsComponent } from './configuration-settings.component';
+import { configurationSettingsUnsavedChangesGuard } from './configuration-settings-unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -39,6 +41,14 @@ export const routes: Routes = [
   {
     path: 'candidates',
     component: CandidatesComponent,
+  },
+  {
+    path: 'inspectors',
+    component: InspectorsComponent,
+  },
+  {
+    path: 'inspectors/:inspectorId',
+    component: InspectorDetailComponent,
   },
   {
     path: 'candidates/:candidateId',
@@ -81,19 +91,16 @@ export const routes: Routes = [
     component: SubjectDetailsComponent,
   },
   {
-    path: 'forms-mockups/accordion',
-    component: FormsMockupAccordionComponent,
-  },
-  {
-    path: 'forms-mockups/modal',
-    component: FormsMockupModalComponent,
-  },
-  {
     path: 'admin/configuration/next-due',
     component: CandidateNextDueConfigComponent,
   },
   {
     path: 'admin/configuration/weekly-digest-time',
     component: WeeklyDigestTimeConfigComponent,
+  },
+  {
+    path: 'admin/configuration/settings',
+    component: ConfigurationSettingsComponent,
+    canDeactivate: [configurationSettingsUnsavedChangesGuard],
   },
 ];

@@ -1,0 +1,427 @@
+<div class="configuration-settings-page">
+  <header class="top-nav">
+    <div class="nav-left">
+      <button
+        pButton
+        pRipple
+        type="button"
+        class="icon-btn"
+        aria-label="Open menu"
+        (click)="menuService.toggle()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="brand" routerLink="/">
+        <span class="brand-text">EIIP</span>
+      </a>
+      <button pButton pRipple type="button" class="tab-link">View CSTIMS</button>
+      <a class="nav-text-link" routerLink="/inspection-overview">Inspection Plan</a>
+      <a class="nav-text-link" routerLink="/inspection-search">Inspection Search</a>
+      <a class="nav-text-link" routerLink="/candidates">Candidates</a>
+      <a class="nav-text-link" routerLink="/inspectors">Inspectors</a>
+      <a class="nav-text-link" routerLink="/locations">Locations</a>
+    </div>
+
+    <div class="nav-right">
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Search">
+        <i class="pi pi-search"></i>
+      </button>
+      <button pButton pRipple type="button" class="icon-btn" aria-label="Open apps">
+        <i class="pi pi-th"></i>
+      </button>
+      <details class="profile-menu">
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
+          <i class="pi pi-user" aria-hidden="true"></i>
+        </summary>
+        <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
+          <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="settings-main">
+    <section class="tabs" role="tablist" aria-label="Configuration settings tabs">
+      @for (tab of tabs; track tab.id) {
+        <button
+          pButton
+          pRipple
+          type="button"
+          class="tab-btn"
+          [class.active]="activeTab() === tab.id"
+          role="tab"
+          [attr.aria-selected]="activeTab() === tab.id"
+          [attr.aria-controls]="'config-tab-panel-' + tab.id"
+          [id]="'config-tab-' + tab.id"
+          (click)="setActiveTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      }
+    </section>
+
+    <section
+      class="content-grid"
+      role="tabpanel"
+      [id]="'config-tab-panel-' + activeTab()"
+      [attr.aria-labelledby]="'config-tab-' + activeTab()"
+    >
+      @if (activeTab() === 'priority-scores') {
+        <article>
+          <div class="card-header solo-header">
+            <h2>Priority Score Configuration</h2>
+          </div>
+
+          <section class="table-card" aria-label="Priority score factors table">
+            <p-table [value]="rows()" tableStyleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Factor Name</th>
+                  <th>Minimum Value</th>
+                  <th>Maximum Value</th>
+                  <th>Range Type</th>
+                  <th>Weight</th>
+                  <th>Description</th>
+                  <th>Active</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.factorName }}</td>
+                  <td>{{ row.minimumValue }}</td>
+                  <td>{{ row.maximumValue }}</td>
+                  <td>{{ row.rangeType }}</td>
+                  <td>{{ row.weight }}</td>
+                  <td>{{ row.description }}</td>
+                  <td>{{ row.active ? 'Yes' : 'No' }}</td>
+                  <td>
+                    <button
+                      pButton
+                      pRipple
+                      type="button"
+                      class="row-action-btn"
+                      icon="pi pi-pencil"
+                      [attr.aria-label]="'Edit ' + row.factorName"
+                      (click)="openEditDialog(row)"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </section>
+        </article>
+      } @else if (activeTab() === 'next-due') {
+        <article>
+          <div class="card-header solo-header">
+            <h2>Next Due Configuration</h2>
+          </div>
+
+          <section class="table-card" aria-label="Next due configurations table">
+            <p-table [value]="orderedNextDueRules()" tableStyleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>
+                    <div class="next-due-header-text-wrap">
+                      <span>Inspection Result</span>
+                    </div>
+                  </th>
+                  <th>Rule</th>
+                  <th>Time Interval</th>
+                  <th>End Date</th>
+                  <th>Active</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-row>
+                <tr>
+                  <td>{{ row.inspectionResult }}</td>
+                  <td>{{ row.rule || '' }}</td>
+                  <td>{{ formatNextDueInterval(row) }}</td>
+                  <td>{{ formatNullableBoolean(row.setEndDate) }}</td>
+                  <td>{{ formatNullableBoolean(row.active) }}</td>
+                  <td>
+                    <button
+                      pButton
+                      pRipple
+                      type="button"
+                      class="next-due-edit-btn"
+                      icon="pi pi-pencil"
+                      [attr.aria-label]="'Edit ' + row.inspectionResult"
+                      (click)="openNextDueEditModal(row)"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </section>
+        </article>
+      } @else if (activeTab() === 'general') {
+        <article>
+          <div class="card-header solo-header">
+            <h2>General Configuration</h2>
+          </div>
+
+          <section
+            class="details-card general-card general-settings-wrap"
+            aria-label="General configuration settings"
+          >
+            <p class="general-subheading">Send Weekly Summary email</p>
+
+            <div class="general-inline-row">
+              <div class="general-inline-field">
+                <span class="general-prefix">Every</span>
+                <p-select
+                  [ngModel]="selectedGeneralDay()"
+                  [options]="generalDayOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body"
+                  (ngModelChange)="selectedGeneralDay.set($event)"
+                ></p-select>
+              </div>
+
+              <div class="general-inline-field">
+                <span class="general-prefix">At</span>
+                <p-select
+                  [ngModel]="selectedGeneralTime()"
+                  [options]="generalTimeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body"
+                  (ngModelChange)="selectedGeneralTime.set($event)"
+                ></p-select>
+              </div>
+            </div>
+
+            <div class="general-save-row">
+              <button
+                pButton
+                pRipple
+                type="button"
+                class="primary-btn"
+                (click)="saveGeneralSettings()"
+              >
+                Save
+              </button>
+            </div>
+          </section>
+        </article>
+      }
+    </section>
+
+    <p-dialog
+      [visible]="editDialogVisible()"
+      [modal]="true"
+      [draggable]="false"
+      [dismissableMask]="true"
+      [closable]="true"
+      header="Edit Priority Score Factor"
+      styleClass="edit-priority-score-modal"
+      [style]="{ width: 'min(760px, 95vw)' }"
+      (onHide)="cancelEdit()"
+    >
+      <div class="edit-form-grid">
+        <label class="edit-field edit-field-span-2">
+          <span>Factor Name</span>
+          <input
+            pInputText
+            type="text"
+            [value]="editForm().factorName"
+            (input)="updateFactorName($event)"
+          />
+        </label>
+
+        <label class="edit-field">
+          <span>Minimum Value</span>
+          <input
+            pInputText
+            type="number"
+            [value]="editForm().minimumValue"
+            (input)="updateMinimumValue($event)"
+          />
+        </label>
+
+        <label class="edit-field">
+          <span>Maximum Value</span>
+          <input
+            pInputText
+            type="number"
+            [value]="editForm().maximumValue"
+            (input)="updateMaximumValue($event)"
+          />
+        </label>
+
+        <label class="edit-field">
+          <span>Range Type</span>
+          <p-select
+            [options]="rangeTypeOptions"
+            [ngModel]="editForm().rangeType"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            (ngModelChange)="updateRangeType($event)"
+          ></p-select>
+        </label>
+
+        <label class="edit-field">
+          <span>Weight</span>
+          <input
+            pInputText
+            type="number"
+            [value]="editForm().weight"
+            (input)="updateWeight($event)"
+          />
+        </label>
+
+        <label class="edit-field edit-field-span-2">
+          <span>Description</span>
+          <input
+            pInputText
+            type="text"
+            [value]="editForm().description"
+            (input)="updateDescription($event)"
+          />
+        </label>
+
+        <div class="edit-field edit-field-span-2 active-toggle-field">
+          <span>Active</span>
+          <div class="active-toggle-row">
+            <p-toggleswitch
+              [ngModel]="editForm().active"
+              (ngModelChange)="updateActive($event)"
+            ></p-toggleswitch>
+            <span class="active-toggle-label">{{ activeLabel() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="edit-modal-footer">
+          <button pButton pRipple type="button" class="secondary-btn" (click)="cancelEdit()">
+            Cancel
+          </button>
+          <button pButton pRipple type="button" class="primary-btn" (click)="saveEdit()">
+            Save
+          </button>
+        </div>
+      </ng-template>
+    </p-dialog>
+
+    @if (nextDueEditVisible()) {
+      <div class="next-due-modal-overlay" role="dialog" aria-modal="true">
+        <div class="next-due-modal-content">
+          <div class="next-due-modal-header">
+            <h2>Edit Candidate Next Due Rule</h2>
+            <button
+              type="button"
+              class="next-due-modal-close-btn"
+              aria-label="Close modal"
+              (click)="closeNextDueEditModal()"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="next-due-modal-body">
+            <div class="next-due-field next-due-field-span-2">
+              <span>Inspection Result</span>
+              <input pInputText type="text" [value]="nextDueEditForm().inspectionResult" readonly />
+            </div>
+
+            <div class="next-due-field next-due-field-span-2 next-due-rule-row">
+              <div class="next-due-rule-field">
+                <span>Rule <strong>*</strong></span>
+                <p-select
+                  [options]="nextDueRuleOptions"
+                  [ngModel]="nextDueEditForm().rule"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body"
+                  (ngModelChange)="updateNextDueRule($event)"
+                ></p-select>
+              </div>
+
+              @if (showNextDueIntervalFields()) {
+                <div class="next-due-to-text">to</div>
+                <div class="next-due-interval-value">
+                  <input
+                    pInputText
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="4"
+                    [value]="nextDueEditForm().timeIntervalValue ?? ''"
+                    (input)="updateNextDueIntervalValue($event)"
+                  />
+                </div>
+                <div class="next-due-unit-field">
+                  <span>Unit <strong>*</strong></span>
+                  <p-select
+                    [options]="nextDueUnitOptions"
+                    [ngModel]="nextDueEditForm().timeIntervalUnit"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                    (ngModelChange)="updateNextDueUnit($event)"
+                  ></p-select>
+                </div>
+              }
+            </div>
+
+            <div class="next-due-field next-due-field-span-2">
+              <span>Set End Date</span>
+              <div class="next-due-toggle-row">
+                <p-toggleswitch
+                  [ngModel]="nextDueEditForm().setEndDate"
+                  (ngModelChange)="updateNextDueSetEndDate($event)"
+                ></p-toggleswitch>
+                <span class="next-due-toggle-label">{{ nextDueSetEndDateLabel() }}</span>
+              </div>
+            </div>
+
+            <div class="next-due-field next-due-field-span-2">
+              <span>Active</span>
+              <div class="next-due-toggle-row">
+                <p-toggleswitch
+                  [ngModel]="nextDueEditForm().active"
+                  (ngModelChange)="updateNextDueActive($event)"
+                ></p-toggleswitch>
+                <span class="next-due-toggle-label">{{ nextDueActiveLabel() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="next-due-modal-footer">
+            <button
+              pButton
+              pRipple
+              type="button"
+              class="secondary-btn"
+              (click)="closeNextDueEditModal()"
+            >
+              Cancel
+            </button>
+            <button
+              pButton
+              pRipple
+              type="button"
+              class="primary-btn"
+              [disabled]="!nextDueCanSave()"
+              (click)="saveNextDueEdit()"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showUnsavedModal()) {
+      <app-unsaved-changes-confirmation-modal
+        (save)="onUnsavedSave()"
+        (discard)="onUnsavedDiscard()"
+        (cancel)="onUnsavedCancel()"
+      ></app-unsaved-changes-confirmation-modal>
+    }
+  </main>
+</div>

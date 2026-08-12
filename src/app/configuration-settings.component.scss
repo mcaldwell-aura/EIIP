@@ -1,0 +1,684 @@
+:host {
+  --text: #192030;
+  --text-soft: #5e677d;
+  --line: #d5dcec;
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --field-bg: #f8fafc;
+  --field-border: #ccd4e0;
+  --accent: #1f56d8;
+  --accent-soft: #eef3ff;
+
+  display: block;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: var(--text);
+  font-family: var(--app-font-family);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.configuration-settings-page {
+  min-height: 100dvh;
+}
+
+.top-nav {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background: #1848b8;
+  border-bottom: 1px solid #123992;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 0 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.nav-left,
+.nav-right,
+.brand {
+  align-items: center;
+  display: flex;
+}
+
+.nav-left,
+.nav-right {
+  gap: 0.7rem;
+}
+
+.nav-left {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.nav-right {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.brand {
+  color: inherit;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
+.brand-text {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.icon-btn,
+.profile-btn,
+.tab-link,
+.primary-btn,
+.secondary-btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  transition: all 180ms ease;
+}
+
+.icon-btn,
+.profile-btn {
+  align-items: center;
+  background: #fff;
+  border-color: var(--line);
+  box-shadow: 0 2px 8px rgba(17, 29, 56, 0.06);
+  color: var(--text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.25rem;
+  justify-content: center;
+  width: 2.25rem;
+}
+
+.profile-btn {
+  border-radius: 50%;
+}
+
+.tab-link {
+  background: var(--accent-soft);
+  border-color: #d3dcf8;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+}
+
+.nav-text-link {
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-text-link:hover {
+  text-decoration: underline;
+}
+
+.profile-menu {
+  position: relative;
+}
+
+.profile-menu summary {
+  list-style: none;
+}
+
+.profile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-menu-panel {
+  background: #ffffff;
+  border: 1px solid #d6def4;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(14, 28, 68, 0.14);
+  min-width: 180px;
+  padding: 0.4rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  z-index: 30;
+}
+
+.profile-menu-item {
+  border-radius: 8px;
+  color: #1d2b47;
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0.58rem 0.7rem;
+  text-decoration: none;
+}
+
+.profile-menu-item:hover {
+  background: #eef3ff;
+  color: var(--accent);
+}
+
+.settings-main {
+  margin: 0 auto;
+  max-width: 1320px;
+  padding: 1.5rem 1.25rem 2.8rem;
+}
+
+.tabs {
+  border-bottom: 1px solid #d5dcec;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  overflow-x: auto;
+  padding-inline: 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--text-soft);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 0.6rem;
+  letter-spacing: 0.01em;
+  margin-bottom: -1px;
+  padding: 0.75rem 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.tab-btn.active {
+  border-bottom-color: #1f56d8;
+  color: var(--accent);
+}
+
+.content-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.45rem;
+}
+
+.card-header {
+  margin-bottom: 1rem;
+}
+
+.solo-header h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.table-card {
+  background: var(--panel-bg);
+  border: 1px solid #d6e0f2;
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(21, 39, 82, 0.08);
+  margin-top: 0.6rem;
+  padding: 0.35rem 0.9rem 0.85rem;
+}
+
+:host ::ng-deep .table-card .p-datatable table {
+  min-width: 1060px;
+}
+
+:host ::ng-deep .table-card .p-datatable-thead > tr > th,
+:host ::ng-deep .table-card .p-datatable-table > .p-datatable-thead > tr > th {
+  background: transparent !important;
+  border-bottom: 1px solid #d8e0f1 !important;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.72rem 0.45rem;
+  text-transform: none;
+}
+
+.next-due-header-text-wrap {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.next-due-header-text-wrap small {
+  color: #7a89a9;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+:host ::ng-deep .table-card .p-datatable-tbody > tr > td,
+:host ::ng-deep .table-card .p-datatable-table > .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #d8e0f1 !important;
+  color: #2d3650;
+  font-size: 0.88rem;
+  min-height: 3.15rem;
+  padding: 0.72rem 0.45rem;
+}
+
+.row-action-btn {
+  background: #1f56d8;
+  border: 1px solid #1f56d8;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  height: 2rem;
+  width: 2rem;
+}
+
+.row-action-btn:hover {
+  background: #1849bb;
+  border-color: #1849bb;
+}
+
+:host ::ng-deep .table-card .row-action-btn.p-button {
+  background: #1f56d8 !important;
+  border-color: #1f56d8 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .table-card .row-action-btn.p-button .pi {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .table-card .row-action-btn.p-button:hover {
+  background: #1849bb !important;
+  border-color: #1849bb !important;
+}
+
+.next-due-edit-btn {
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+:host ::ng-deep .table-card .next-due-edit-btn.p-button {
+  background: #1f56d8 !important;
+  border-color: #1f56d8 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .table-card .next-due-edit-btn.p-button .pi,
+:host ::ng-deep .table-card .next-due-edit-btn.p-button .p-button-label {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .table-card .next-due-edit-btn.p-button:hover {
+  background: #1849bb !important;
+  border-color: #1849bb !important;
+}
+
+.edit-form-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 0.2rem;
+}
+
+.edit-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.edit-field-span-2 {
+  grid-column: 1 / -1;
+}
+
+.edit-field span {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.edit-field input,
+:host ::ng-deep .edit-field .p-select {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 9px;
+  color: #2a3652;
+  font: inherit;
+  min-height: 2.45rem;
+  padding: 0.5rem 0.68rem;
+  width: 100%;
+}
+
+.active-toggle-field {
+  align-items: start;
+}
+
+.active-toggle-row {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  min-height: 2.45rem;
+}
+
+.active-toggle-label {
+  color: #2a3652;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch {
+  --p-toggleswitch-checked-background: #1f56d8;
+  --p-toggleswitch-checked-border-color: #1f56d8;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #1f56d8 !important;
+  border-color: #1f56d8 !important;
+}
+
+:host ::ng-deep .active-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
+  background: #ffffff !important;
+}
+
+.edit-modal-footer {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: flex-end;
+}
+
+.details-card {
+  background: var(--panel-bg);
+  border: 1px solid #d6e0f2;
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(21, 39, 82, 0.08);
+}
+
+.general-card {
+  margin-top: 0.6rem;
+  padding: 1.5rem 1.6rem 1.6rem;
+}
+
+.general-settings-wrap {
+  display: grid;
+  gap: 1rem;
+}
+
+.general-subheading {
+  color: #24314d;
+  font-size: 1.08em;
+  font-weight: 700;
+  margin: 0.5rem 0 0;
+}
+
+.general-inline-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.general-inline-field {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.general-prefix {
+  color: #24314d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  min-width: 2.6rem;
+}
+
+:host ::ng-deep .general-inline-field .p-select {
+  width: 220px;
+}
+
+.general-save-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.next-due-modal-overlay {
+  align-items: center;
+  background: rgba(6, 14, 30, 0.52);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 70;
+}
+
+.next-due-modal-content {
+  background: #ffffff;
+  border: 1px solid #d6deef;
+  border-radius: 14px;
+  box-shadow: 0 20px 42px rgba(19, 36, 78, 0.24);
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 820px);
+  width: min(860px, 96vw);
+}
+
+.next-due-modal-header {
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #dce4f3;
+  border-radius: 14px 14px 0 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.next-due-modal-header h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.next-due-modal-close-btn {
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: #5b6b8a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.2rem;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.next-due-modal-close-btn:hover {
+  color: #1c2b4a;
+}
+
+.next-due-modal-body {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
+.next-due-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.next-due-field-span-2 {
+  grid-column: 1 / -1;
+}
+
+.next-due-field span {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.next-due-field strong {
+  color: #c62828;
+}
+
+.next-due-rule-row {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.next-due-rule-field {
+  display: grid;
+  flex: 1 1 300px;
+  gap: 0.35rem;
+}
+
+.next-due-to-text {
+  color: #3f4f70;
+  font-size: 0.88rem;
+  font-weight: 700;
+  min-height: 2.5rem;
+  padding-bottom: 0.7rem;
+}
+
+.next-due-interval-value {
+  min-width: 6rem;
+}
+
+.next-due-unit-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 9rem;
+}
+
+.next-due-unit-field span {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.next-due-toggle-row {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+  min-height: 2.5rem;
+}
+
+.next-due-toggle-label {
+  color: #2a3652;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+:host ::ng-deep .next-due-field input,
+:host ::ng-deep .next-due-field .p-select {
+  background: var(--field-bg);
+  border: 1px solid var(--field-border);
+  border-radius: 9px;
+  min-height: 2.45rem;
+  width: 100%;
+}
+
+:host ::ng-deep .next-due-toggle-row .p-toggleswitch {
+  --p-toggleswitch-checked-background: #1f56d8;
+  --p-toggleswitch-checked-border-color: #1f56d8;
+}
+
+:host ::ng-deep .next-due-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: #1f56d8 !important;
+  border-color: #1f56d8 !important;
+}
+
+:host ::ng-deep .next-due-toggle-row .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
+  background: #ffffff !important;
+}
+
+.next-due-modal-footer {
+  background: #ffffff;
+  border-radius: 0 0 14px 14px;
+  border-top: 1px solid #dce4f3;
+  bottom: 0;
+  display: flex;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  padding: 0.95rem 1.25rem;
+  position: sticky;
+  z-index: 1;
+}
+
+.secondary-btn {
+  background: #fff;
+  border-color: #d2dcf2;
+  color: #355087;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.58rem 0.92rem;
+}
+
+.primary-btn {
+  background: linear-gradient(90deg, #1f56d8, #1660f4);
+  border-color: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.58rem 0.92rem;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #2f61d2;
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .tab-link,
+  .nav-text-link {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .edit-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-field-span-2 {
+    grid-column: auto;
+  }
+
+  .next-due-modal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .next-due-field-span-2 {
+    grid-column: auto;
+  }
+
+  .general-inline-field {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .general-inline-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .general-prefix {
+    min-width: 0;
+  }
+
+  :host ::ng-deep .general-inline-field .p-select {
+    width: 100%;
+  }
+}
