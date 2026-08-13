@@ -45,22 +45,47 @@
       <div class="title-wrap">
         <div>
           <div class="title-row">
-            <h1>Inspection #{{ inspection().inspectionId }}</h1>
-            <label
-              class="status-badge"
-              [class.warning]="requiresAttention(currentInspectionStatus())"
-            >
-              <span class="status-dot" aria-hidden="true"></span>
-              <select
-                aria-label="Inspection status"
-                [value]="currentInspectionStatus()"
-                (change)="updateInspectionStatus($event)"
-              >
-                <option *ngFor="let status of inspectionStatusOptions" [value]="status">
-                  {{ status }}
-                </option>
-              </select>
-            </label>
+            <div class="heading-section">
+              <h1>Inspection #{{ inspection().inspectionId }}</h1>
+              <p-tag
+                [value]="inspectionStatusLabel()"
+                [styleClass]="inspectionStatusStyleClass()"
+              ></p-tag>
+            </div>
+          </div>
+          <div class="inspection-header-info">
+            <div class="header-info-item" *ngIf="displayedInspectors().length > 0">
+              <span class="header-label">Inspector(s)</span>
+              <div class="header-values">
+                <p class="header-value" *ngFor="let inspector of displayedInspectors()">
+                  {{ inspector }}
+                </p>
+              </div>
+            </div>
+            <div class="header-info-item" *ngIf="displayedCandidates().length > 0">
+              <span class="header-label">Candidate(s)</span>
+              <div class="header-values">
+                <p class="header-value" *ngFor="let candidate of displayedCandidates()">
+                  {{ candidate }}
+                </p>
+              </div>
+            </div>
+            <div class="header-info-group" *ngIf="appointmentDisplay(); else showInspectionResult">
+              <div class="header-info-item">
+                <span class="header-label">Next Appointment</span>
+                <p class="header-value">{{ appointmentDisplay() }}</p>
+              </div>
+              <div class="header-info-item" *ngIf="appointmentLocationDisplay()">
+                <span class="header-label">Location</span>
+                <p class="header-value">{{ appointmentLocationDisplay() }}</p>
+              </div>
+            </div>
+            <ng-template #showInspectionResult>
+              <div class="header-info-item" *ngIf="inspectionResultDisplay()">
+                <span class="header-label">Inspection Result</span>
+                <p class="header-value">{{ inspectionResultDisplay() }}</p>
+              </div>
+            </ng-template>
           </div>
         </div>
 
@@ -70,34 +95,47 @@
       </div>
     </section>
 
-    <article class="details-card ai-summary-card" aria-label="AI-generated inspection summary">
-      <div class="ai-summary-header">
-        <div class="ai-summary-title-row">
-          <span class="ai-summary-title">AI Summary</span>
-          <span class="ai-summary-info" aria-hidden="true">
-            <i class="pi pi-info-circle"></i>
-          </span>
-          <span class="ai-summary-beta">Beta</span>
+    <!-- AI Summary Section -->
+    @if (aiSummaryGenerated()) {
+      <!-- State 2: Generated Summary Card with Expand/Collapse -->
+      <article class="details-card ai-summary-card" aria-label="AI-generated inspection summary">
+        <div class="ai-summary-header">
+          <div class="ai-summary-title-row">
+            <span class="ai-summary-title">AI Summary</span>
+            <span class="ai-summary-info" aria-hidden="true">
+              <i class="pi pi-info-circle"></i>
+            </span>
+            <span class="ai-summary-beta">Beta</span>
+            <div class="ai-summary-timestamp-group" *ngIf="aiSummaryTimestamp()">
+              <span class="ai-summary-timestamp-label">Last Updated:</span>
+              <span class="ai-summary-timestamp">{{ aiSummaryTimestamp() }}</span>
+            </div>
+            <button
+              type="button"
+              class="ai-summary-expand-btn"
+              (click)="toggleAiSummaryExpanded()"
+              [attr.aria-expanded]="aiSummaryCardExpanded()"
+              aria-label="Expand or collapse AI summary"
+            >
+              <i [class]="aiSummaryCardExpanded() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+            </button>
+          </div>
         </div>
-        <div class="ai-summary-timestamp" *ngIf="aiSummaryGenerated() && aiSummaryTimestamp()">
-          {{ aiSummaryTimestamp() }}
-        </div>
-      </div>
 
-      <div class="ai-summary-body">
-        @if (aiSummaryGenerated()) {
-          <p>{{ aiSummaryText() }}</p>
-        } @else {
-          <p class="ai-summary-description">
-            Generate an AI summary of this inspection to quickly understand key details and
-            findings.
-          </p>
-          <button pButton type="button" class="ai-generate-btn" (click)="generateAiSummary()">
-            Generate summary
-          </button>
+        @if (aiSummaryCardExpanded()) {
+          <div class="ai-summary-body">
+            <p>{{ aiSummaryText() }}</p>
+          </div>
         }
+      </article>
+    } @else {
+      <!-- State 1: Only Generate Button -->
+      <div class="ai-summary-button-container">
+        <button pButton type="button" class="ai-generate-btn" (click)="generateAiSummary()">
+          Generate AI Summary
+        </button>
       </div>
-    </article>
+    }
 
     <section class="tabs" aria-label="Inspection details tabs">
       <button
@@ -1403,4 +1441,3 @@
     </ng-template>
   </p-dialog>
 </div>
-

@@ -28,6 +28,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { MenuModule } from 'primeng/menu';
+import { TagModule } from 'primeng/tag';
 
 type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
 type InspectionTypeOption = 'Overt' | 'Covert';
@@ -447,7 +448,7 @@ type InspectorOption = {
   status: InspectorStatus;
 };
 
-type SelectableInspectionStatus = InspectionStatus | 'Excellent' | 'Marginal' | 'Canceled';
+type SelectableInspectionStatus = 'New' | 'Pending' | 'Closed';
 
 type AppointmentStatus = 'Scheduled' | 'Cancelled';
 
@@ -478,6 +479,7 @@ type SummaryFormValue = {
     SelectModule,
     SelectButtonModule,
     MenuModule,
+    TagModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -503,6 +505,7 @@ export class InspectionDetailsComponent implements OnInit {
 
   protected readonly activeTab = signal<DetailsTab>('summary');
   protected readonly aiSummaryGenerated = signal(false);
+  protected readonly aiSummaryCardExpanded = signal(true);
   protected readonly isAppointmentModalOpen = signal(false);
   protected readonly isAssignInspectorModalOpen = signal(false);
   protected readonly isNoteModalOpen = signal(false);
@@ -562,16 +565,10 @@ export class InspectionDetailsComponent implements OnInit {
         .find((item) => item.inspectionId === this.inspectionId()) ?? INSPECTIONS[0],
   );
   protected readonly inspectionStatusOptions: readonly SelectableInspectionStatus[] = [
+    'New',
     'Pending',
-    'Planned',
-    'Scheduled',
-    'Excellent',
-    'Good',
-    'Satisfactory',
-    'Marginal',
-    'Unsatisfactory',
-    'Canceled',
-  ];
+    'Closed',
+  ] as any;
   protected readonly appointmentStatusOptions: readonly AppointmentStatus[] = [
     'Scheduled',
     'Cancelled',
@@ -641,6 +638,89 @@ export class InspectionDetailsComponent implements OnInit {
       this.assignedInspectorByInspection()[this.inspection().inspectionId] ??
       this.inspection().assignedInspector,
   );
+
+  protected readonly mappedInspectionStatus = computed(() => {
+    const rawStatus = this.currentInspectionStatus() as string;
+    if (!rawStatus) return 'Closed';
+    if (rawStatus === 'Pending') {
+      return 'Pending';
+    }
+    // Map all "new" statuses (Scheduled, Planned, etc.) to "New"
+    if (rawStatus === 'Scheduled' || rawStatus === 'Planned') {
+      return 'New';
+    }
+    // Map all completion/closure statuses to "Closed"
+    return 'Closed';
+  });
+
+  protected readonly inspectionStatusLabel = computed(() => {
+    return this.mappedInspectionStatus();
+  });
+
+  protected readonly inspectionStatusStyleClass = computed(() => {
+    const status = this.mappedInspectionStatus();
+    if (status === 'New') {
+      return 'inspection-status-tag inspection-status-tag--new';
+    }
+    if (status === 'Pending') {
+      return 'inspection-status-tag inspection-status-tag--pending';
+    }
+    if (status === 'Closed') {
+      return 'inspection-status-tag inspection-status-tag--closed';
+    }
+    return 'inspection-status-tag inspection-status-tag--closed';
+  });
+
+  protected readonly displayedInspectors = computed(() => {
+    const inspector = this.assignedInspector();
+    if (!inspector) return [];
+    // For now, return the single inspector as an array
+    // In the future, if data structure supports multiple inspectors, handle that here
+    return [inspector].filter((i) => i && this.isAssigned(i)).slice(0, 3);
+  });
+
+  protected readonly displayedCandidates = computed(() => {
+    const candidate = this.inspection().subjectName;
+    if (!candidate) return [];
+    // For now, return the single candidate as an array
+    // In the future, if data structure supports multiple candidates, handle that here
+    return [candidate].slice(0, 3);
+  });
+
+  protected readonly appointmentDisplay = computed(() => {
+    const inspection = this.inspection();
+    if (!inspection.appointmentDate && !inspection.appointmentTime) {
+      return '';
+    }
+
+    let display = '';
+    if (inspection.appointmentDate) {
+      // Format date - assuming input is in MM-DD-YYYY format, convert to mm/dd/yyyy
+      display = inspection.appointmentDate.replace(/-/g, '/');
+    }
+
+    if (inspection.appointmentTime) {
+      // Remove MST from the time
+      const timeWithoutMST = inspection.appointmentTime.replace(/\s*MST\s*$/, '');
+      display += ` ${timeWithoutMST}`;
+    }
+
+    return display.trim();
+  });
+
+  protected readonly appointmentLocationDisplay = computed(() => {
+    const inspection = this.inspection();
+    if (!inspection.appointmentDate && !inspection.appointmentTime) {
+      return '';
+    }
+    return inspection.appointmentLocation || '';
+  });
+
+  protected readonly inspectionResultDisplay = computed(() => {
+    const form = this.summaryForm();
+    return form.inspectionResult || '';
+  });
+
   protected readonly lastEditedTimestamp = computed<string>(() => {
     const timestamp = this.lastEditedByInspection()[this.inspection().inspectionId];
     if (!timestamp) return '';
@@ -1214,6 +1294,17 @@ export class InspectionDetailsComponent implements OnInit {
 
   protected generateAiSummary(): void {
     this.aiSummaryGenerated.set(true);
+    this.aiSummaryCardExpanded.set(true);
+    // Set the timestamp for the AI summary
+    const inspectionId = this.inspection().inspectionId;
+    this.lastEditedByInspection.update((state) => ({
+      ...state,
+      [inspectionId]: new Date().toISOString(),
+    }));
+  }
+
+  protected toggleAiSummaryExpanded(): void {
+    this.aiSummaryCardExpanded.update((expanded) => !expanded);
   }
 
   protected openFormModal(form: InspectionFormRecord): void {
@@ -1532,13 +1623,7 @@ Generated on: ${new Date().toLocaleString()}
   }
 
   protected requiresAttention(status: SelectableInspectionStatus): boolean {
-    return (
-      status === 'Pending' ||
-      status === 'Planned' ||
-      status === 'Unsatisfactory' ||
-      status === 'Marginal' ||
-      status === 'Canceled'
-    );
+    return status === 'Pending';
   }
 
   protected updateInspectionStatus(event: Event): void {
@@ -2274,16 +2359,8 @@ Generated on: ${new Date().toLocaleString()}
   private getDefaultAppointmentStatus(): AppointmentStatus {
     const currentStatus = this.currentInspectionStatus();
 
-    if (currentStatus === 'Canceled') {
+    if (currentStatus === 'Closed') {
       return 'Cancelled';
-    }
-
-    if (
-      currentStatus === 'Pending' ||
-      currentStatus === 'Scheduled' ||
-      currentStatus === 'Planned'
-    ) {
-      return 'Scheduled';
     }
 
     return 'Scheduled';

@@ -283,6 +283,104 @@ h2 {
   gap: 0.75rem;
 }
 
+.heading-section {
+  flex: 1;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-auto-rows: auto;
+  gap: 0rem 1rem;
+  justify-content: start;
+  align-items: center;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.heading-section > h1 {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+.heading-section > p-tag {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+
+:host ::ng-deep .inspection-status-tag {
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  justify-self: start;
+  padding: 0.35rem 0.8rem !important;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .inspection-status-tag.inspection-status-tag--new {
+  background: #e7f6ec !important;
+  border-color: #b8dfc4 !important;
+  color: #1f6a3a !important;
+}
+
+:host ::ng-deep .inspection-status-tag.inspection-status-tag--pending {
+  background: #fff3e7 !important;
+  border-color: #f0d5bd !important;
+  color: #ac5f15 !important;
+}
+
+:host ::ng-deep .inspection-status-tag.inspection-status-tag--closed {
+  background: #f2f4f7 !important;
+  border-color: #d8dde5 !important;
+  color: #4f5b6a !important;
+}
+
+:host ::ng-deep .inspection-status-tag.inspection-status-tag--default {
+  background: #f2f4f7 !important;
+  border-color: #d8dde5 !important;
+  color: #4f5b6a !important;
+}
+
+.inspection-header-info {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+}
+
+.header-info-group {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.header-info-item {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.header-label {
+  color: #60708f;
+  font-size: 0.81rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.header-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-value {
+  color: #232f48;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .back-btn,
 .secondary-btn,
 .tertiary-btn {
@@ -484,15 +582,17 @@ h2 {
 .ai-summary-header {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0;
   margin-bottom: 0.75rem;
+  position: relative;
 }
 
 .ai-summary-title-row {
   align-items: center;
-  display: inline-flex;
+  display: flex;
   gap: 0.45rem;
   min-width: 0;
+  justify-content: flex-start;
 }
 
 .ai-summary-icon {
@@ -537,9 +637,54 @@ h2 {
   letter-spacing: 0.01em;
 }
 
+.ai-summary-timestamp-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.ai-summary-timestamp-label {
+  color: #6f7890;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.ai-summary-expand-btn {
+  all: unset;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  forced-color-adjust: none;
+  -ms-high-contrast-adjust: none;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0.25rem;
+  transition: color 150ms ease;
+
+  &:hover {
+    color: #4d5f8f;
+  }
+
+  &:active {
+    color: #1f56d8;
+  }
+}
+
 .ai-summary-body {
   margin-top: 0;
   padding-bottom: 0;
+  overflow: hidden;
+  transition: all 200ms ease;
 }
 
 .ai-summary-body p {
@@ -548,6 +693,14 @@ h2 {
   font-weight: 400;
   line-height: 1.6;
   margin: 0;
+}
+
+.ai-summary-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 0.75rem;
+  padding: 0;
 }
 
 .ai-generate-btn {
