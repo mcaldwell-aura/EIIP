@@ -637,22 +637,6 @@ export class InspectionOverviewComponent {
     }
   }
 
-  protected togglePriorityFactorsView(): void {
-    this.showAllPriorityFactors.update((showAll) => !showAll);
-  }
-
-  protected isPriorityFactorExpanded(factorName: string): boolean {
-    return this.expandedPriorityFactors().includes(factorName);
-  }
-
-  protected togglePriorityFactor(factorName: string): void {
-    this.expandedPriorityFactors.update((expandedFactors) =>
-      expandedFactors.includes(factorName)
-        ? expandedFactors.filter((name) => name !== factorName)
-        : [...expandedFactors, factorName],
-    );
-  }
-
   protected openNewInspectionModal(row: InspectionPlanRow): void {
     this.closePriorityModal();
     this.newInspectionCandidate.set(row);

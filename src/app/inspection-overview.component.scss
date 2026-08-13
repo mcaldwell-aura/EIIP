@@ -714,6 +714,18 @@ td a.subject-link:hover {
   background-color: transparent !important;
 }
 
+.priority-factor-display {
+  align-items: center;
+  background: transparent;
+  display: grid;
+  column-gap: 0.45rem;
+  row-gap: 0.15rem;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) auto;
+  padding: 0.95rem 0;
+  text-align: left;
+  width: 100%;
+}
+
 .priority-factor-trigger {
   all: unset;
   -webkit-tap-highlight-color: transparent;

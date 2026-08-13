@@ -369,17 +369,6 @@
           <section class="priority-factors-section" aria-label="Score factors">
             <div class="priority-factors-header">
               <h3>Why this score?</h3>
-              @if (canTogglePriorityFactorsView()) {
-                <button
-                  type="button"
-                  class="priority-factors-toggle"
-                  (click)="togglePriorityFactorsView()"
-                >
-                  {{
-                    showAllPriorityFactors() ? 'Show impactful only' : 'Show all evaluated factors'
-                  }}
-                </button>
-              }
             </div>
 
             @if (!hasPriorityFactors()) {
@@ -390,20 +379,7 @@
               <div class="priority-factor-list">
                 @for (factor of visiblePriorityFactors(); track factor.name) {
                   <article class="priority-factor-item">
-                    <button
-                      type="button"
-                      class="priority-factor-trigger"
-                      [attr.aria-expanded]="isPriorityFactorExpanded(factor.name)"
-                      [attr.aria-controls]="'priority-factor-panel-' + $index"
-                      (click)="togglePriorityFactor(factor.name)"
-                    >
-                      <span
-                        class="priority-factor-chevron"
-                        [class.is-expanded]="isPriorityFactorExpanded(factor.name)"
-                        aria-hidden="true"
-                      >
-                        ▸
-                      </span>
+                    <div class="priority-factor-display">
                       <span class="priority-factor-name">{{ factor.name }}</span>
                       <span class="priority-factor-value">{{ factor.candidateValue }}</span>
                       <span
@@ -413,20 +389,7 @@
                       >
                         {{ formatPriorityPoints(factor.points) }}
                       </span>
-                    </button>
-
-                    @if (isPriorityFactorExpanded(factor.name)) {
-                      <div class="priority-factor-panel" [id]="'priority-factor-panel-' + $index">
-                        <ul>
-                          @for (tier of factor.tiers; track tier.rangeLabel + '-' + tier.points) {
-                            <li [class.active-tier]="tier.isActive">
-                              <span>{{ tier.rangeLabel }}</span>
-                              <strong>{{ formatPriorityPoints(tier.points) }}</strong>
-                            </li>
-                          }
-                        </ul>
-                      </div>
-                    }
+                    </div>
                   </article>
                 }
               </div>
