@@ -720,10 +720,17 @@ td a.subject-link:hover {
   display: grid;
   column-gap: 0.45rem;
   row-gap: 0.15rem;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1.55fr) minmax(0, 1fr) auto;
   padding: 0.95rem 0;
   text-align: left;
   width: 100%;
+}
+
+.priority-factor-name {
+  color: #1f2a44;
+  font-size: 0.97rem;
+  font-weight: 700;
+  grid-column: 2;
 }
 
 .priority-factor-trigger {
@@ -833,6 +840,7 @@ td a.subject-link:hover {
 .priority-factor-value {
   color: #55637f;
   font-size: 0.97rem;
+  grid-column: 3;
   justify-self: start;
 }
 
@@ -840,6 +848,7 @@ td a.subject-link:hover {
   border-radius: 11px;
   font-size: 1.04rem;
   font-weight: 700;
+  grid-column: 4;
   min-width: 3.9rem;
   padding: 0.18rem 0.7rem;
   text-align: center;
