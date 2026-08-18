@@ -22,6 +22,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 type DueDateFilter = 'all' | 'next-7-days' | 'next-30-days' | 'after-30-days';
 type PriorityFilter = 'all' | 'high' | 'medium' | 'low';
@@ -162,6 +163,7 @@ type HistoryTooltipState = {
     SelectModule,
     TableModule,
     TextareaModule,
+    ToggleSwitchModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inspection-overview.component.html',
@@ -376,7 +378,7 @@ export class InspectionOverviewComponent {
     const tier = this.selectedPriorityTier();
 
     if (tier === 'high') {
-      return 'var(--accent-deep)';
+      return 'var(--priority-danger)';
     }
 
     if (tier === 'medium') {
@@ -637,6 +639,10 @@ export class InspectionOverviewComponent {
     }
   }
 
+  protected setPriorityFactorsView(showAll: boolean): void {
+    this.showAllPriorityFactors.set(showAll);
+  }
+
   protected openNewInspectionModal(row: InspectionPlanRow): void {
     this.closePriorityModal();
     this.newInspectionCandidate.set(row);
@@ -807,6 +813,15 @@ export class InspectionOverviewComponent {
 
   protected formatPriorityPoints(points: number): string {
     return points > 0 ? `+${points}` : `${points}`;
+  }
+
+  protected formatPriorityFactorPoints(factor: PriorityScoreFactor): string {
+    if (factor.points <= 0) {
+      return '0';
+    }
+
+    const possiblePoints = Math.max(...factor.tiers.map((tier) => tier.points), 0);
+    return `${this.formatPriorityPoints(factor.points)}/${possiblePoints}`;
   }
 
   protected showPriorityHistoryTooltip(

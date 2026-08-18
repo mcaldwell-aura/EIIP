@@ -54,38 +54,35 @@
             </div>
           </div>
           <div class="inspection-header-info">
-            <div class="header-info-item" *ngIf="displayedInspectors().length > 0">
+            <div class="header-info-item">
               <span class="header-label">Inspector(s)</span>
               <div class="header-values">
                 <p class="header-value" *ngFor="let inspector of displayedInspectors()">
                   {{ inspector }}
                 </p>
+                <p class="header-value" *ngIf="displayedInspectors().length === 0">Not assigned</p>
               </div>
             </div>
-            <div class="header-info-item" *ngIf="displayedCandidates().length > 0">
+            <div class="header-info-item">
               <span class="header-label">Candidate(s)</span>
               <div class="header-values">
                 <p class="header-value" *ngFor="let candidate of displayedCandidates()">
                   {{ candidate }}
                 </p>
+                <p class="header-value" *ngIf="displayedCandidates().length === 0">Not assigned</p>
               </div>
             </div>
-            <div class="header-info-group" *ngIf="appointmentDisplay(); else showInspectionResult">
-              <div class="header-info-item">
-                <span class="header-label">Next Appointment</span>
-                <p class="header-value">{{ appointmentDisplay() }}</p>
-              </div>
-              <div class="header-info-item" *ngIf="appointmentLocationDisplay()">
-                <span class="header-label">Location</span>
-                <p class="header-value">{{ appointmentLocationDisplay() }}</p>
-              </div>
+            <div class="header-info-item">
+              <span class="header-label">Next Appointment</span>
+              <p class="header-value">{{ appointmentDisplay() }}</p>
+              <p class="header-value" *ngIf="appointmentLocationDisplay()">
+                {{ appointmentLocationDisplay() }}
+              </p>
             </div>
-            <ng-template #showInspectionResult>
-              <div class="header-info-item" *ngIf="inspectionResultDisplay()">
-                <span class="header-label">Inspection Result</span>
-                <p class="header-value">{{ inspectionResultDisplay() }}</p>
-              </div>
-            </ng-template>
+            <div class="header-info-item">
+              <span class="header-label">Inspection Result</span>
+              <p class="header-value">{{ inspectionResultDisplay() }}</p>
+            </div>
           </div>
         </div>
 

@@ -18,6 +18,7 @@ export type InspectionRecord = {
   inspectionReason: string;
   inspectionStatus: InspectionStatus;
   inspectionType: InspectionType;
+  inspectionResult?: string;
   emphasizedAction?: boolean;
   assignedInspector: string;
   appointmentDate: string;
@@ -37,6 +38,7 @@ export const INSPECTIONS: InspectionRecord[] = [
     inspectionReason: 'ReExam Inspection',
     inspectionStatus: 'Scheduled',
     inspectionType: 'Overt',
+    inspectionResult: 'Original',
     assignedInspector: 'Monique Hale',
     appointmentDate: '04-12-2026',
     appointmentTime: '12:30pm MST',

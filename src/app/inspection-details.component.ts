@@ -461,7 +461,7 @@ type SummaryFormValue = {
   inspectionStatusReason: string;
   inspectionReason: InspectionReasonOption | '';
   inspectionType: InspectionTypeOption | '';
-  inspectionResult: InspectionReasonOption | '';
+  inspectionResult: string;
   completionDate: string;
 };
 
@@ -623,7 +623,7 @@ export class InspectionDetailsComponent implements OnInit {
       inspectionStatusReason: '',
       inspectionReason: reason,
       inspectionType: type,
-      inspectionResult: '',
+      inspectionResult: inspection.inspectionResult ?? 'Change',
       completionDate: '',
     };
   });
@@ -672,54 +672,73 @@ export class InspectionDetailsComponent implements OnInit {
   });
 
   protected readonly displayedInspectors = computed(() => {
-    const inspector = this.assignedInspector();
-    if (!inspector) return [];
-    // For now, return the single inspector as an array
-    // In the future, if data structure supports multiple inspectors, handle that here
-    return [inspector].filter((i) => i && this.isAssigned(i)).slice(0, 3);
+    return this.assignedInspector()
+      .split(/[\n,]+/)
+      .map((inspector) => inspector.trim())
+      .filter((inspector) => inspector && this.isAssigned(inspector));
   });
 
   protected readonly displayedCandidates = computed(() => {
-    const candidate = this.inspection().subjectName;
-    if (!candidate) return [];
-    // For now, return the single candidate as an array
-    // In the future, if data structure supports multiple candidates, handle that here
-    return [candidate].slice(0, 3);
+    return this.inspection()
+      .subjectName.split(/[\n,]+/)
+      .map((candidate) => candidate.trim())
+      .filter(Boolean);
   });
 
   protected readonly appointmentDisplay = computed(() => {
-    const inspection = this.inspection();
-    if (!inspection.appointmentDate && !inspection.appointmentTime) {
-      return '';
-    }
-
-    let display = '';
-    if (inspection.appointmentDate) {
-      // Format date - assuming input is in MM-DD-YYYY format, convert to mm/dd/yyyy
-      display = inspection.appointmentDate.replace(/-/g, '/');
-    }
-
-    if (inspection.appointmentTime) {
-      // Remove MST from the time
-      const timeWithoutMST = inspection.appointmentTime.replace(/\s*MST\s*$/, '');
-      display += ` ${timeWithoutMST}`;
-    }
-
-    return display.trim();
+    const appointment = this.nearestUpcomingScheduledAppointment();
+    return appointment
+      ? this.formatHeaderAppointmentDateTime(appointment.dateTime)
+      : 'No upcoming scheduled appointment';
   });
 
   protected readonly appointmentLocationDisplay = computed(() => {
-    const inspection = this.inspection();
-    if (!inspection.appointmentDate && !inspection.appointmentTime) {
-      return '';
-    }
-    return inspection.appointmentLocation || '';
+    return this.nearestUpcomingScheduledAppointment()?.location.trim() ?? '';
+  });
+
+  private readonly nearestUpcomingScheduledAppointment = computed<AppointmentRow | null>(() => {
+    const now = Date.now();
+    const scheduledAppointments = this.appointmentRows()
+      .filter((appointment) => appointment.status === 'Scheduled')
+      .map((appointment) => ({ appointment, timestamp: Date.parse(appointment.dateTime) }))
+      .filter(({ timestamp }) => !Number.isNaN(timestamp))
+      .sort((left, right) => left.timestamp - right.timestamp);
+
+    return (
+      scheduledAppointments.find(({ timestamp }) => timestamp > now)?.appointment ??
+      scheduledAppointments[0]?.appointment ??
+      null
+    );
   });
 
   protected readonly inspectionResultDisplay = computed(() => {
     const form = this.summaryForm();
-    return form.inspectionResult || '';
+    if (this.inspectionReasonOptions.includes(form.inspectionResult as InspectionReasonOption)) {
+      return form.inspectionResult;
+    }
+
+    return 'Change';
   });
+
+  private formatHeaderAppointmentDateTime(dateTime: string): string {
+    const parsed = new Date(dateTime);
+    if (Number.isNaN(parsed.getTime())) {
+      return '';
+    }
+
+    const date = new Intl.DateTimeFormat('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(parsed);
+    const time = new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(parsed);
+
+    return `${date} ${time}`;
+  }
 
   protected readonly lastEditedTimestamp = computed<string>(() => {
     const timestamp = this.lastEditedByInspection()[this.inspection().inspectionId];
@@ -1754,7 +1773,7 @@ Generated on: ${new Date().toLocaleString()}
 
   protected updateSummaryInspectionResult(event: Event): void {
     this.updateSummaryForm({
-      inspectionResult: (event.target as HTMLSelectElement).value as InspectionReasonOption | '',
+      inspectionResult: (event.target as HTMLSelectElement).value,
     });
   }
 
@@ -2406,7 +2425,9 @@ Generated on: ${new Date().toLocaleString()}
       return `${year}-${month}-${day}T${hour}:${minute}`;
     }
 
-    const legacyMatch = trimmed.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+    const legacyMatch = trimmed.match(
+      /^(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(am|pm)(?:\s+[A-Z]{2,4})?$/i,
+    );
 
     if (!legacyMatch) {
       return '';
