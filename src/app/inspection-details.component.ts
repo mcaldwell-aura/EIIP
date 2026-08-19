@@ -34,6 +34,9 @@ type DetailsTab = 'summary' | 'forms' | 'appointments' | 'notes' | 'documents';
 type InspectionTypeOption = 'Overt' | 'Covert';
 type InspectionFormStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';
 
+const AI_SUMMARY_STORAGE_PREFIX = 'eiip-ai-summary-generated:';
+const AI_SUMMARY_TIMESTAMP_PREFIX = 'eiip-ai-summary-timestamp:';
+
 type FormFieldType = 'text' | 'select' | 'textarea' | 'date' | 'time' | 'number';
 
 type FormFieldDef = {
@@ -1299,6 +1302,16 @@ export class InspectionDetailsComponent implements OnInit {
 
     // Initialize last edited timestamps for all existing forms
     const inspectionId = this.inspection().inspectionId;
+    const hasStoredSummary = this.hasStoredAiSummary(inspectionId);
+    this.aiSummaryGenerated.set(hasStoredSummary);
+    const storedSummaryTimestamp = this.getStoredAiSummaryTimestamp(inspectionId);
+    if (storedSummaryTimestamp) {
+      this.lastEditedByInspection.set({ [inspectionId]: storedSummaryTimestamp });
+    } else if (hasStoredSummary) {
+      const timestamp = new Date().toISOString();
+      this.lastEditedByInspection.set({ [inspectionId]: timestamp });
+      this.storeAiSummaryTimestamp(inspectionId, timestamp);
+    }
     const forms = this.inspectionStore.getInspectionForms(inspectionId);
     const lastEditedData: Record<string, string> = {};
     forms.forEach((form) => {
@@ -1316,10 +1329,34 @@ export class InspectionDetailsComponent implements OnInit {
     this.aiSummaryCardExpanded.set(true);
     // Set the timestamp for the AI summary
     const inspectionId = this.inspection().inspectionId;
+    const timestamp = new Date().toISOString();
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`${AI_SUMMARY_STORAGE_PREFIX}${inspectionId}`, 'true');
+    }
+    this.storeAiSummaryTimestamp(inspectionId, timestamp);
     this.lastEditedByInspection.update((state) => ({
       ...state,
-      [inspectionId]: new Date().toISOString(),
+      [inspectionId]: timestamp,
     }));
+  }
+
+  private hasStoredAiSummary(inspectionId: string): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      window.localStorage.getItem(`${AI_SUMMARY_STORAGE_PREFIX}${inspectionId}`) === 'true'
+    );
+  }
+
+  private getStoredAiSummaryTimestamp(inspectionId: string): string {
+    return typeof window !== 'undefined'
+      ? (window.localStorage.getItem(`${AI_SUMMARY_TIMESTAMP_PREFIX}${inspectionId}`) ?? '')
+      : '';
+  }
+
+  private storeAiSummaryTimestamp(inspectionId: string, timestamp: string): void {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`${AI_SUMMARY_TIMESTAMP_PREFIX}${inspectionId}`, timestamp);
+    }
   }
 
   protected toggleAiSummaryExpanded(): void {

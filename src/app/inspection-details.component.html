@@ -122,6 +122,10 @@
         @if (aiSummaryCardExpanded()) {
           <div class="ai-summary-body">
             <p>{{ aiSummaryText() }}</p>
+            <button type="button" class="ai-regenerate-btn" (click)="generateAiSummary()">
+              <i class="pi pi-refresh" aria-hidden="true"></i>
+              <span>Regenerate AI Summary</span>
+            </button>
           </div>
         }
       </article>
