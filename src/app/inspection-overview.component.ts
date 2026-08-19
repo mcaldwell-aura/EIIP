@@ -812,7 +812,7 @@ export class InspectionOverviewComponent {
   }
 
   protected formatPriorityPoints(points: number): string {
-    return points > 0 ? `+${points}` : `${points}`;
+    return `${points}`;
   }
 
   protected formatPriorityFactorPoints(factor: PriorityScoreFactor): string {
@@ -820,7 +820,22 @@ export class InspectionOverviewComponent {
       return '0';
     }
 
-    const possiblePoints = Math.max(...factor.tiers.map((tier) => tier.points), 0);
+    const explicitFactorMaximum =
+      this.selectedPriorityDetail()
+        ?.factors.filter(
+          (candidateFactor) =>
+            candidateFactor.points > 0 && candidateFactor.name !== 'Historical trend weighting',
+        )
+        .reduce(
+          (total, candidateFactor) =>
+            total + Math.max(...candidateFactor.tiers.map((tier) => tier.points), 0),
+          0,
+        ) ?? 0;
+    const possiblePoints =
+      factor.name === 'Historical trend weighting'
+        ? Math.max(0, 100 - explicitFactorMaximum)
+        : Math.max(...factor.tiers.map((tier) => tier.points), 0);
+
     return `${this.formatPriorityPoints(factor.points)}/${possiblePoints}`;
   }
 

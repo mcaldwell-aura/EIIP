@@ -397,14 +397,33 @@ td a.subject-link:hover {
 }
 
 .priority-cell-value {
-  color: var(--priority-danger);
   font-weight: 700;
 }
 
 .priority-cell-icon {
-  color: var(--priority-danger);
-  font-size: 0.85rem;
+  align-items: center;
+  background: var(--priority-danger);
+  border-radius: 50%;
+  color: #ffffff;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 400;
+  height: 1rem;
+  justify-content: center;
   line-height: 1;
+  width: 1rem;
+}
+
+.priority-cell-high {
+  color: var(--priority-danger);
+}
+
+.priority-cell-medium {
+  color: var(--accent);
+}
+
+.priority-cell-low {
+  color: var(--text-soft);
 }
 
 .priority-trigger {
@@ -452,8 +471,8 @@ td a.subject-link:hover {
 .priority-modal-header {
   display: flex;
   gap: 1.2rem;
-  justify-content: space-between;
-  padding: 1.45rem 1.5rem 0.6rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem 0;
 }
 
 .priority-modal-title-wrap {
@@ -538,7 +557,7 @@ td a.subject-link:hover {
   display: grid;
   gap: 1.2rem;
   grid-template-columns: auto 1fr;
-  padding: 1.2rem 1.5rem;
+  padding: 0.15rem 1.5rem 2.5rem;
 }
 
 .priority-ring-wrap {

@@ -252,9 +252,16 @@
                   (click)="openPriorityModal(row, priorityTrigger)"
                   [attr.aria-label]="'View priority score details for ' + row.subjectName"
                 >
-                  <span class="priority-cell">
+                  <span
+                    class="priority-cell"
+                    [class.priority-cell-high]="priorityTier(row.priority) === 'high'"
+                    [class.priority-cell-medium]="priorityTier(row.priority) === 'medium'"
+                    [class.priority-cell-low]="priorityTier(row.priority) === 'low'"
+                  >
                     <span class="priority-cell-value">{{ row.priority }}</span>
-                    <i class="pi pi-exclamation-circle priority-cell-icon" aria-hidden="true"></i>
+                    @if (priorityTier(row.priority) === 'high') {
+                      <span class="priority-cell-icon" aria-hidden="true">!</span>
+                    }
                   </span>
                 </button>
               </td>
@@ -313,12 +320,6 @@
         aria-labelledby="priority-modal-title"
       >
         <div class="priority-modal-header">
-          <div class="priority-modal-title-wrap">
-            <p class="priority-modal-kicker">Priority score</p>
-            <h2 id="priority-modal-title" class="priority-modal-title">
-              {{ detail.candidateName }}
-            </h2>
-          </div>
           <button
             type="button"
             class="modal-close-icon-btn"
@@ -351,6 +352,12 @@
           </div>
 
           <div class="priority-summary-text">
+            <div class="priority-modal-title-wrap">
+              <p class="priority-modal-kicker">Priority score</p>
+              <h2 id="priority-modal-title" class="priority-modal-title">
+                {{ detail.candidateName }}
+              </h2>
+            </div>
             <span
               class="priority-chip"
               [class.priority-chip-high]="selectedPriorityTier() === 'high'"
@@ -359,7 +366,6 @@
             >
               {{ selectedPriorityTierLabel() }}
             </span>
-            <p>{{ detail.plainEnglishSummary }}</p>
           </div>
         </section>
 
