@@ -34,6 +34,7 @@ export type StoredAppointmentRow = {
   location: string;
   comments: string;
   status: 'Scheduled' | 'Cancelled' | 'Completed' | 'Canceled';
+  candidateGuid?: string;
 };
 
 export type InspectionFormStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Overdue';

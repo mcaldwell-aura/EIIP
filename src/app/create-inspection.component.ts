@@ -8,6 +8,12 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {
+  filterActiveCandidateAppointments,
+  formatCandidateAppointmentDateTime,
+  MOCK_CANDIDATE_APPOINTMENTS,
+  type CandidateAppointment,
+} from './candidate-appointments';
 
 type CreateInspectionTab = 'summary' | 'notes' | 'documents';
 type InspectorStatus = 'Available' | 'Busy' | 'Offline';
@@ -62,10 +68,15 @@ export class CreateInspectionComponent {
   protected readonly appointmentDateInput = signal('');
   protected readonly appointmentTimeInput = signal('');
   protected readonly appointmentLocationInput = signal('');
+  protected readonly candidateGuidInput = signal('candidate-100');
+  protected readonly appointmentStatusInput = signal<'Scheduled' | 'Cancelled'>('Scheduled');
 
   protected readonly appointmentDateDraft = signal('');
   protected readonly appointmentTimeDraft = signal('');
   protected readonly appointmentLocationDraft = signal('');
+  protected readonly candidateGuidDraft = signal('candidate-100');
+  protected readonly appointmentStatusDraft = signal<'Scheduled' | 'Cancelled'>('Scheduled');
+  protected readonly isShowingCandidateAppointments = signal(false);
   protected readonly noteNameInput = signal('');
   protected readonly noteDescriptionInput = signal('');
   protected readonly documentNameInput = signal('');
@@ -112,6 +123,8 @@ export class CreateInspectionComponent {
       appointmentDate: this.appointmentDateInput(),
       appointmentTime: this.appointmentTimeInput(),
       appointmentLocation: this.appointmentLocationInput(),
+      candidateGuid: this.candidateGuidInput(),
+      appointmentStatus: this.appointmentStatusInput(),
       notes: this.noteRows(),
       documents: this.documentRows(),
     }),
@@ -138,6 +151,9 @@ export class CreateInspectionComponent {
   );
 
   protected readonly saveButtonLabel = computed(() => 'Save');
+  protected readonly availableCandidateAppointments = computed<CandidateAppointment[]>(() =>
+    filterActiveCandidateAppointments(this.candidateGuidInput(), MOCK_CANDIDATE_APPOINTMENTS),
+  );
 
   protected readonly saveHelperText = computed(() => {
     if (this.saveAcknowledged() && !this.hasUnsavedChanges()) {
@@ -230,11 +246,15 @@ export class CreateInspectionComponent {
     this.appointmentDateDraft.set(this.appointmentDateInput());
     this.appointmentTimeDraft.set(this.appointmentTimeInput());
     this.appointmentLocationDraft.set(this.appointmentLocationInput());
+    this.candidateGuidDraft.set(this.candidateGuidInput());
+    this.appointmentStatusDraft.set(this.appointmentStatusInput());
+    this.isShowingCandidateAppointments.set(false);
     this.isAppointmentModalOpen.set(true);
   }
 
   protected closeAppointmentModal(): void {
     this.isAppointmentModalOpen.set(false);
+    this.isShowingCandidateAppointments.set(false);
   }
 
   protected updateAppointmentDateDraft(event: Event): void {
@@ -249,6 +269,31 @@ export class CreateInspectionComponent {
     this.appointmentLocationDraft.set((event.target as HTMLInputElement).value);
   }
 
+  protected updateCandidateGuidDraft(event: Event): void {
+    this.candidateGuidDraft.set((event.target as HTMLInputElement).value);
+  }
+
+  protected updateAppointmentStatusDraft(status: 'Scheduled' | 'Cancelled'): void {
+    this.appointmentStatusDraft.set(status);
+  }
+
+  protected toggleCandidateAppointments(): void {
+    this.isShowingCandidateAppointments.update((value) => !value);
+  }
+
+  protected selectCandidateAppointment(appointment: CandidateAppointment): void {
+    this.appointmentDateDraft.set(appointment.dateTime.split('T')[0] ?? '');
+    this.appointmentTimeDraft.set(appointment.dateTime.split('T')[1]?.slice(0, 5) ?? '');
+    this.appointmentLocationDraft.set(appointment.location);
+    this.candidateGuidDraft.set(appointment.candidateGuid);
+    this.appointmentStatusDraft.set('Scheduled');
+    this.isShowingCandidateAppointments.set(false);
+  }
+
+  protected formatCandidateAppointmentDateTime(dateTime: string): string {
+    return formatCandidateAppointmentDateTime(dateTime);
+  }
+
   protected saveAppointmentDraft(): void {
     if (!this.canSaveAppointmentDraft()) {
       return;
@@ -257,6 +302,8 @@ export class CreateInspectionComponent {
     this.appointmentDateInput.set(this.appointmentDateDraft().trim());
     this.appointmentTimeInput.set(this.appointmentTimeDraft().trim());
     this.appointmentLocationInput.set(this.appointmentLocationDraft().trim());
+    this.candidateGuidInput.set(this.candidateGuidDraft().trim() || 'candidate-100');
+    this.appointmentStatusInput.set(this.appointmentStatusDraft());
     this.saveAcknowledged.set(false);
     this.closeAppointmentModal();
   }
@@ -372,6 +419,8 @@ export class CreateInspectionComponent {
           appointmentDate: this.appointmentDateInput(),
           appointmentTime: this.appointmentTimeInput(),
           appointmentLocation: this.appointmentLocationInput(),
+          candidateGuid: this.candidateGuidInput(),
+          appointmentStatus: this.appointmentStatusInput(),
           notes: this.noteRows(),
           documents: this.documentRows(),
         }),
@@ -433,6 +482,8 @@ export class CreateInspectionComponent {
         appointmentDate: string;
         appointmentTime: string;
         appointmentLocation: string;
+        candidateGuid: string;
+        appointmentStatus: 'Scheduled' | 'Cancelled';
         notes: DraftNoteRow[];
         documents: DraftDocumentRow[];
       }>;
@@ -446,6 +497,9 @@ export class CreateInspectionComponent {
       this.appointmentDateInput.set(draft.appointmentDate ?? '');
       this.appointmentTimeInput.set(draft.appointmentTime ?? '');
       this.appointmentLocationInput.set(draft.appointmentLocation ?? '');
+      this.candidateGuidInput.set(draft.candidateGuid ?? 'candidate-100');
+      const savedStatus = draft.appointmentStatus === 'Cancelled' ? 'Cancelled' : 'Scheduled';
+      this.appointmentStatusInput.set(savedStatus);
       this.noteRows.set(Array.isArray(draft.notes) ? draft.notes : []);
       this.documentRows.set(Array.isArray(draft.documents) ? draft.documents : []);
       this.savedSnapshot.set(this.formSnapshot());

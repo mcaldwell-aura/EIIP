@@ -967,6 +967,16 @@
       </label>
 
       <label class="appointment-field">
+        <span>Candidate GUID</span>
+        <input
+          pInputText
+          type="text"
+          [value]="candidateGuidInput()"
+          (input)="candidateGuidInput.set($any($event.target).value)"
+        />
+      </label>
+
+      <label class="appointment-field">
         <span>Appointment Status *</span>
         <p-select
           [options]="appointmentStatusSelectOptions"
@@ -986,7 +996,7 @@
           class="primary-btn"
           (click)="toggleShowAppointmentSlots()"
         >
-          {{ isShowingAppointmentSlots() ? 'Hide' : 'Get' }} new appointments
+          {{ isShowingAppointmentSlots() ? 'Hide' : 'Get' }} candidate appointments
         </button>
       </div>
 
@@ -995,41 +1005,30 @@
           <table class="appointment-slots-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Type</th>
+                <th>Date/Time</th>
+                <th>Candidate GUID</th>
+                <th>Status</th>
                 <th>Location</th>
-                <th>Auditor</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr
-                *ngFor="let slot of availableAppointmentSlots"
-                [class.appointment-slot-selected]="selectedAppointmentSlotForDetails() === slot"
-              >
+              <tr *ngFor="let appointment of activeCandidateAppointments()">
                 <td>
-                  <strong>{{ slot.time }}</strong>
+                  <strong>{{ formatCandidateAppointmentDateTime(appointment.dateTime) }}</strong>
                 </td>
-                <td>{{ slot.examType || 'CDL Exam' }}</td>
-                <td>{{ slot.location }}</td>
-                <td>{{ slot.auditorName }}</td>
+                <td>{{ appointment.candidateGuid }}</td>
+                <td>{{ appointment.appointmentStatus }}</td>
+                <td>{{ appointment.location }}</td>
                 <td class="appointment-slot-action">
                   <button
                     pButton
                     pRipple
                     type="button"
-                    [class]="
-                      selectedAppointmentSlotForDetails() === slot
-                        ? 'primary-btn appointment-select-btn-selected'
-                        : 'primary-btn'
-                    "
-                    (click)="selectAppointmentSlotForDetails(slot)"
+                    class="primary-btn"
+                    (click)="selectCandidateAppointment(appointment)"
                   >
-                    {{
-                      selectedAppointmentSlotForDetails() === slot
-                        ? 'Selected'
-                        : 'Select Appointment'
-                    }}
+                    Select Appointment
                   </button>
                 </td>
               </tr>

@@ -2,6 +2,12 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import {
+  filterActiveCandidateAppointments,
+  formatCandidateAppointmentDateTime,
+  MOCK_CANDIDATE_APPOINTMENTS,
+  type CandidateAppointment,
+} from './candidate-appointments';
 import { LOCATIONS } from './locations.data';
 import { NavMenuService } from './nav-menu.service';
 import { type InspectionRecord, type InspectionStatus } from './inspection-data';
@@ -14,12 +20,12 @@ import { getPriorityTier, getPriorityTierLabel, type PriorityTier } from './prio
 import { USERS } from './users.data';
 
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { RippleModule } from 'primeng/ripple';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
@@ -38,6 +44,7 @@ type SortDirection = 'asc' | 'desc';
 type ToolbarSortSelection = 'default' | 'asc' | 'desc' | 'attention-first';
 type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
 type InspectionTypeOption = 'Overt' | 'Covert';
+type AppointmentEntryMode = 'existing' | 'manual';
 type SelectOption<T extends string> = {
   label: string;
   value: T;
@@ -75,53 +82,8 @@ type InspectionPlanRow = {
 type NewInspectionAppointmentDraft = {
   dateTime: string;
   location: string;
+  comments?: string;
 };
-
-type AppointmentSlot = {
-  time: string;
-  examType: string;
-  inspectionType: InspectionTypeOption;
-  location: string;
-  auditorName: string;
-};
-
-const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
-  {
-    time: '9:00 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Austin Assessment Center',
-    auditorName: 'Campos',
-  },
-  {
-    time: '10:30 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Harris Central Campus',
-    auditorName: 'Lin',
-  },
-  {
-    time: '11:45 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Covert',
-    location: 'Dallas Metro Hub',
-    auditorName: 'Reeves',
-  },
-  {
-    time: '1:00 PM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Fort Worth North Site',
-    auditorName: 'Patel',
-  },
-  {
-    time: '2:30 PM',
-    examType: 'CDL Exam',
-    inspectionType: 'Covert',
-    location: 'Collin Regional Site',
-    auditorName: 'Turner',
-  },
-];
 
 const PRIORITY_RING_RADIUS = 38;
 const PRIORITY_RING_CIRCUMFERENCE = 2 * Math.PI * PRIORITY_RING_RADIUS;
@@ -155,12 +117,12 @@ type HistoryTooltipState = {
     FormsModule,
     RouterLink,
     ButtonModule,
-    CheckboxModule,
     DatePickerModule,
     DialogModule,
     RippleModule,
     InputTextModule,
     SelectModule,
+    SelectButtonModule,
     TableModule,
     TextareaModule,
     ToggleSwitchModule,
@@ -196,10 +158,11 @@ export class InspectionOverviewComponent {
   protected readonly selectedInspectors = signal<string[]>([]);
   protected readonly appointmentDateTimeInput = signal('');
   protected readonly appointmentLocationInput = signal('');
+  protected readonly appointmentCommentsInput = signal('');
+  protected readonly scheduleAppointmentEnabled = signal(false);
+  protected readonly appointmentEntryMode = signal<AppointmentEntryMode>('existing');
+  protected readonly selectedCandidateAppointment = signal<CandidateAppointment | null>(null);
   protected readonly stagedAppointments = signal<NewInspectionAppointmentDraft[]>([]);
-  protected readonly selectedAppointmentSlot = signal<AppointmentSlot | null>(null);
-  protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
-    AVAILABLE_APPOINTMENT_SLOTS;
   private priorityAnimationTimer: ReturnType<typeof setTimeout> | null = null;
   private priorityDialogTrigger: HTMLButtonElement | null = null;
   protected readonly newInspectionValidationMessage = signal('');
@@ -211,6 +174,10 @@ export class InspectionOverviewComponent {
     'Periodic',
   ];
   protected readonly inspectionTypeOptions: readonly InspectionTypeOption[] = ['Overt', 'Covert'];
+  protected readonly appointmentEntryModeOptions: SelectOption<AppointmentEntryMode>[] = [
+    { label: 'Choose existing', value: 'existing' },
+    { label: 'Enter manually', value: 'manual' },
+  ];
   protected readonly dueDateFilterOptions: SelectOption<DueDateFilter>[] = [
     { label: 'Due Date: All', value: 'all' },
     { label: 'Due Date: Next 7 Days', value: 'next-7-days' },
@@ -269,6 +236,15 @@ export class InspectionOverviewComponent {
     .sort((leftName, rightName) =>
       leftName.localeCompare(rightName, undefined, { sensitivity: 'base' }),
     );
+  protected readonly availableCandidateAppointments = computed<CandidateAppointment[]>(() => {
+    const candidate = this.newInspectionCandidate();
+
+    if (!candidate) {
+      return [];
+    }
+
+    return filterActiveCandidateAppointments(candidate.subjectId, MOCK_CANDIDATE_APPOINTMENTS);
+  });
   protected readonly visibleRows = computed(() => {
     const dueDateFilter = this.dueDateFilter();
     const priorityFilter = this.priorityFilter();
@@ -652,8 +628,11 @@ export class InspectionOverviewComponent {
     this.selectedInspectors.set([]);
     this.appointmentDateTimeInput.set('');
     this.appointmentLocationInput.set('');
+    this.appointmentCommentsInput.set('');
+    this.scheduleAppointmentEnabled.set(false);
+    this.appointmentEntryMode.set('existing');
+    this.selectedCandidateAppointment.set(null);
     this.stagedAppointments.set([]);
-    this.selectedAppointmentSlot.set(null);
     this.newInspectionValidationMessage.set('');
     this.isNewInspectionModalOpen.set(true);
   }
@@ -667,9 +646,38 @@ export class InspectionOverviewComponent {
     this.selectedInspectors.set([]);
     this.appointmentDateTimeInput.set('');
     this.appointmentLocationInput.set('');
+    this.appointmentCommentsInput.set('');
+    this.scheduleAppointmentEnabled.set(false);
+    this.appointmentEntryMode.set('existing');
+    this.selectedCandidateAppointment.set(null);
     this.stagedAppointments.set([]);
-    this.selectedAppointmentSlot.set(null);
     this.newInspectionValidationMessage.set('');
+  }
+
+  protected toggleScheduleAppointmentEnabled(value: boolean): void {
+    if (!this.newInspectionCandidate()) {
+      this.scheduleAppointmentEnabled.set(false);
+      return;
+    }
+
+    this.scheduleAppointmentEnabled.set(value);
+
+    if (!value) {
+      this.selectedCandidateAppointment.set(null);
+      this.clearManualAppointmentInputs();
+    }
+  }
+
+  protected setAppointmentEntryMode(mode: AppointmentEntryMode): void {
+    this.appointmentEntryMode.set(mode);
+    this.newInspectionValidationMessage.set('');
+
+    if (mode === 'existing') {
+      this.clearManualAppointmentInputs();
+      return;
+    }
+
+    this.selectedCandidateAppointment.set(null);
   }
 
   protected updateInspectionReason(event: Event): void {
@@ -689,15 +697,19 @@ export class InspectionOverviewComponent {
   }
 
   protected toggleInspectorSelection(inspectorName: string): void {
-    this.selectedInspectors.update((selectedInspectors) =>
-      selectedInspectors.includes(inspectorName)
-        ? selectedInspectors.filter((selectedInspector) => selectedInspector !== inspectorName)
-        : [...selectedInspectors, inspectorName],
+    this.selectedInspectors.update((inspectorNames) =>
+      inspectorNames.includes(inspectorName)
+        ? inspectorNames.filter((name) => name !== inspectorName)
+        : [...inspectorNames, inspectorName],
     );
   }
 
   protected isInspectorSelected(inspectorName: string): boolean {
     return this.selectedInspectors().includes(inspectorName);
+  }
+
+  protected selectedInspectorSummary(): string {
+    return this.selectedInspectors().join(', ') || 'Select inspectors';
   }
 
   protected updateAppointmentDateTime(event: Event): void {
@@ -708,22 +720,23 @@ export class InspectionOverviewComponent {
     this.appointmentLocationInput.set((event.target as HTMLInputElement).value);
   }
 
-  protected selectAppointment(slot: AppointmentSlot): void {
-    this.selectedAppointmentSlot.update((selectedSlot) => (selectedSlot === slot ? null : slot));
+  protected updateAppointmentComments(event: Event): void {
+    this.appointmentCommentsInput.set((event.target as HTMLTextAreaElement).value);
+  }
 
-    const nextSelectedSlot = this.selectedAppointmentSlot();
-
-    if (!nextSelectedSlot) {
-      this.newInspectionValidationMessage.set('');
-      return;
-    }
-
-    this.inspectionTypeInput.set(nextSelectedSlot.inspectionType);
-    this.appointmentLocationInput.set(nextSelectedSlot.location);
-    this.selectedInspectors.set(this.resolveInspectorSelection(nextSelectedSlot.auditorName));
-    this.appointmentDateTimeValue = this.buildSelectedAppointmentDateTime(nextSelectedSlot.time);
-    this.stagedAppointments.set([]);
+  protected selectCandidateAppointment(appointment: CandidateAppointment): void {
+    this.scheduleAppointmentEnabled.set(true);
+    this.appointmentEntryMode.set('existing');
+    this.selectedCandidateAppointment.set(appointment);
     this.newInspectionValidationMessage.set('');
+  }
+
+  protected isCandidateAppointmentSelected(appointment: CandidateAppointment): boolean {
+    const selectedAppointment = this.selectedCandidateAppointment();
+    return (
+      selectedAppointment?.candidateGuid === appointment.candidateGuid &&
+      selectedAppointment.dateTime === appointment.dateTime
+    );
   }
 
   protected addAppointment(): void {
@@ -755,20 +768,33 @@ export class InspectionOverviewComponent {
       return;
     }
 
-    const hasDraftAppointmentInput =
-      this.appointmentDateTimeInput().trim().length > 0 ||
-      this.appointmentLocationInput().trim().length > 0;
-
     let draftAppointment: NewInspectionAppointmentDraft | null = null;
 
-    if (hasDraftAppointmentInput) {
-      draftAppointment = this.buildDraftAppointment(false);
-      if (draftAppointment === null) {
-        return;
+    if (this.scheduleAppointmentEnabled()) {
+      if (this.appointmentEntryMode() === 'existing') {
+        const selectedAppointment = this.selectedCandidateAppointment();
+        if (selectedAppointment) {
+          draftAppointment = {
+            dateTime: selectedAppointment.dateTime,
+            location: selectedAppointment.location,
+            comments: selectedAppointment.comments ?? '',
+          };
+        }
+      } else {
+        const hasManualAppointmentInput =
+          this.appointmentDateTimeInput().trim().length > 0 ||
+          this.appointmentLocationInput().trim().length > 0;
+
+        if (hasManualAppointmentInput) {
+          draftAppointment = this.buildDraftAppointment(false);
+          if (draftAppointment === null) {
+            return;
+          }
+        }
       }
-    } else {
-      this.newInspectionValidationMessage.set('');
     }
+
+    this.newInspectionValidationMessage.set('');
 
     const appointments = draftAppointment
       ? [...this.stagedAppointments(), draftAppointment]
@@ -798,6 +824,10 @@ export class InspectionOverviewComponent {
 
   protected priorityTier(priority: number): PriorityTier {
     return getPriorityTier(priority);
+  }
+
+  protected formatAppointmentSelectionTime(dateTime: string): string {
+    return formatCandidateAppointmentDateTime(dateTime);
   }
 
   protected handleEscape(): void {
@@ -1215,6 +1245,7 @@ export class InspectionOverviewComponent {
   private buildDraftAppointment(showEmptyMessage = true): NewInspectionAppointmentDraft | null {
     const dateTime = this.appointmentDateTimeInput().trim();
     const location = this.appointmentLocationInput().trim();
+    const comments = this.appointmentCommentsInput().trim();
 
     if (dateTime.length === 0 && location.length === 0) {
       if (showEmptyMessage) {
@@ -1237,51 +1268,14 @@ export class InspectionOverviewComponent {
     return {
       dateTime,
       location,
+      comments,
     };
   }
 
-  private resolveInspectorSelection(auditorName: string): string[] {
-    const matchingInspector = USERS.find(
-      (user) =>
-        user.active &&
-        user.lastName.localeCompare(auditorName, undefined, { sensitivity: 'base' }) === 0,
-    );
-
-    return matchingInspector
-      ? [`${matchingInspector.firstName} ${matchingInspector.lastName}`]
-      : [];
-  }
-
-  private buildSelectedAppointmentDateTime(time: string): Date {
-    const currentValue = this.appointmentDateTimeValue;
-    const baseDate = currentValue ?? new Date();
-    const nextDateTime = new Date(baseDate);
-    const timeMatch = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-
-    if (!timeMatch) {
-      return currentValue ?? new Date(Date.now() + 60 * 60 * 1000);
-    }
-
-    let hour = Number(timeMatch[1]);
-    const minute = Number(timeMatch[2]);
-    const meridiem = timeMatch[3].toUpperCase();
-
-    if (meridiem === 'PM' && hour !== 12) {
-      hour += 12;
-    }
-
-    if (meridiem === 'AM' && hour === 12) {
-      hour = 0;
-    }
-
-    nextDateTime.setSeconds(0, 0);
-    nextDateTime.setHours(hour, minute, 0, 0);
-
-    if (!currentValue && nextDateTime.getTime() <= Date.now()) {
-      nextDateTime.setDate(nextDateTime.getDate() + 1);
-    }
-
-    return nextDateTime;
+  private clearManualAppointmentInputs(): void {
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+    this.appointmentCommentsInput.set('');
   }
 
   private formatDateTimeInputValue(value: Date): string {

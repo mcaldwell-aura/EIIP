@@ -19,6 +19,12 @@ import {
 } from './inspection-store.service';
 import { LocationStoreService } from './location-store.service';
 import { NavMenuService } from './nav-menu.service';
+import {
+  filterActiveCandidateAppointments,
+  formatCandidateAppointmentDateTime,
+  MOCK_CANDIDATE_APPOINTMENTS,
+  type CandidateAppointment,
+} from './candidate-appointments';
 
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
@@ -438,6 +444,7 @@ type AppointmentRow = {
   location: string;
   comments: string;
   status: AppointmentStatus;
+  candidateGuid?: string;
 };
 
 type NoteModalMode = 'add' | 'edit';
@@ -907,6 +914,7 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly appointmentDateTimeInput = signal('');
   protected readonly appointmentLocationInput = signal('');
   protected readonly appointmentCommentsInput = signal('');
+  protected readonly candidateGuidInput = signal('');
   protected readonly appointmentStatusInput = signal<AppointmentStatus>('Scheduled');
   protected readonly appointmentValidationMessage = signal('');
   protected readonly selectedFormTypeInput = signal('');
@@ -926,6 +934,12 @@ export class InspectionDetailsComponent implements OnInit {
   protected readonly selectedAppointmentSlotForDetails = signal<AppointmentSlot | null>(null);
   protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
     AVAILABLE_APPOINTMENT_SLOTS;
+  protected readonly activeCandidateAppointments = computed<CandidateAppointment[]>(() =>
+    filterActiveCandidateAppointments(
+      this.inspection().subjectId || this.candidateGuidInput(),
+      MOCK_CANDIDATE_APPOINTMENTS,
+    ),
+  );
   protected readonly inspectionFormStatusOptions: readonly InspectionFormStatus[] = [
     'Scheduled',
     'In Progress',
@@ -1715,6 +1729,7 @@ Generated on: ${new Date().toLocaleString()}
     this.appointmentDateTimeInput.set('');
     this.appointmentLocationInput.set('');
     this.appointmentCommentsInput.set('');
+    this.candidateGuidInput.set(this.inspection().subjectId || 'candidate-100');
     this.appointmentStatusInput.set('Scheduled');
     this.appointmentValidationMessage.set('');
     this.isShowingAppointmentSlots.set(false);
@@ -1733,6 +1748,9 @@ Generated on: ${new Date().toLocaleString()}
     this.appointmentDateTimeInput.set(appointment.dateTime);
     this.appointmentLocationInput.set(appointment.location);
     this.appointmentCommentsInput.set(appointment.comments);
+    this.candidateGuidInput.set(
+      appointment.candidateGuid ?? this.inspection().subjectId ?? 'candidate-100',
+    );
     this.appointmentStatusInput.set(appointment.status);
     this.appointmentValidationMessage.set('');
     this.isShowingAppointmentSlots.set(false);
@@ -1756,6 +1774,17 @@ Generated on: ${new Date().toLocaleString()}
     this.selectedAppointmentSlotForDetails.set(slot);
     this.appointmentDateTimeInput.set(slot.time);
     this.appointmentLocationInput.set(slot.location);
+    this.isShowingAppointmentSlots.set(false);
+  }
+
+  protected selectCandidateAppointment(appointment: CandidateAppointment): void {
+    this.selectedAppointmentSlotForDetails.set(null);
+    this.appointmentDateTimeInput.set(appointment.dateTime);
+    this.appointmentLocationInput.set(appointment.location);
+    this.candidateGuidInput.set(appointment.candidateGuid);
+    this.appointmentStatusInput.set(
+      appointment.appointmentStatus === 'Canceled' ? 'Scheduled' : 'Scheduled',
+    );
     this.isShowingAppointmentSlots.set(false);
   }
 
@@ -1908,6 +1937,8 @@ Generated on: ${new Date().toLocaleString()}
       location: this.appointmentLocationInput().trim(),
       comments: this.appointmentCommentsInput().trim(),
       status: this.appointmentStatusInput(),
+      candidateGuid:
+        this.candidateGuidInput().trim() || this.inspection().subjectId || 'candidate-100',
     };
 
     const inspectionId = this.inspection().inspectionId;
@@ -1992,6 +2023,10 @@ Generated on: ${new Date().toLocaleString()}
     }).format(parsed);
 
     return `${date} ${time}`;
+  }
+
+  protected formatCandidateAppointmentDateTime(dateTime: string): string {
+    return formatCandidateAppointmentDateTime(dateTime);
   }
 
   protected openNoteModal(): void {
@@ -2437,6 +2472,7 @@ Generated on: ${new Date().toLocaleString()}
       location: row.location,
       comments: row.comments,
       status: row.status === 'Scheduled' ? 'Scheduled' : 'Cancelled',
+      candidateGuid: row.candidateGuid ?? this.inspection().subjectId ?? 'candidate-100',
     };
   }
 

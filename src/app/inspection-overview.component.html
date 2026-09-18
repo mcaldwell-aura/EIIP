@@ -50,7 +50,17 @@
         <button pButton pRipple type="button" class="search-btn" routerLink="/inspection-search">
           Inspection Search
         </button>
-        <a class="back-link" routerLink="/">Back To Dashboard</a>
+        <button
+          pButton
+          pRipple
+          type="button"
+          class="new-inspection-btn"
+          [disabled]="planRows().length === 0"
+          (click)="planRows().length > 0 && openNewInspectionModal(planRows()[0])"
+        >
+          <i class="pi pi-plus" aria-hidden="true"></i>
+          <span>New Inspection</span>
+        </button>
       </div>
     </section>
 
@@ -427,17 +437,11 @@
     [dismissableMask]="true"
     styleClass="new-inspection-dialog"
     [header]="'New Inspection'"
-    [style]="{ width: 'min(980px, 96vw)' }"
+    [style]="{ width: 'min(840px, 96vw)' }"
     (onHide)="closeNewInspectionModal()"
   >
     <ng-container *ngIf="newInspectionCandidate() as candidate">
       <div class="new-inspection-modal">
-        <div class="new-inspection-modal-header">
-          <p class="priority-modal-kicker">Create Inspection</p>
-        </div>
-
-        <div class="priority-modal-divider"></div>
-
         <div class="new-inspection-modal-body">
           <label class="new-inspection-field new-inspection-field-wide">
             <span>Candidate Name</span>
@@ -445,7 +449,7 @@
           </label>
 
           <label class="new-inspection-field">
-            <span>Inspection Reason *</span>
+            <span>Inspection Reason <strong class="required-marker">*</strong></span>
             <p-select
               [options]="inspectionReasonDropdownOptions"
               [ngModel]="inspectionReasonInput() || null"
@@ -457,7 +461,7 @@
           </label>
 
           <label class="new-inspection-field">
-            <span>Inspection Type *</span>
+            <span>Inspection Type <strong class="required-marker">*</strong></span>
             <p-select
               [options]="inspectionTypeDropdownOptions"
               [ngModel]="inspectionTypeInput() || null"
@@ -469,129 +473,173 @@
           </label>
 
           <section
-            class="new-inspection-section new-inspection-field-wide"
+            class="new-inspection-field new-inspection-field-wide inspector-field"
             aria-label="Inspector selection"
           >
-            <div class="new-inspection-section-header">
-              <h3>Inspector</h3>
-              <span>Optional</span>
-            </div>
-
-            <label class="new-inspection-field search-field-inline">
-              <span class="visually-hidden">Search active inspectors</span>
-              <input
-                pInputText
-                type="search"
-                [value]="inspectorSearchTerm()"
-                (input)="updateInspectorSearchTerm($event)"
-                placeholder="Search active users"
-              />
-            </label>
-
-            <div class="selection-list" role="listbox" aria-label="Active users">
-              <label *ngFor="let inspectorName of activeInspectorNames()" class="selection-option">
-                <p-checkbox
-                  [binary]="true"
-                  [ngModel]="isInspectorSelected(inspectorName)"
-                  (onChange)="toggleInspectorSelection(inspectorName)"
-                ></p-checkbox>
-                <span>{{ inspectorName }}</span>
-              </label>
-            </div>
-
-            <div
-              *ngIf="selectedInspectors().length > 0"
-              class="selected-pill-list"
-              aria-label="Selected inspectors"
-            >
-              <span *ngFor="let inspectorName of selectedInspectors()" class="selected-pill">{{
-                inspectorName
-              }}</span>
-            </div>
+            <span class="new-inspection-field-label">Inspector</span>
+            <details class="inspector-multiselect">
+              <summary>
+                <span [class.is-placeholder]="selectedInspectors().length === 0">
+                  {{ selectedInspectorSummary() }}
+                </span>
+                <i class="pi pi-chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="inspector-multiselect-panel">
+                <label class="inspector-search-field">
+                  <span class="visually-hidden">Search inspectors</span>
+                  <input
+                    pInputText
+                    type="search"
+                    placeholder="Search inspectors"
+                    [value]="inspectorSearchTerm()"
+                    (input)="updateInspectorSearchTerm($event)"
+                  />
+                </label>
+                <div class="inspector-option-list">
+                  @for (inspectorName of activeInspectorNames(); track inspectorName) {
+                    <label class="inspector-option">
+                      <input
+                        type="checkbox"
+                        [checked]="isInspectorSelected(inspectorName)"
+                        (change)="toggleInspectorSelection(inspectorName)"
+                      />
+                      <span>{{ inspectorName }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            </details>
           </section>
 
           <section
-            class="new-inspection-section new-inspection-field-wide"
+            class="new-inspection-field new-inspection-field-wide schedule-appointment-field"
             aria-label="Appointment section"
           >
-            <div class="new-inspection-section-header">
-              <h3>Appointment</h3>
-              <span>Optional</span>
+            <div class="schedule-appointment-heading">
+              <span class="new-inspection-field-label">Schedule an Appointment</span>
+              <p-toggleswitch
+                inputId="schedule-appointment-toggle"
+                [ngModel]="scheduleAppointmentEnabled()"
+                [disabled]="!newInspectionCandidate()"
+                (ngModelChange)="toggleScheduleAppointmentEnabled($event)"
+                ariaLabel="Schedule an Appointment"
+              ></p-toggleswitch>
             </div>
 
-            <div class="appointment-inline-grid">
-              <label class="new-inspection-field">
-                <span>Inspection Date</span>
-                <p-datepicker
-                  [ngModel]="appointmentDateTimeValue"
-                  (ngModelChange)="appointmentDateTimeValue = $event"
-                  [showTime]="true"
-                  [showSeconds]="false"
-                  [showIcon]="true"
-                ></p-datepicker>
-              </label>
+            @if (scheduleAppointmentEnabled()) {
+              <div class="appointment-entry-toggle" aria-label="Appointment entry method">
+                <p-selectbutton
+                  [options]="appointmentEntryModeOptions"
+                  [ngModel]="appointmentEntryMode()"
+                  optionLabel="label"
+                  optionValue="value"
+                  (onChange)="setAppointmentEntryMode($event.value)"
+                  ariaLabel="Appointment entry method"
+                ></p-selectbutton>
+              </div>
 
-              <label class="new-inspection-field">
-                <span>Inspection Location</span>
-                <input
-                  pInputText
-                  type="search"
-                  list="active-location-options"
-                  [value]="appointmentLocationInput()"
-                  (input)="updateAppointmentLocation($event)"
-                  placeholder="Search active locations"
-                />
-              </label>
-            </div>
+              @if (appointmentEntryMode() === 'existing') {
+                <div class="appointment-slots-container">
+                  <div class="appointment-slots-scroll">
+                    @if (availableCandidateAppointments().length > 0) {
+                      <table class="appointment-slots-table">
+                        <thead>
+                          <tr>
+                            <th>Date/Time</th>
+                            <th>Location</th>
+                            <th>Comments</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (
+                            appointment of availableCandidateAppointments();
+                            track appointment.candidateGuid + appointment.dateTime
+                          ) {
+                            <tr
+                              [class.appointment-slot-selected]="
+                                isCandidateAppointmentSelected(appointment)
+                              "
+                            >
+                              <td>
+                                <strong>{{
+                                  formatAppointmentSelectionTime(appointment.dateTime)
+                                }}</strong>
+                              </td>
+                              <td>{{ appointment.location }}</td>
+                              <td>{{ appointment.comments || '—' }}</td>
+                              <td class="appointment-slot-action">
+                                <button
+                                  pButton
+                                  pRipple
+                                  type="button"
+                                  class="action-btn appointment-select-btn"
+                                  [class.appointment-select-btn-selected]="
+                                    isCandidateAppointmentSelected(appointment)
+                                  "
+                                  (click)="selectCandidateAppointment(appointment)"
+                                >
+                                  {{
+                                    isCandidateAppointmentSelected(appointment)
+                                      ? 'Selected'
+                                      : 'Select Appointment'
+                                  }}
+                                </button>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    } @else {
+                      <p class="appointment-empty-state">No results found.</p>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="appointment-inline-grid">
+                  <label class="new-inspection-field">
+                    <span>Appointment Date</span>
+                    <p-datepicker
+                      [ngModel]="appointmentDateTimeValue"
+                      (ngModelChange)="appointmentDateTimeValue = $event"
+                      [showTime]="true"
+                      [showSeconds]="false"
+                      [showIcon]="true"
+                    ></p-datepicker>
+                  </label>
 
-            <datalist id="active-location-options">
-              <option
-                *ngFor="let locationName of activeLocationNames"
-                [value]="locationName"
-              ></option>
-            </datalist>
+                  <label class="new-inspection-field">
+                    <span>Location</span>
+                    <input
+                      pInputText
+                      type="search"
+                      list="active-location-options"
+                      [value]="appointmentLocationInput()"
+                      (input)="updateAppointmentLocation($event)"
+                      placeholder="Search active locations"
+                    />
+                  </label>
+                </div>
 
-            <div class="appointment-slots-scroll">
-              <table class="appointment-slots-table">
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Auditor</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    *ngFor="let slot of availableAppointmentSlots"
-                    [class.appointment-slot-selected]="selectedAppointmentSlot() === slot"
-                  >
-                    <td>
-                      <strong>{{ slot.time }}</strong>
-                    </td>
-                    <td>{{ slot.examType || 'CDL Exam' }}</td>
-                    <td>{{ slot.location }}</td>
-                    <td>{{ slot.auditorName }}</td>
-                    <td class="appointment-slot-action">
-                      <button
-                        pButton
-                        pRipple
-                        type="button"
-                        [class]="
-                          selectedAppointmentSlot() === slot
-                            ? 'action-btn appointment-select-btn appointment-select-btn-selected'
-                            : 'action-btn appointment-select-btn'
-                        "
-                        (click)="selectAppointment(slot)"
-                      >
-                        {{ selectedAppointmentSlot() === slot ? 'Selected' : 'Select Appointment' }}
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                <label class="new-inspection-field new-inspection-field-wide">
+                  <span>Comments</span>
+                  <textarea
+                    pInputTextarea
+                    rows="3"
+                    [value]="appointmentCommentsInput()"
+                    (input)="updateAppointmentComments($event)"
+                    placeholder="Add appointment comments"
+                  ></textarea>
+                </label>
+
+                <datalist id="active-location-options">
+                  <option
+                    *ngFor="let locationName of activeLocationNames"
+                    [value]="locationName"
+                  ></option>
+                </datalist>
+              }
+            }
           </section>
 
           <p *ngIf="newInspectionValidationMessage()" class="modal-validation-message">

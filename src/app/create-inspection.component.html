@@ -13,9 +13,7 @@
       <button type="button" class="icon-btn" aria-label="Search">⌕</button>
       <button type="button" class="icon-btn" aria-label="Open apps">⌗</button>
       <details class="profile-menu">
-        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">
-          ◯
-        </summary>
+        <summary class="profile-btn profile-menu-trigger" aria-label="Profile actions">◯</summary>
         <div class="profile-menu-panel" role="menu" aria-label="Profile menu">
           <a class="profile-menu-item" routerLink="/user-settings" role="menuitem">User Settings</a>
         </div>
@@ -446,7 +444,77 @@
               (input)="updateAppointmentLocationDraft($event)"
             />
           </label>
+
+          <label class="appointment-field">
+            <span>Candidate GUID</span>
+            <input
+              type="text"
+              [value]="candidateGuidDraft()"
+              (input)="updateCandidateGuidDraft($event)"
+            />
+          </label>
+
+          <label class="appointment-field">
+            <span>Appointment Status</span>
+            <select
+              [value]="appointmentStatusDraft()"
+              (change)="updateAppointmentStatusDraft($any($event.target).value)"
+            >
+              <option value="Scheduled">Scheduled</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </label>
         </div>
+
+        <div class="appointment-get-slots-button">
+          <button type="button" class="primary-btn" (click)="toggleCandidateAppointments()">
+            {{ isShowingCandidateAppointments() ? 'Hide' : 'Get' }} candidate appointments
+          </button>
+        </div>
+
+        @if (isShowingCandidateAppointments() && availableCandidateAppointments().length > 0) {
+          <div class="appointment-slots-container">
+            <div class="appointment-slots-scroll">
+              <table class="appointment-slots-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Candidate GUID</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (
+                    appointment of availableCandidateAppointments();
+                    track appointment.candidateGuid + appointment.dateTime
+                  ) {
+                    <tr>
+                      <td>
+                        <strong>{{
+                          formatCandidateAppointmentDateTime(appointment.dateTime)
+                        }}</strong>
+                      </td>
+                      <td>{{ appointment.candidateGuid }}</td>
+                      <td>{{ appointment.appointmentStatus }}</td>
+                      <td>{{ appointment.location }}</td>
+                      <td>
+                        <button
+                          type="button"
+                          class="primary-btn"
+                          (click)="selectCandidateAppointment(appointment)"
+                        >
+                          Select Appointment
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
 
         <div class="appointment-submit-row">
           <button
