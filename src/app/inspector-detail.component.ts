@@ -307,7 +307,7 @@ export class InspectorDetailComponent {
     const day = `${parsedDate.getDate()}`.padStart(2, '0');
     const year = `${parsedDate.getFullYear()}`;
 
-    return `${month}-${day}-${year}`;
+    return `${month}/${day}/${year}`;
   }
 
   protected goBack(): void {

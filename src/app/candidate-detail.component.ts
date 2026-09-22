@@ -494,7 +494,7 @@ export class CandidateDetailComponent {
     const day = `${parsedDate.getDate()}`.padStart(2, '0');
     const year = `${parsedDate.getFullYear()}`;
 
-    return `${month}-${day}-${year}`;
+    return `${month}/${day}/${year}`;
   }
 
   private mapFallbackSubjectToCandidate(subjectId: string): CandidateDetailData | null {

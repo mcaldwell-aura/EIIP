@@ -2134,9 +2134,7 @@ Generated on: ${new Date().toLocaleString()}
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',
-    })
-      .format(parsed)
-      .replace(/\//g, '-');
+    }).format(parsed);
     const time = new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
       minute: '2-digit',
