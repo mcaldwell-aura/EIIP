@@ -514,6 +514,7 @@
           <section
             class="new-inspection-field new-inspection-field-wide schedule-appointment-field"
             aria-label="Appointment section"
+            (document:click)="closeAppointmentLocationFilter($event)"
           >
             <div class="schedule-appointment-heading">
               <span class="new-inspection-field-label">Schedule an Appointment</span>
@@ -527,75 +528,65 @@
             </div>
 
             @if (scheduleAppointmentEnabled()) {
-              <div class="appointment-entry-toggle" aria-label="Appointment entry method">
-                <p-selectbutton
-                  [options]="appointmentEntryModeOptions"
-                  [ngModel]="appointmentEntryMode()"
-                  optionLabel="label"
-                  optionValue="value"
-                  (onChange)="setAppointmentEntryMode($event.value)"
-                  ariaLabel="Appointment entry method"
-                ></p-selectbutton>
+              <div class="appointment-slots-container">
+                <div class="appointment-slots-scroll">
+                  @if (filteredCandidateAppointments().length > 0) {
+                    <table class="appointment-slots-table">
+                      <thead>
+                        <tr>
+                          <th>Select</th>
+                          <th>Date/Time</th>
+                          <th>Location</th>
+                          <th>Comments</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (
+                          appointment of filteredCandidateAppointments();
+                          track appointment.candidateGuid + appointment.dateTime
+                        ) {
+                          <tr
+                            [class.appointment-slot-selected]="
+                              isCandidateAppointmentSelected(appointment)
+                            "
+                          >
+                            <td class="appointment-slot-select">
+                              <input
+                                type="radio"
+                                name="candidate-appointment"
+                                aria-label="Select appointment"
+                                [checked]="isCandidateAppointmentSelected(appointment)"
+                                (click)="toggleCandidateAppointmentSelection(appointment, $event)"
+                                (change)="selectCandidateAppointment(appointment)"
+                              />
+                            </td>
+                            <td>
+                              <strong>{{
+                                formatAppointmentSelectionTime(appointment.dateTime)
+                              }}</strong>
+                            </td>
+                            <td>{{ appointment.location }}</td>
+                            <td>{{ appointment.comments || '—' }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  } @else {
+                    <p class="appointment-empty-state">No appointments match these filters.</p>
+                  }
+                </div>
               </div>
 
-              @if (appointmentEntryMode() === 'existing') {
-                <div class="appointment-slots-container">
-                  <div class="appointment-slots-scroll">
-                    @if (availableCandidateAppointments().length > 0) {
-                      <table class="appointment-slots-table">
-                        <thead>
-                          <tr>
-                            <th>Date/Time</th>
-                            <th>Location</th>
-                            <th>Comments</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (
-                            appointment of availableCandidateAppointments();
-                            track appointment.candidateGuid + appointment.dateTime
-                          ) {
-                            <tr
-                              [class.appointment-slot-selected]="
-                                isCandidateAppointmentSelected(appointment)
-                              "
-                            >
-                              <td>
-                                <strong>{{
-                                  formatAppointmentSelectionTime(appointment.dateTime)
-                                }}</strong>
-                              </td>
-                              <td>{{ appointment.location }}</td>
-                              <td>{{ appointment.comments || '—' }}</td>
-                              <td class="appointment-slot-action">
-                                <button
-                                  pButton
-                                  pRipple
-                                  type="button"
-                                  class="action-btn appointment-select-btn"
-                                  [class.appointment-select-btn-selected]="
-                                    isCandidateAppointmentSelected(appointment)
-                                  "
-                                  (click)="selectCandidateAppointment(appointment)"
-                                >
-                                  {{
-                                    isCandidateAppointmentSelected(appointment)
-                                      ? 'Selected'
-                                      : 'Select Appointment'
-                                  }}
-                                </button>
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    } @else {
-                      <p class="appointment-empty-state">No results found.</p>
-                    }
-                  </div>
-                </div>
-              } @else {
+              <a
+                href=""
+                class="appointment-manual-link"
+                (click)="$event.preventDefault(); toggleManualAppointmentFields()"
+              >
+                <span>Can't find an appointment?</span>
+                <span class="appointment-manual-link-highlight"> Enter manually</span>
+              </a>
+
+              @if (isManualAppointmentFieldsVisible()) {
                 <div class="appointment-inline-grid">
                   <label class="new-inspection-field">
                     <span>Appointment Date</span>
@@ -621,7 +612,9 @@
                   </label>
                 </div>
 
-                <label class="new-inspection-field new-inspection-field-wide">
+                <label
+                  class="new-inspection-field new-inspection-field-wide appointment-comments-field"
+                >
                   <span>Comments</span>
                   <textarea
                     pInputTextarea

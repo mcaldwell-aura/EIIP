@@ -938,115 +938,223 @@
     [header]="appointmentModalMode() === 'create' ? 'New Appointment' : 'Edit Appointment'"
     [modal]="true"
     [style]="{ width: 'min(900px, 95vw)' }"
+    styleClass="appointment-dialog"
     (onHide)="closeAppointmentModal()"
   >
     <div class="appointment-form-grid">
-      <label class="appointment-field">
-        <span>Appointment Date/Time *</span>
-        <input
-          pInputText
-          type="datetime-local"
-          [value]="appointmentDateTimeInput()"
-          (input)="updateAppointmentDateTime($event)"
-        />
-      </label>
+      @if (appointmentModalMode() === 'create') {
+        <label class="appointment-field appointment-status-readonly">
+          <span>Appointment Status</span>
+          <input type="text" value="Scheduled" readonly />
+        </label>
 
-      <label class="appointment-field">
-        <span>Location</span>
-        <p-select
-          [options]="activeLocationOptions()"
-          [ngModel]="appointmentLocationInput() || null"
-          [filter]="true"
-          [showClear]="true"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Select location"
-          appendTo="body"
-          (ngModelChange)="updateAppointmentLocation($event)"
-        ></p-select>
-      </label>
+        <section class="new-appointment-selection" aria-label="Schedule an Appointment">
+          <div class="appointment-heading-row">
+            <h3>Schedule an Appointment</h3>
+          </div>
 
-      <label class="appointment-field">
-        <span>Candidate GUID</span>
-        <input
-          pInputText
-          type="text"
-          [value]="candidateGuidInput()"
-          (input)="candidateGuidInput.set($any($event.target).value)"
-        />
-      </label>
+          <div class="appointment-slots-container">
+            <div class="appointment-slots-scroll">
+              @if (filteredCandidateAppointments().length > 0) {
+                <table class="appointment-slots-table">
+                  <thead>
+                    <tr>
+                      <th>Select</th>
+                      <th>Date/Time</th>
+                      <th>Location</th>
+                      <th>Comments</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      *ngFor="let appointment of filteredCandidateAppointments()"
+                      [class.appointment-slot-selected]="
+                        isCandidateAppointmentSelected(appointment)
+                      "
+                    >
+                      <td class="appointment-slot-select">
+                        <input
+                          type="radio"
+                          name="details-candidate-appointment"
+                          aria-label="Select appointment"
+                          [checked]="isCandidateAppointmentSelected(appointment)"
+                          (click)="toggleCandidateAppointmentSelection(appointment, $event)"
+                          (change)="selectCandidateAppointment(appointment)"
+                        />
+                      </td>
+                      <td>
+                        <strong>{{
+                          formatCandidateAppointmentDateTime(appointment.dateTime)
+                        }}</strong>
+                      </td>
+                      <td>{{ appointment.location }}</td>
+                      <td>{{ appointment.comments || '—' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              } @else {
+                <p class="appointment-empty-state">No appointments match these filters.</p>
+              }
+            </div>
+          </div>
 
-      <label class="appointment-field">
-        <span>Appointment Status *</span>
-        <p-select
-          [options]="appointmentStatusSelectOptions"
-          [ngModel]="appointmentStatusInput()"
-          optionLabel="label"
-          optionValue="value"
-          appendTo="body"
-          (ngModelChange)="updateAppointmentStatus($event)"
-        ></p-select>
-      </label>
+          <a
+            href=""
+            class="appointment-manual-link"
+            (click)="$event.preventDefault(); toggleManualAppointmentFields()"
+          >
+            <span>Can't find an appointment?</span>
+            <span class="appointment-manual-link-highlight"> Enter manually</span>
+          </a>
 
-      <div class="appointment-get-slots-button">
-        <button
-          pButton
-          pRipple
-          type="button"
-          class="primary-btn"
-          (click)="toggleShowAppointmentSlots()"
-        >
-          {{ isShowingAppointmentSlots() ? 'Hide' : 'Get' }} candidate appointments
-        </button>
-      </div>
+          @if (isManualAppointmentFieldsVisible()) {
+            <div class="appointment-inline-grid">
+              <label class="appointment-field">
+                <span>Appointment Date</span>
+                <input
+                  pInputText
+                  type="datetime-local"
+                  [value]="appointmentDateTimeInput()"
+                  (input)="updateAppointmentDateTime($event)"
+                />
+              </label>
 
-      <div *ngIf="isShowingAppointmentSlots()" class="appointment-slots-container">
-        <div class="appointment-slots-scroll">
-          <table class="appointment-slots-table">
-            <thead>
-              <tr>
-                <th>Date/Time</th>
-                <th>Candidate GUID</th>
-                <th>Status</th>
-                <th>Location</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let appointment of activeCandidateAppointments()">
-                <td>
-                  <strong>{{ formatCandidateAppointmentDateTime(appointment.dateTime) }}</strong>
-                </td>
-                <td>{{ appointment.candidateGuid }}</td>
-                <td>{{ appointment.appointmentStatus }}</td>
-                <td>{{ appointment.location }}</td>
-                <td class="appointment-slot-action">
-                  <button
-                    pButton
-                    pRipple
-                    type="button"
-                    class="primary-btn"
-                    (click)="selectCandidateAppointment(appointment)"
-                  >
-                    Select Appointment
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+              <label class="appointment-field">
+                <span>Location</span>
+                <p-select
+                  [options]="activeLocationOptions()"
+                  [ngModel]="appointmentLocationInput() || null"
+                  [filter]="true"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select location"
+                  appendTo="body"
+                  (ngModelChange)="updateAppointmentLocation($event)"
+                ></p-select>
+              </label>
+            </div>
+
+            <label class="appointment-field appointment-field-wide appointment-comments-field">
+              <span>Comments</span>
+              <textarea
+                pInputTextarea
+                rows="3"
+                maxlength="500"
+                [value]="appointmentCommentsInput()"
+                (input)="updateAppointmentComments($event)"
+              ></textarea>
+            </label>
+          }
+        </section>
+      } @else {
+        <label class="appointment-field">
+          <span>Appointment Date/Time *</span>
+          <input
+            pInputText
+            type="datetime-local"
+            [value]="appointmentDateTimeInput()"
+            (input)="updateAppointmentDateTime($event)"
+          />
+        </label>
+
+        <label class="appointment-field">
+          <span>Location</span>
+          <p-select
+            [options]="activeLocationOptions()"
+            [ngModel]="appointmentLocationInput() || null"
+            [filter]="true"
+            [showClear]="true"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select location"
+            appendTo="body"
+            (ngModelChange)="updateAppointmentLocation($event)"
+          ></p-select>
+        </label>
+
+        <label class="appointment-field">
+          <span>Candidate GUID</span>
+          <input
+            pInputText
+            type="text"
+            [value]="candidateGuidInput()"
+            (input)="candidateGuidInput.set($any($event.target).value)"
+          />
+        </label>
+
+        <label class="appointment-field">
+          <span>Appointment Status *</span>
+          <p-select
+            [options]="appointmentStatusSelectOptions"
+            [ngModel]="appointmentStatusInput()"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            (ngModelChange)="updateAppointmentStatus($event)"
+          ></p-select>
+        </label>
+
+        <div class="appointment-get-slots-button">
+          <button
+            pButton
+            pRipple
+            type="button"
+            class="primary-btn"
+            (click)="toggleShowAppointmentSlots()"
+          >
+            {{ isShowingAppointmentSlots() ? 'Hide' : 'Get' }} candidate appointments
+          </button>
         </div>
-      </div>
 
-      <label class="appointment-field appointment-field-wide">
-        <span>Comments</span>
-        <textarea
-          pInputTextarea
-          rows="3"
-          maxlength="500"
-          [value]="appointmentCommentsInput()"
-          (input)="updateAppointmentComments($event)"
-        ></textarea>
-      </label>
+        <div *ngIf="isShowingAppointmentSlots()" class="appointment-slots-container">
+          <div class="appointment-slots-scroll">
+            <table class="appointment-slots-table">
+              <thead>
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Candidate GUID</th>
+                  <th>Status</th>
+                  <th>Location</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let appointment of activeCandidateAppointments()">
+                  <td>
+                    <strong>{{ formatCandidateAppointmentDateTime(appointment.dateTime) }}</strong>
+                  </td>
+                  <td>{{ appointment.candidateGuid }}</td>
+                  <td>{{ appointment.appointmentStatus }}</td>
+                  <td>{{ appointment.location }}</td>
+                  <td class="appointment-slot-action">
+                    <button
+                      pButton
+                      pRipple
+                      type="button"
+                      class="primary-btn"
+                      (click)="selectCandidateAppointment(appointment)"
+                    >
+                      Select Appointment
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <label class="appointment-field appointment-field-wide">
+          <span>Comments</span>
+          <textarea
+            pInputTextarea
+            rows="3"
+            maxlength="500"
+            [value]="appointmentCommentsInput()"
+            (input)="updateAppointmentComments($event)"
+          ></textarea>
+        </label>
+      }
     </div>
 
     <p *ngIf="appointmentValidationMessage()" class="appointment-validation-message" role="alert">

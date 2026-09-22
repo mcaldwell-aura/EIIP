@@ -73,6 +73,52 @@ type CstimsCriteriaSectionDef = {
   readonly fields: readonly CstimsCriteriaFieldDef[];
 };
 
+type AppointmentSlot = {
+  time: string;
+  examType: string;
+  inspectionType: InspectionTypeOption;
+  location: string;
+  auditorName: string;
+};
+
+const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
+  {
+    time: '9:00 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Austin Assessment Center',
+    auditorName: 'Campos',
+  },
+  {
+    time: '10:30 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Harris Central Campus',
+    auditorName: 'Lin',
+  },
+  {
+    time: '11:45 AM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Dallas Metro Hub',
+    auditorName: 'Reeves',
+  },
+  {
+    time: '1:00 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Overt',
+    location: 'Fort Worth North Site',
+    auditorName: 'Patel',
+  },
+  {
+    time: '2:30 PM',
+    examType: 'CDL Exam',
+    inspectionType: 'Covert',
+    location: 'Collin Regional Site',
+    auditorName: 'Turner',
+  },
+];
+
 type CstimsInspectionInformationValue = {
   candidate: string;
   inspector: string;
@@ -367,52 +413,6 @@ const FORM_CONTENT_DEFS: Readonly<Record<string, readonly FormSectionDef[]>> = {
     },
   ],
 };
-
-type AppointmentSlot = {
-  time: string;
-  examType: string;
-  inspectionType: InspectionTypeOption;
-  location: string;
-  auditorName: string;
-};
-
-const AVAILABLE_APPOINTMENT_SLOTS: readonly AppointmentSlot[] = [
-  {
-    time: '9:00 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Austin Assessment Center',
-    auditorName: 'Campos',
-  },
-  {
-    time: '10:30 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Harris Central Campus',
-    auditorName: 'Lin',
-  },
-  {
-    time: '11:45 AM',
-    examType: 'CDL Exam',
-    inspectionType: 'Covert',
-    location: 'Dallas Metro Hub',
-    auditorName: 'Reeves',
-  },
-  {
-    time: '1:00 PM',
-    examType: 'CDL Exam',
-    inspectionType: 'Overt',
-    location: 'Fort Worth North Site',
-    auditorName: 'Patel',
-  },
-  {
-    time: '2:30 PM',
-    examType: 'CDL Exam',
-    inspectionType: 'Covert',
-    location: 'Collin Regional Site',
-    auditorName: 'Turner',
-  },
-];
 
 type NoteRow = {
   name: string;
@@ -930,16 +930,48 @@ export class InspectionDetailsComponent implements OnInit {
     status: InspectionFormStatus;
     comments: string;
   } | null>(null);
+  protected readonly isManualAppointmentFieldsVisible = signal(false);
+  protected readonly selectedCandidateAppointment = signal<CandidateAppointment | null>(null);
+  protected readonly appointmentDateFilter = signal('');
+  protected readonly appointmentLocationFilter = signal<string[]>([]);
+  protected readonly appointmentLocationSearch = signal('');
   protected readonly isShowingAppointmentSlots = signal(false);
   protected readonly selectedAppointmentSlotForDetails = signal<AppointmentSlot | null>(null);
   protected readonly availableAppointmentSlots: readonly AppointmentSlot[] =
     AVAILABLE_APPOINTMENT_SLOTS;
-  protected readonly activeCandidateAppointments = computed<CandidateAppointment[]>(() =>
-    filterActiveCandidateAppointments(
+  protected readonly activeCandidateAppointments = computed<CandidateAppointment[]>(() => {
+    const candidateAppointments = filterActiveCandidateAppointments(
       this.inspection().subjectId || this.candidateGuidInput(),
       MOCK_CANDIDATE_APPOINTMENTS,
-    ),
-  );
+    );
+    const fallbackAppointments = MOCK_CANDIDATE_APPOINTMENTS.filter(
+      (appointment) => appointment.appointmentStatus !== 'Canceled',
+    );
+    const appointments = [...candidateAppointments, ...fallbackAppointments].filter(
+      (appointment, index, allAppointments) =>
+        allAppointments.findIndex(
+          (candidate) =>
+            candidate.candidateGuid === appointment.candidateGuid &&
+            candidate.dateTime === appointment.dateTime,
+        ) === index,
+    );
+
+    return appointments.slice(0, Math.max(2, candidateAppointments.length));
+  });
+  protected readonly filteredCandidateAppointments = computed<CandidateAppointment[]>(() => {
+    const dateFilter = this.appointmentDateFilter();
+    const locationFilter = this.appointmentLocationFilter();
+    const dateKey = dateFilter;
+
+    return this.activeCandidateAppointments().filter((appointment) => {
+      const matchesDate =
+        dateKey.length === 0 || this.toAppointmentDateKey(appointment.dateTime) === dateKey;
+      const matchesLocation =
+        locationFilter.length === 0 || locationFilter.includes(appointment.location);
+
+      return matchesDate && matchesLocation;
+    });
+  });
   protected readonly inspectionFormStatusOptions: readonly InspectionFormStatus[] = [
     'Scheduled',
     'In Progress',
@@ -1732,6 +1764,11 @@ Generated on: ${new Date().toLocaleString()}
     this.candidateGuidInput.set(this.inspection().subjectId || 'candidate-100');
     this.appointmentStatusInput.set('Scheduled');
     this.appointmentValidationMessage.set('');
+    this.isManualAppointmentFieldsVisible.set(false);
+    this.selectedCandidateAppointment.set(null);
+    this.appointmentDateFilter.set('');
+    this.appointmentLocationFilter.set([]);
+    this.appointmentLocationSearch.set('');
     this.isShowingAppointmentSlots.set(false);
     this.selectedAppointmentSlotForDetails.set(null);
     this.isAppointmentModalOpen.set(true);
@@ -1753,6 +1790,11 @@ Generated on: ${new Date().toLocaleString()}
     );
     this.appointmentStatusInput.set(appointment.status);
     this.appointmentValidationMessage.set('');
+    this.isManualAppointmentFieldsVisible.set(false);
+    this.selectedCandidateAppointment.set(null);
+    this.appointmentDateFilter.set('');
+    this.appointmentLocationFilter.set([]);
+    this.appointmentLocationSearch.set('');
     this.isShowingAppointmentSlots.set(false);
     this.selectedAppointmentSlotForDetails.set(null);
     this.isAppointmentModalOpen.set(true);
@@ -1762,8 +1804,22 @@ Generated on: ${new Date().toLocaleString()}
     this.isAppointmentModalOpen.set(false);
     this.appointmentValidationMessage.set('');
     this.activeAppointmentIndex.set(null);
+    this.isManualAppointmentFieldsVisible.set(false);
+    this.selectedCandidateAppointment.set(null);
     this.isShowingAppointmentSlots.set(false);
     this.selectedAppointmentSlotForDetails.set(null);
+  }
+
+  protected selectCandidateAppointment(appointment: CandidateAppointment): void {
+    this.selectedCandidateAppointment.set(appointment);
+    this.appointmentDateTimeInput.set(appointment.dateTime);
+    this.appointmentLocationInput.set(appointment.location);
+    this.appointmentCommentsInput.set(appointment.comments ?? '');
+    this.candidateGuidInput.set(appointment.candidateGuid);
+    this.appointmentStatusInput.set(
+      appointment.appointmentStatus === 'Canceled' ? 'Scheduled' : 'Scheduled',
+    );
+    this.isManualAppointmentFieldsVisible.set(false);
   }
 
   protected toggleShowAppointmentSlots(): void {
@@ -1777,15 +1833,80 @@ Generated on: ${new Date().toLocaleString()}
     this.isShowingAppointmentSlots.set(false);
   }
 
-  protected selectCandidateAppointment(appointment: CandidateAppointment): void {
-    this.selectedAppointmentSlotForDetails.set(null);
-    this.appointmentDateTimeInput.set(appointment.dateTime);
-    this.appointmentLocationInput.set(appointment.location);
-    this.candidateGuidInput.set(appointment.candidateGuid);
-    this.appointmentStatusInput.set(
-      appointment.appointmentStatus === 'Canceled' ? 'Scheduled' : 'Scheduled',
+  protected toggleManualAppointmentFields(): void {
+    this.isManualAppointmentFieldsVisible.update((visible) => !visible);
+    this.appointmentValidationMessage.set('');
+  }
+
+  protected updateAppointmentDateFilter(event: Event): void {
+    this.appointmentDateFilter.set((event.target as HTMLInputElement).value);
+  }
+
+  protected openAppointmentDatePicker(event: Event): void {
+    const input = event.target as HTMLInputElement & { showPicker?: () => void };
+    input.showPicker?.();
+  }
+
+  protected closeAppointmentLocationFilter(event: MouseEvent, filter: HTMLDetailsElement): void {
+    if (!filter.contains(event.target as Node)) {
+      filter.removeAttribute('open');
+    }
+  }
+
+  protected updateAppointmentLocationSearch(event: Event): void {
+    this.appointmentLocationSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  protected toggleAppointmentLocationFilter(location: string): void {
+    this.appointmentLocationFilter.update((locations) =>
+      locations.includes(location)
+        ? locations.filter((selectedLocation) => selectedLocation !== location)
+        : [...locations, location],
     );
-    this.isShowingAppointmentSlots.set(false);
+  }
+
+  protected readonly filteredAppointmentLocations = computed(() => {
+    const search = this.appointmentLocationSearch().trim().toLowerCase();
+
+    return this.activeLocationOptions().filter(
+      (location) => search.length === 0 || location.label.toLowerCase().includes(search),
+    );
+  });
+
+  protected readonly minimumAppointmentDate = new Date().toISOString().slice(0, 10);
+
+  private toAppointmentDateKey(value: Date | string): string {
+    const date = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  }
+
+  protected toggleCandidateAppointmentSelection(
+    appointment: CandidateAppointment,
+    event: Event,
+  ): void {
+    if (!this.isCandidateAppointmentSelected(appointment)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.selectedCandidateAppointment.set(null);
+    this.appointmentDateTimeInput.set('');
+    this.appointmentLocationInput.set('');
+    this.appointmentCommentsInput.set('');
+    this.appointmentValidationMessage.set('');
+  }
+
+  protected isCandidateAppointmentSelected(appointment: CandidateAppointment): boolean {
+    const selectedAppointment = this.selectedCandidateAppointment();
+    return (
+      selectedAppointment?.candidateGuid === appointment.candidateGuid &&
+      selectedAppointment.dateTime === appointment.dateTime
+    );
   }
 
   protected openAssignInspectorModal(): void {

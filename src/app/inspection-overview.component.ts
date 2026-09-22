@@ -25,7 +25,6 @@ import { DialogModule } from 'primeng/dialog';
 import { RippleModule } from 'primeng/ripple';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { TextareaModule } from 'primeng/textarea';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
@@ -44,7 +43,6 @@ type SortDirection = 'asc' | 'desc';
 type ToolbarSortSelection = 'default' | 'asc' | 'desc' | 'attention-first';
 type InspectionReasonOption = 'Change' | 'Original' | 'ReExam' | 'Reinstatement' | 'Periodic';
 type InspectionTypeOption = 'Overt' | 'Covert';
-type AppointmentEntryMode = 'existing' | 'manual';
 type SelectOption<T extends string> = {
   label: string;
   value: T;
@@ -122,7 +120,6 @@ type HistoryTooltipState = {
     RippleModule,
     InputTextModule,
     SelectModule,
-    SelectButtonModule,
     TableModule,
     TextareaModule,
     ToggleSwitchModule,
@@ -160,8 +157,11 @@ export class InspectionOverviewComponent {
   protected readonly appointmentLocationInput = signal('');
   protected readonly appointmentCommentsInput = signal('');
   protected readonly scheduleAppointmentEnabled = signal(false);
-  protected readonly appointmentEntryMode = signal<AppointmentEntryMode>('existing');
+  protected readonly isManualAppointmentFieldsVisible = signal(false);
   protected readonly selectedCandidateAppointment = signal<CandidateAppointment | null>(null);
+  protected readonly appointmentDateFilter = signal('');
+  protected readonly appointmentLocationFilter = signal<string[]>([]);
+  protected readonly appointmentLocationSearch = signal('');
   protected readonly stagedAppointments = signal<NewInspectionAppointmentDraft[]>([]);
   private priorityAnimationTimer: ReturnType<typeof setTimeout> | null = null;
   private priorityDialogTrigger: HTMLButtonElement | null = null;
@@ -174,10 +174,6 @@ export class InspectionOverviewComponent {
     'Periodic',
   ];
   protected readonly inspectionTypeOptions: readonly InspectionTypeOption[] = ['Overt', 'Covert'];
-  protected readonly appointmentEntryModeOptions: SelectOption<AppointmentEntryMode>[] = [
-    { label: 'Choose existing', value: 'existing' },
-    { label: 'Enter manually', value: 'manual' },
-  ];
   protected readonly dueDateFilterOptions: SelectOption<DueDateFilter>[] = [
     { label: 'Due Date: All', value: 'all' },
     { label: 'Due Date: Next 7 Days', value: 'next-7-days' },
@@ -245,6 +241,27 @@ export class InspectionOverviewComponent {
 
     return filterActiveCandidateAppointments(candidate.subjectId, MOCK_CANDIDATE_APPOINTMENTS);
   });
+  protected readonly filteredCandidateAppointments = computed<CandidateAppointment[]>(() => {
+    const dateFilter = this.appointmentDateFilter();
+    const locationFilter = this.appointmentLocationFilter();
+
+    return this.availableCandidateAppointments().filter((appointment) => {
+      const matchesDate =
+        dateFilter.length === 0 || this.toAppointmentDateKey(appointment.dateTime) === dateFilter;
+      const matchesLocation =
+        locationFilter.length === 0 || locationFilter.includes(appointment.location);
+
+      return matchesDate && matchesLocation;
+    });
+  });
+  protected readonly filteredAppointmentLocations = computed(() => {
+    const search = this.appointmentLocationSearch().trim().toLowerCase();
+
+    return this.activeLocationNames.filter((location) =>
+      search.length === 0 ? true : location.toLowerCase().includes(search),
+    );
+  });
+  protected readonly minimumAppointmentDate = new Date().toISOString().slice(0, 10);
   protected readonly visibleRows = computed(() => {
     const dueDateFilter = this.dueDateFilter();
     const priorityFilter = this.priorityFilter();
@@ -630,8 +647,11 @@ export class InspectionOverviewComponent {
     this.appointmentLocationInput.set('');
     this.appointmentCommentsInput.set('');
     this.scheduleAppointmentEnabled.set(false);
-    this.appointmentEntryMode.set('existing');
+    this.isManualAppointmentFieldsVisible.set(false);
     this.selectedCandidateAppointment.set(null);
+    this.appointmentDateFilter.set('');
+    this.appointmentLocationFilter.set([]);
+    this.appointmentLocationSearch.set('');
     this.stagedAppointments.set([]);
     this.newInspectionValidationMessage.set('');
     this.isNewInspectionModalOpen.set(true);
@@ -648,8 +668,11 @@ export class InspectionOverviewComponent {
     this.appointmentLocationInput.set('');
     this.appointmentCommentsInput.set('');
     this.scheduleAppointmentEnabled.set(false);
-    this.appointmentEntryMode.set('existing');
+    this.isManualAppointmentFieldsVisible.set(false);
     this.selectedCandidateAppointment.set(null);
+    this.appointmentDateFilter.set('');
+    this.appointmentLocationFilter.set([]);
+    this.appointmentLocationSearch.set('');
     this.stagedAppointments.set([]);
     this.newInspectionValidationMessage.set('');
   }
@@ -665,19 +688,48 @@ export class InspectionOverviewComponent {
     if (!value) {
       this.selectedCandidateAppointment.set(null);
       this.clearManualAppointmentInputs();
+      this.isManualAppointmentFieldsVisible.set(false);
     }
   }
 
-  protected setAppointmentEntryMode(mode: AppointmentEntryMode): void {
-    this.appointmentEntryMode.set(mode);
+  protected toggleManualAppointmentFields(): void {
+    this.isManualAppointmentFieldsVisible.update((visible) => !visible);
     this.newInspectionValidationMessage.set('');
+  }
 
-    if (mode === 'existing') {
-      this.clearManualAppointmentInputs();
+  protected updateAppointmentDateFilter(event: Event): void {
+    this.appointmentDateFilter.set((event.target as HTMLInputElement).value);
+  }
+
+  protected openAppointmentDatePicker(event: Event): void {
+    const input = event.target as HTMLInputElement & { showPicker?: () => void };
+    input.showPicker?.();
+  }
+
+  protected updateAppointmentLocationSearch(event: Event): void {
+    this.appointmentLocationSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  protected toggleAppointmentLocationFilter(location: string): void {
+    this.appointmentLocationFilter.update((locations) =>
+      locations.includes(location)
+        ? locations.filter((selectedLocation) => selectedLocation !== location)
+        : [...locations, location],
+    );
+  }
+
+  protected closeAppointmentLocationFilter(event: MouseEvent): void {
+    const filter = (event.currentTarget as Document).querySelector<HTMLDetailsElement>(
+      '.appointment-location-filter',
+    );
+
+    if (!filter) {
       return;
     }
 
-    this.selectedCandidateAppointment.set(null);
+    if (!filter.contains(event.target as Node)) {
+      filter.removeAttribute('open');
+    }
   }
 
   protected updateInspectionReason(event: Event): void {
@@ -726,8 +778,24 @@ export class InspectionOverviewComponent {
 
   protected selectCandidateAppointment(appointment: CandidateAppointment): void {
     this.scheduleAppointmentEnabled.set(true);
-    this.appointmentEntryMode.set('existing');
     this.selectedCandidateAppointment.set(appointment);
+    this.appointmentDateTimeInput.set(appointment.dateTime);
+    this.appointmentLocationInput.set(appointment.location);
+    this.appointmentCommentsInput.set(appointment.comments ?? '');
+    this.newInspectionValidationMessage.set('');
+  }
+
+  protected toggleCandidateAppointmentSelection(
+    appointment: CandidateAppointment,
+    event: Event,
+  ): void {
+    if (!this.isCandidateAppointmentSelected(appointment)) {
+      return;
+    }
+
+    event.preventDefault();
+    this.selectedCandidateAppointment.set(null);
+    this.clearManualAppointmentInputs();
     this.newInspectionValidationMessage.set('');
   }
 
@@ -737,6 +805,16 @@ export class InspectionOverviewComponent {
       selectedAppointment?.candidateGuid === appointment.candidateGuid &&
       selectedAppointment.dateTime === appointment.dateTime
     );
+  }
+
+  private toAppointmentDateKey(dateTime: string): string {
+    const date = new Date(dateTime);
+
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toISOString().slice(0, 10);
   }
 
   protected addAppointment(): void {
@@ -771,25 +849,21 @@ export class InspectionOverviewComponent {
     let draftAppointment: NewInspectionAppointmentDraft | null = null;
 
     if (this.scheduleAppointmentEnabled()) {
-      if (this.appointmentEntryMode() === 'existing') {
-        const selectedAppointment = this.selectedCandidateAppointment();
-        if (selectedAppointment) {
-          draftAppointment = {
-            dateTime: selectedAppointment.dateTime,
-            location: selectedAppointment.location,
-            comments: selectedAppointment.comments ?? '',
-          };
-        }
-      } else {
-        const hasManualAppointmentInput =
-          this.appointmentDateTimeInput().trim().length > 0 ||
-          this.appointmentLocationInput().trim().length > 0;
+      const selectedAppointment = this.selectedCandidateAppointment();
+      const hasManualAppointmentInput =
+        this.appointmentDateTimeInput().trim().length > 0 ||
+        this.appointmentLocationInput().trim().length > 0;
 
-        if (hasManualAppointmentInput) {
-          draftAppointment = this.buildDraftAppointment(false);
-          if (draftAppointment === null) {
-            return;
-          }
+      if (selectedAppointment && !this.isManualAppointmentFieldsVisible()) {
+        draftAppointment = {
+          dateTime: selectedAppointment.dateTime,
+          location: selectedAppointment.location,
+          comments: selectedAppointment.comments ?? '',
+        };
+      } else if (hasManualAppointmentInput) {
+        draftAppointment = this.buildDraftAppointment(false);
+        if (draftAppointment === null) {
+          return;
         }
       }
     }
