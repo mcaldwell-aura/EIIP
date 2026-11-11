@@ -12,6 +12,22 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Dashboard inspection charts
+
+The results and reasons charts display the current calendar month and the preceding two months,
+using prototype completion records from `src/app/dashboard-inspection-data.ts`, not legacy
+appointment dates. Each month has five grouped bars stacked by the selected candidate characteristic.
+Results use muted forest/sage greens and amber/gold accents; reasons use brand blue with indigo,
+violet, slate and teal companions.
+Lighter shades identify New or Individual candidates; darker shades identify Established or
+Organization candidates. Click a chart card (or press Enter/Space while focused) to view category
+totals and monthly breakdowns. Both tables use the same completion records as the charts.
+The blue candidate legend sits inside the Total Active Candidates card; bar-chart shade labels
+are separated by a vertical divider.
+Table columns wrap to fit the modal width without horizontal scrolling.
+New/Established and Individual/Organization are separate breakdowns of the same population;
+the Total row counts each inspection once.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

@@ -101,19 +101,6 @@
     </section>
 
     <section class="visibility-shell" aria-label="Operational visibility panels">
-      <div
-        class="maturity-legend operational-heading-legend"
-        [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
-        aria-label="Operational visibility color coding"
-      >
-        <span class="legend-item"
-          ><i class="legend-swatch primary"></i>{{ visibilityLegendLabels().primary }}</span
-        >
-        <span class="legend-item"
-          ><i class="legend-swatch secondary"></i>{{ visibilityLegendLabels().secondary }}</span
-        >
-      </div>
-
       <div class="visibility-grid">
         <article
           class="panel counter-panel total-active-card"
@@ -136,6 +123,15 @@
             </div>
           </div>
 
+          <div class="maturity-legend" aria-label="Active candidate color coding">
+            <span class="legend-item"
+              ><i class="legend-swatch primary"></i>{{ visibilityLegendLabels().primary }}</span
+            >
+            <span class="legend-item"
+              ><i class="legend-swatch secondary"></i>{{ visibilityLegendLabels().secondary }}</span
+            >
+          </div>
+
           <div class="candidate-maturity-grid">
             <div *ngFor="let row of activeCandidateBreakdownRows()" class="candidate-maturity-row">
               <span class="candidate-maturity-label">{{ row.label }}</span>
@@ -146,14 +142,25 @@
 
         <div class="chart-stack">
           <article
-            class="panel chart-panel"
+            class="panel chart-panel chart-panel-button"
+            role="button"
+            tabindex="0"
+            aria-haspopup="dialog"
+            aria-label="View Inspection Results in the Last 3 Months details"
+            (click)="openInspectionChartModal('result')"
+            (keydown.enter)="openInspectionChartModal('result')"
+            (keydown.space)="$event.preventDefault(); openInspectionChartModal('result')"
             [class.scope-candidate-maturity]="visibilityScope() === 'candidateMaturity'"
             [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
           >
             <div class="panel-header">
-              <h3>Inspection Results in Last 30 Days</h3>
+              <h3>Inspection Results in the Last 3 Months</h3>
+              <i class="pi pi-window-maximize" aria-hidden="true"></i>
             </div>
-
+            <p class="chart-scope-note">
+              <span>Light shade: {{ visibilityLegendLabels().primary }}</span>
+              <span>Dark shade: {{ visibilityLegendLabels().secondary }}</span>
+            </p>
             <div
               class="bar-chart bar-chart-primeng"
               aria-label="Inspection result chart by selected visibility scope"
@@ -161,21 +168,38 @@
               <p-chart
                 type="bar"
                 [data]="inspectionResultsStackedChartData()"
-                [options]="stackedBarChartOptions()"
+                [options]="stackedBarChartOptions"
                 class="stacked-bar-chart"
               ></p-chart>
+            </div>
+            <div class="chart-category-legend" aria-label="Inspection results legend">
+              <span *ngFor="let category of inspectionResultCategories" class="legend-item">
+                <i class="legend-swatch" [style.background]="category.color"></i
+                >{{ category.label }}
+              </span>
             </div>
           </article>
 
           <article
-            class="panel chart-panel"
+            class="panel chart-panel chart-panel-button"
+            role="button"
+            tabindex="0"
+            aria-haspopup="dialog"
+            aria-label="View Reasons for Inspection in the Last 3 Months details"
+            (click)="openInspectionChartModal('reason')"
+            (keydown.enter)="openInspectionChartModal('reason')"
+            (keydown.space)="$event.preventDefault(); openInspectionChartModal('reason')"
             [class.scope-candidate-maturity]="visibilityScope() === 'candidateMaturity'"
             [class.scope-candidate-type]="visibilityScope() === 'candidateType'"
           >
             <div class="panel-header">
-              <h3>Reasons for Inspections in Last 30 Days</h3>
+              <h3>Reasons for Inspection in the Last 3 Months</h3>
+              <i class="pi pi-window-maximize" aria-hidden="true"></i>
             </div>
-
+            <p class="chart-scope-note">
+              <span>Light shade: {{ visibilityLegendLabels().primary }}</span>
+              <span>Dark shade: {{ visibilityLegendLabels().secondary }}</span>
+            </p>
             <div
               class="bar-chart bar-chart-primeng"
               aria-label="Reasons for inspection chart by selected visibility scope"
@@ -183,9 +207,15 @@
               <p-chart
                 type="bar"
                 [data]="reasonsForInspectionStackedChartData()"
-                [options]="stackedBarChartOptions()"
+                [options]="stackedBarChartOptions"
                 class="stacked-bar-chart"
               ></p-chart>
+            </div>
+            <div class="chart-category-legend" aria-label="Inspection reasons legend">
+              <span *ngFor="let category of inspectionReasonCategories" class="legend-item">
+                <i class="legend-swatch" [style.background]="category.color"></i
+                >{{ category.label }}
+              </span>
             </div>
           </article>
         </div>
@@ -494,6 +524,72 @@
   </main>
 
   <p-dialog
+    [(visible)]="inspectionChartModalVisible"
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="true"
+    [header]="inspectionChartModalTitle()"
+    [style]="{ width: 'min(980px, 96vw)' }"
+  >
+    <div class="table-wrap chart-detail-table">
+      <table>
+        <caption>
+          {{
+            inspectionTotalsTableTitle()
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Candidate Group</th>
+            <th *ngFor="let category of inspectionChartCategories()" scope="col">
+              {{ category.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let row of inspectionCategoryTotals()"
+            [class.totals-row]="row.label === 'Total'"
+          >
+            <th scope="row">{{ row.label }}</th>
+            <td *ngFor="let count of row.counts">{{ count }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap chart-detail-table">
+      <table>
+        <caption>
+          Breakdown Totals by Month
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Candidate Group</th>
+            <th *ngFor="let month of inspectionChartMonths()" scope="col">{{ month.label }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let row of inspectionMonthlyTotals()"
+            [class.totals-row]="row.label === 'Total'"
+          >
+            <th scope="row">
+              {{
+                row.label === 'Individual'
+                  ? 'Individuals'
+                  : row.label === 'Organization'
+                    ? 'Organizations'
+                    : row.label
+              }}
+            </th>
+            <td *ngFor="let count of row.counts">{{ count }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </p-dialog>
+
+  <p-dialog
     [(visible)]="itemsNeedingAttentionModalVisible"
     [modal]="true"
     [draggable]="false"
@@ -699,4 +795,3 @@
     </div>
   </p-dialog>
 </div>
-

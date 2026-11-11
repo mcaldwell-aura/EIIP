@@ -6,6 +6,13 @@ import { CandidateStoreService } from './candidate-store.service';
 import { type CandidateType } from './candidates.data';
 import { INSPECTIONS, type InspectionRecord, type InspectionStatus } from './inspection-data';
 import { NavMenuService } from './nav-menu.service';
+import type { ChartData, ChartOptions } from 'chart.js';
+import {
+  createDashboardInspections,
+  INSPECTION_REASONS,
+  INSPECTION_RESULTS,
+  type DashboardInspection,
+} from './dashboard-inspection-data';
 
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
@@ -72,23 +79,11 @@ type CandidateDueRow = {
   dueBucket: DueBucketLabel;
 };
 
-type ChartDatum = {
-  label: string;
-  value: number;
-};
-
 type VisibilityScope = 'candidateMaturity' | 'candidateType';
 
 type VisibilitySplitLabel = {
   primary: string;
   secondary: string;
-};
-
-type VisibilitySplitDatum = {
-  label: string;
-  total: number;
-  primaryCount: number;
-  secondaryCount: number;
 };
 
 type VisibilityScopeOption = {
@@ -108,11 +103,9 @@ type CandidateTypeSummaryRow = {
   value: number;
 };
 
-type InspectionResultByMaturityDatum = {
-  label: string;
-  newCount: number;
-  establishedCount: number;
-};
+type InspectionChartKind = 'result' | 'reason';
+type InspectionBreakdownGroup = DashboardInspection['maturity'] | CandidateType | 'Total';
+type InspectionTotalsRow = { label: InspectionBreakdownGroup; counts: number[] };
 
 type DueBucketLabel = 'Overdue' | '0-30 Days' | '31-60 Days' | '61-90 Days' | 'Date not set';
 
@@ -316,14 +309,6 @@ export class DashboardComponent {
       secondary: 'Organization',
     };
   });
-
-  protected readonly inspectionResultsByMaturity = signal<InspectionResultByMaturityDatum[]>([
-    { label: 'Excellent', newCount: 8, establishedCount: 15 },
-    { label: 'Good', newCount: 9, establishedCount: 17 },
-    { label: 'Satisfactory', newCount: 4, establishedCount: 8 },
-    { label: 'Marginal', newCount: 9, establishedCount: 15 },
-    { label: 'Unsatisfactory', newCount: 7, establishedCount: 11 },
-  ]);
 
   private readonly dashboardCounts = computed(() => {
     const today = this.startOfDay(new Date());
@@ -690,112 +675,142 @@ export class DashboardComponent {
     },
   }));
 
-  protected readonly inspectionResultTotals = signal<ChartDatum[]>([
-    { label: 'Excellent', value: 23 },
-    { label: 'Good', value: 26 },
-    { label: 'Satisfactory', value: 12 },
-    { label: 'Marginal', value: 24 },
-    { label: 'Unsatisfactory', value: 18 },
-  ]);
-
-  protected readonly reasonsForInspectionTotals = signal<ChartDatum[]>([
-    { label: 'Change', value: 10 },
-    { label: 'Original', value: 15 },
-    { label: 'ReExam', value: 22 },
-    { label: 'Reinstatement', value: 24 },
-    { label: 'Periodic', value: 21 },
-  ]);
-
-  protected readonly inspectionResultsChartData = computed<VisibilitySplitDatum[]>(() =>
-    this.toVisibilitySplitData(this.inspectionResultTotals()),
-  );
-
-  protected readonly reasonsForInspectionChartData = computed<VisibilitySplitDatum[]>(() =>
-    this.toVisibilitySplitData(this.reasonsForInspectionTotals()),
-  );
-
-  protected readonly inspectionResultsChartMax = computed(() =>
-    Math.max(1, ...this.inspectionResultsChartData().map((item) => item.total)),
-  );
-
-  protected readonly reasonsForInspectionChartMax = computed(() =>
-    Math.max(1, ...this.reasonsForInspectionChartData().map((item) => item.total)),
-  );
-
+  protected readonly inspectionResultCategories = INSPECTION_RESULTS;
+  protected readonly inspectionReasonCategories = INSPECTION_REASONS;
+  protected readonly completedChartInspections = signal(createDashboardInspections(new Date()));
+  protected readonly inspectionChartModalVisible = signal(false);
+  protected readonly activeInspectionChart = signal<InspectionChartKind>('result');
+  protected readonly inspectionChartMonths = computed(() => {
+    const today = new Date();
+    return Array.from({ length: 3 }, (_, index) => {
+      const start = new Date(today.getFullYear(), today.getMonth() - 2 + index, 1);
+      return {
+        label: start.toLocaleDateString('en-US', { month: 'long' }),
+        start,
+        end: new Date(start.getFullYear(), start.getMonth() + 1, 1),
+      };
+    });
+  });
+  private readonly inspectionsInChartRange = computed(() => {
+    const months = this.inspectionChartMonths();
+    return this.completedChartInspections().filter(
+      (inspection) =>
+        inspection.completionDate >= months[0].start && inspection.completionDate < months[2].end,
+    );
+  });
   protected readonly inspectionResultsStackedChartData = computed(() =>
-    this.toStackedBarChartData(this.inspectionResultsChartData()),
+    this.toGroupedStackedChartData('result'),
   );
-
   protected readonly reasonsForInspectionStackedChartData = computed(() =>
-    this.toStackedBarChartData(this.reasonsForInspectionChartData()),
+    this.toGroupedStackedChartData('reason'),
+  );
+  protected readonly inspectionChartCategories = computed<
+    ReadonlyArray<{ label: DashboardInspection[InspectionChartKind]; color: string }>
+  >(() => (this.activeInspectionChart() === 'result' ? INSPECTION_RESULTS : INSPECTION_REASONS));
+  protected readonly inspectionChartModalTitle = computed(() =>
+    this.activeInspectionChart() === 'result'
+      ? 'Inspection Results in the Last 3 Months'
+      : 'Reasons for Inspection in the Last 3 Months',
+  );
+  protected readonly inspectionTotalsTableTitle = computed(() =>
+    this.activeInspectionChart() === 'result'
+      ? 'Inspection Result Totals in Last 3 Months'
+      : 'Inspection Reason Totals in Last 3 Months',
+  );
+  private readonly inspectionBreakdownGroups: InspectionBreakdownGroup[] = [
+    'New',
+    'Established',
+    'Individual',
+    'Organization',
+    'Total',
+  ];
+  protected readonly inspectionCategoryTotals = computed<InspectionTotalsRow[]>(() =>
+    this.inspectionBreakdownGroups.map((label) => ({
+      label,
+      counts: this.inspectionChartCategories().map(
+        (category) =>
+          this.inspectionsInChartRange().filter(
+            (inspection) =>
+              inspection[this.activeInspectionChart()] === category.label &&
+              this.matchesInspectionGroup(inspection, label),
+          ).length,
+      ),
+    })),
+  );
+  protected readonly inspectionMonthlyTotals = computed<InspectionTotalsRow[]>(() =>
+    this.inspectionBreakdownGroups.map((label) => ({
+      label,
+      counts: this.inspectionChartMonths().map(
+        (month) =>
+          this.inspectionsInChartRange().filter(
+            (inspection) =>
+              inspection.completionDate >= month.start &&
+              inspection.completionDate < month.end &&
+              this.matchesInspectionGroup(inspection, label),
+          ).length,
+      ),
+    })),
   );
 
-  protected readonly stackedBarChartOptions = computed(() => {
-    const legend = this.visibilityLegendLabels();
-
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
+  protected readonly stackedBarChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const groupName = context.dataset.label ?? '';
+            const count = context.parsed.y ?? 0;
+            return `${groupName}: ${count}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: {
           display: false,
         },
-        tooltip: {
-          callbacks: {
-            label: (context: { dataset: { label?: string }; parsed: { y: number } }) => {
-              const groupName = context.dataset.label ?? '';
-              const count = context.parsed.y ?? 0;
-              return `${groupName}: ${count}`;
-            },
+        ticks: {
+          color: '#5e677d',
+          font: {
+            size: 11,
+            weight: 600,
           },
         },
       },
-      scales: {
-        x: {
-          stacked: true,
-          grid: {
-            display: false,
-          },
-          ticks: {
-            color: '#5e677d',
-            font: {
-              size: 11,
-              weight: '600',
-            },
-          },
+      y: {
+        beginAtZero: true,
+        stacked: true,
+        ticks: {
+          color: '#5e677d',
+          precision: 0,
+          stepSize: 1,
         },
-        y: {
-          beginAtZero: true,
-          stacked: true,
-          ticks: {
-            color: '#5e677d',
-            precision: 0,
-            stepSize: 1,
-          },
-          grid: {
-            color: '#e8edf8',
-          },
+        grid: {
+          color: '#e8edf8',
         },
       },
-      datasets: {
-        bar: {
-          borderRadius: 4,
-          maxBarThickness: 58,
-          barPercentage: 0.58,
-          categoryPercentage: 0.82,
-        },
+    },
+    datasets: {
+      bar: {
+        borderRadius: 0,
+        barPercentage: 1,
+        categoryPercentage: 0.8,
       },
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      parsing: true,
-      animation: {
-        duration: 180,
-      },
-      customLegendLabels: legend,
-    };
-  });
+    },
+    interaction: {
+      mode: 'nearest',
+      intersect: false,
+    },
+    animation: {
+      duration: 180,
+    },
+  };
 
   protected readonly upcomingInspectionsInNext30Days = signal<InspectionTableRow[]>([
     {
@@ -1274,43 +1289,42 @@ export class DashboardComponent {
     return status === 'Planned' || status === 'Pending';
   }
 
-  private toVisibilitySplitData(source: ChartDatum[]): VisibilitySplitDatum[] {
-    const [primaryWeight, secondaryWeight] = this.getVisibilityWeights(this.visibilityScope());
-    return source.map((item) => {
-      const primaryCount = Math.round(item.value * primaryWeight);
-      const secondaryCount = Math.max(0, item.value - primaryCount);
-      return {
-        label: item.label,
-        total: item.value,
-        primaryCount,
-        secondaryCount,
-      };
-    });
+  protected openInspectionChartModal(kind: InspectionChartKind): void {
+    this.activeInspectionChart.set(kind);
+    this.inspectionChartModalVisible.set(true);
   }
 
-  private toStackedBarChartData(source: VisibilitySplitDatum[]) {
-    const labels = source.map((item) => item.label);
-    const legend = this.visibilityLegendLabels();
-    const scope = this.visibilityScope();
+  private matchesInspectionGroup(
+    inspection: DashboardInspection,
+    group: InspectionBreakdownGroup,
+  ): boolean {
+    return group === 'Total' || inspection.maturity === group || inspection.candidateType === group;
+  }
 
-    const colors = scope === 'candidateMaturity' ? ['#3f83f8', '#1d4ed8'] : ['#4f79b3', '#2f5d93'];
-
+  private toGroupedStackedChartData(kind: InspectionChartKind): ChartData<'bar'> {
+    const categories = kind === 'result' ? INSPECTION_RESULTS : INSPECTION_REASONS;
+    const groups = this.visibilityLegendLabels();
     return {
-      labels,
-      datasets: [
-        {
-          label: legend.primary,
-          data: source.map((item) => item.primaryCount),
-          backgroundColor: colors[0],
-          stack: 'stack-0',
-        },
-        {
-          label: legend.secondary,
-          data: source.map((item) => item.secondaryCount),
-          backgroundColor: colors[1],
-          stack: 'stack-0',
-        },
-      ],
+      labels: this.inspectionChartMonths().map((month) => month.label),
+      datasets: categories.flatMap((category) =>
+        [groups.primary, groups.secondary].map((group, index) => ({
+          label: `${category.label} - ${group}`,
+          stack: category.label,
+          backgroundColor: index === 0 ? `${category.color}80` : category.color,
+          data: this.inspectionChartMonths().map(
+            (month) =>
+              this.inspectionsInChartRange().filter(
+                (inspection) =>
+                  inspection[kind] === category.label &&
+                  inspection.completionDate >= month.start &&
+                  inspection.completionDate < month.end &&
+                  (this.visibilityScope() === 'candidateMaturity'
+                    ? inspection.maturity === group
+                    : inspection.candidateType === group),
+              ).length,
+          ),
+        })),
+      ),
     };
   }
 
@@ -1380,26 +1394,6 @@ export class DashboardComponent {
       minute: '2-digit',
       hour12: true,
     }).format(value);
-  }
-
-  private getVisibilityWeights(scope: VisibilityScope): [number, number] {
-    if (scope === 'candidateMaturity') {
-      const rows = this.candidateMaturitySummaryRows().slice(1);
-      const total = rows.reduce((sum, row) => sum + row.value, 0);
-      if (total === 0) {
-        return [0.5, 0.5];
-      }
-
-      return [rows[0].value / total, rows[1].value / total];
-    }
-
-    const rows = this.candidateTypeSummaryRows();
-    const total = rows.reduce((sum, row) => sum + row.value, 0);
-    if (total === 0) {
-      return [0.5, 0.5];
-    }
-
-    return [rows[0].value / total, rows[1].value / total];
   }
 
   private parseFlexibleDate(value: string | null | undefined): Date | null {
